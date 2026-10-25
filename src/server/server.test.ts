@@ -560,6 +560,30 @@ describe("server", () => {
     expect(await client.closeReason).toBe("Room closed: the race ended.");
   });
 
+  test("tells the room when it closes: 48 hours after opening, or 10 minutes after .end", async () => {
+    const base = start();
+    const { slug, host } = await createRoom(base);
+    const client = new Client(
+      socketUrl(base, slug),
+      `${host}; raceme_session=due-secret-due-secret-due-secret-d`,
+    );
+    const opened = await client.waitFor((m) => m.type === "state");
+    const lifetime = opened.type === "state" ? opened.closesAt - opened.serverNow : 0;
+    expect(lifetime).toBeGreaterThan(48 * 60 * 60_000 - 5_000);
+    expect(lifetime).toBeLessThanOrEqual(48 * 60 * 60_000);
+
+    client.send({ type: "end" });
+    const ended = await client.waitFor(isPhase("terminated"));
+    expect(ended.type === "state" && ended.closesAt - (ended.race.endedAt ?? 0)).toBe(10 * 60_000);
+
+    client.send({ type: "rematch" });
+    await client.waitFor((m) => m.type === "feed" && m.entries.some((e) => e.text === "Rematch!"));
+    const rematched = client.messages.filter((m) => m.type === "state").at(-1);
+    expect(rematched?.type === "state" && rematched.closesAt).toBe(
+      opened.type === "state" ? opened.closesAt : 0,
+    );
+  });
+
   test("announces actions as RaceBot lines and relays chat", async () => {
     const base = start();
     const { slug } = await createRoom(base);

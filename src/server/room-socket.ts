@@ -50,7 +50,7 @@ export function roomSocketHandlers(deps: {
       isHost: socket.data.isHost,
       chatEveryMs,
     });
-    send(socket, { type: "state", race: room.race, serverNow: clock() });
+    send(socket, { type: "state", race: room.race, serverNow: clock(), closesAt: room.closesAt });
     send(socket, { type: "feed", entries: [...room.feed.entries] });
 
     // Someone opening the room is someone at the screen, so it counts as input too.

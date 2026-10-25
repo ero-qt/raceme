@@ -50,6 +50,7 @@ function renderRoom(entrantId: string, isHost = false, state: RaceState = race, 
       send={(action) => sent.push(action)}
       catalog={catalog}
       closed={closed}
+      closesAt={10 * 60_000 + 5_000}
     />
   ));
   return { ...view, sent };
@@ -335,6 +336,18 @@ describe("RoomView layout", () => {
     fireEvent.keyDown(document.body, { key: "Enter" });
 
     expect(document.activeElement).toBe(view.getByLabelText("Message"));
+  });
+
+  test("shows when the room closes, and a click hides it until the room opens again", () => {
+    localStorage.clear();
+    const view = renderRoom("a");
+
+    fireEvent.click(view.getByRole("button", { name: "room closes in 00:10:05" }));
+    expect(view.getByRole("button", { name: "show room timer" })).toBeTruthy();
+    cleanup();
+
+    expect(renderRoom("a").getByRole("button", { name: "room closes in 00:10:05" })).toBeTruthy();
+    localStorage.clear();
   });
 
   test("entrants come after the chat box", () => {

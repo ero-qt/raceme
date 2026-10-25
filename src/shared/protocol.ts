@@ -42,7 +42,8 @@ export type RoomRefusal =
 
 export type ServerMessage =
   | { type: "welcome"; entrantId: string; isHost: boolean; chatEveryMs: number }
-  | { type: "state"; race: RaceState; serverNow: number }
+  /** Gives the room's state, with `closesAt` as the server time the room will close. */
+  | { type: "state"; race: RaceState; serverNow: number; closesAt: number }
   | { type: "feed"; entries: FeedEntry[] }
   | { type: "refused"; refusal: RoomRefusal }
   | { type: "idleWarning"; closesAt: number; quietFor: string }

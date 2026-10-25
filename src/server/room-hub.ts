@@ -37,7 +37,12 @@ export class RoomHub<Data> {
   }
 
   publishState(room: Room): void {
-    this.#send(room, { type: "state", race: room.race, serverNow: this.clock() });
+    this.#send(room, {
+      type: "state",
+      race: room.race,
+      serverNow: this.clock(),
+      closesAt: room.closesAt,
+    });
   }
 
   publishLines(room: Room, lines: NewFeedEntry[]): void {

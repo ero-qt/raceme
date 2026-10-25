@@ -228,6 +228,24 @@ export const muteButton = style({
   selectors: { "&[data-muted=true]": { color: tokens.color.statusForfeit } },
 });
 
+const hiddenTimer = { "&[data-hidden=true]": { visibility: "hidden" } } as const;
+
+export const roomTimerDot = style({
+  paddingInline: tokens.space.xs,
+  fontSize: "0.6em",
+  selectors: hiddenTimer,
+});
+
+export const roomTimerTime = style({ selectors: hiddenTimer });
+
+export const roomTimer = style({
+  inlineSize: "auto",
+  paddingInline: tokens.space.s,
+  gap: tokens.space.xs,
+  fontWeight: 400,
+  fontVariantNumeric: "tabular-nums",
+});
+
 export const rowIcon = style({
   inlineSize: "1.25em",
   blockSize: "1.25em",

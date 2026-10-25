@@ -15,6 +15,8 @@ export interface RoomConnection {
   idleClosesAt: Accessor<number | null>;
   /** Gives how long the server makes each entrant wait between chat lines. */
   chatEveryMs: Accessor<number>;
+  /** Gives the server time the room closes, from the latest state. */
+  closesAt: Accessor<number | null>;
   /** Turns true once the server closes the socket with the room-gone code. */
   gone: Accessor<boolean>;
   /** Gives the server time the room closed at, once it's gone. */
@@ -63,6 +65,7 @@ export function connectRoom(slug: string): RoomConnection {
   const [notice, setNotice] = createSignal<string | null>(null);
   const [feed, setFeed] = createSignal<FeedEntry[]>([]);
   const [chatEveryMs, setChatEveryMs] = createSignal(0);
+  const [closesAt, setClosesAt] = createSignal<number | null>(null);
   const [gone, setGone] = createSignal(false);
   const [closedAt, setClosedAt] = createSignal<number | null>(null);
   const [idleClosesAt, setIdleClosesAt] = createSignal<number | null>(null);
@@ -144,6 +147,7 @@ export function connectRoom(slug: string): RoomConnection {
       case "state":
         setClockOffset(message.serverNow - Date.now());
         setRace(message.race);
+        setClosesAt(message.closesAt);
         break;
       case "feed": {
         // A reconnect resends the whole log, so only lines newer than the last one shown count.
@@ -180,6 +184,7 @@ export function connectRoom(slug: string): RoomConnection {
     notice,
     feed,
     chatEveryMs,
+    closesAt,
     gone,
     closedAt,
     idleClosesAt,

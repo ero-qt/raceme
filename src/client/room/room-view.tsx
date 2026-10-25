@@ -18,6 +18,7 @@ import { RaceClock } from "./race-clock.tsx";
 import { ResultsExport } from "./results-export.tsx";
 import * as styles from "./room.css.ts";
 import { ChatForm, JoinForm } from "./room-forms.tsx";
+import { HeaderStatus, RoomTimer } from "./room-timer.tsx";
 
 // Shows the actions that take you out of the race in your own row.
 const rowActionTypes = new Set<ActionType>(["forfeit", "leave"]);
@@ -38,6 +39,8 @@ export interface RoomViewProps {
   catalog?: GoalCatalog | undefined;
   /** Keeps `send` off this long after each chat line, matching the server's slow mode. */
   chatEveryMs?: number;
+  /** Gives the server time the room closes, for the room timer. */
+  closesAt?: number;
   /** Shows the room as it was when the server closed it, with nothing left to do in it. */
   closed?: boolean;
 }
@@ -182,6 +185,11 @@ export function RoomView(props: RoomViewProps): JSX.Element {
         onSubmit={(goal) => props.send({ type: "setGoal", goal })}
         catalog={props.catalog}
       />
+      <Show when={!props.closed && props.closesAt !== undefined}>
+        <HeaderStatus>
+          <RoomTimer closesAt={props.closesAt ?? 0} now={props.now} />
+        </HeaderStatus>
+      </Show>
       <div class={styles.clockLine}>
         <RaceClock elapsed={elapsed()} digits={precision.digits()} onPick={precision.pick} />
         <Show when={props.me.isHost && !over() && !props.closed}>

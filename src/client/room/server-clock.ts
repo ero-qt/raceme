@@ -3,9 +3,9 @@ import type { RoomConnection } from "./connection.ts";
 
 /**
  * Returns the server's time, read fresh on every access. It redraws every frame while the race
- * clock runs, because a timer would leave that clock stale by up to a second. While the room is
- * warned as idle it redraws every second, since animation frames stop in background tabs and the
- * countdown also shows in the tab title.
+ * clock runs, because a timer would leave that clock stale by up to a second. It also redraws every
+ * second for the room timer and the idle countdown, which shows in the tab title too, since
+ * animation frames stop in background tabs.
  */
 export function useServerClock(
   room: Pick<RoomConnection, "race" | "idleClosesAt" | "clockOffset">,
@@ -26,13 +26,7 @@ export function useServerClock(
     }
   });
 
-  let interval: ReturnType<typeof setInterval> | undefined;
-  createEffect(() => {
-    clearInterval(interval);
-    if (room.idleClosesAt() !== null) {
-      interval = setInterval(tick, 1_000);
-    }
-  });
+  const interval = setInterval(tick, 1_000);
 
   onCleanup(() => {
     cancelAnimationFrame(request);

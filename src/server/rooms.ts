@@ -24,6 +24,8 @@ export class Room {
   #lastActivityAt: number;
   #connected = 0;
   readonly openedAt: number;
+  /** Ends the room at this server time, however active it is. */
+  readonly expiresAt: number;
   warnedOfClosing = false;
   #lastInputAt: number;
   warnedOfIdle = false;
@@ -35,12 +37,19 @@ export class Room {
     hostToken: string,
     settings: NewRaceSettings,
     now: number,
+    lifetimeMs: number,
   ) {
     this.#hostToken = hostToken;
     this.race = createRace(settings);
     this.#lastActivityAt = now;
     this.openedAt = now;
+    this.expiresAt = now + lifetimeMs;
     this.#lastInputAt = now;
+  }
+
+  /** Gives the server time the room closes, which comes sooner than `expiresAt` after `.end`. */
+  get closesAt(): number {
+    return Math.min(this.expiresAt, this.clearAt ?? this.expiresAt);
   }
 
   get lastInputAt(): number {
@@ -198,7 +207,7 @@ export class RoomRegistry {
     }
 
     const hostToken = randomSecret();
-    const room = new Room(slug, hostToken, settings, now);
+    const room = new Room(slug, hostToken, settings, now, this.#roomLifetimeMs);
     this.#rooms.set(slug, room);
     return { ok: true, room, hostToken };
   }
@@ -225,7 +234,7 @@ export class RoomRegistry {
   closingSoon(now: number): string[] {
     const closing: string[] = [];
     for (const [slug, room] of this.#rooms) {
-      if (!room.warnedOfClosing && now >= room.openedAt + this.#roomLifetimeMs - closingWarningMs) {
+      if (!room.warnedOfClosing && now >= room.expiresAt - closingWarningMs) {
         room.warnedOfClosing = true;
         closing.push(slug);
       }
@@ -259,7 +268,7 @@ export class RoomRegistry {
     if (room.clearAt !== null && now >= room.clearAt) {
       return "ended";
     }
-    if (now >= room.openedAt + this.#roomLifetimeMs) {
+    if (now >= room.expiresAt) {
       return "expired";
     }
     if (!isRacing(room) && now - room.lastInputAt >= this.#idleInputMs + this.#idleWarningMs) {

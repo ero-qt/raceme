@@ -16,7 +16,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v7
+      - name: Check out
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -24,34 +25,36 @@ jobs:
         run: |
           git merge-base --is-ancestor "$GITHUB_SHA" origin/main
           grep -q "^## \[$GITHUB_REF_NAME\] - " changelog.md
-      - uses: oven-sh/setup-bun@v2
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
         with:
           bun-version-file: .bun-version
-      - uses: actions/cache@v6
+      - name: Cache Bun packages
+        uses: actions/cache@v6
         with:
           path: ~/.bun/install/cache
           key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
-      - run: bun install --frozen-lockfile
+      - name: Install packages
+        run: bun install --frozen-lockfile
         env:
           PUPPETEER_SKIP_DOWNLOAD: "true"
-      - run: bunx playwright install --with-deps chromium
-      - run: bun run check
-      - run: bun run test
-      - run: bun run test:e2e
-      - run: bun run release
+      - name: Install Chromium
+        run: bunx playwright install --with-deps chromium
+      - name: Lint and type check
+        run: bun run check
+      - name: Unit tests
+        run: bun run test
+      - name: Browser tests
+        run: bun run test:e2e
+      - name: Build the tarball
+        run: bun run release
         env:
           RACEME_BASE_PATH: apps/raceme
-      - name: Take the release notes from the changelog
-        run: |
-          awk -v heading="## [$GITHUB_REF_NAME] - " \
-            'index($0, heading) == 1 { found = 1; next } found && /^(## )?\[/ { exit } found' \
-            changelog.md > notes.md
-      - uses: actions/upload-artifact@v7
+      - name: Upload the tarball
+        uses: actions/upload-artifact@v7
         with:
           name: release
-          path: |
-            raceme.tar.gz
-            notes.md
+          path: raceme.tar.gz
 
   # Only this job can sign and publish. It runs none of the project's own code.
   publish:
@@ -63,10 +66,12 @@ jobs:
       id-token: write
       attestations: write
     steps:
-      - uses: actions/download-artifact@v8
+      - name: Download the tarball
+        uses: actions/download-artifact@v8
         with:
           name: release
-      - id: attest
+      - name: Attest the tarball
+        id: attest
         uses: actions/attest-build-provenance@v4
         with:
           subject-path: raceme.tar.gz
@@ -81,5 +86,5 @@ jobs:
               --repo "$GITHUB_REPOSITORY" --clobber
           else
             gh release create "$GITHUB_REF_NAME" raceme.tar.gz raceme.tar.gz.sigstore.json \
-              --repo "$GITHUB_REPOSITORY" --verify-tag --title "v$GITHUB_REF_NAME" --notes-file notes.md
+              --repo "$GITHUB_REPOSITORY" --verify-tag --title "v$GITHUB_REF_NAME" --generate-notes
           fi

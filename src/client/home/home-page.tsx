@@ -1,4 +1,4 @@
-import { LoaderCircle } from "lucide-solid";
+import { LoaderCircle, TriangleAlert } from "lucide-solid";
 import { type JSX, Show, createResource, createSignal } from "solid-js";
 import { solveChallenge } from "../../shared/proof-of-work.ts";
 import { Button } from "../primitives/button.tsx";
@@ -161,7 +161,14 @@ export function HomePage(props: {
       <p class={styles.notice} role="status">
         {notice()}
       </p>
-      <Show when={restartAt()}>{(at) => <p>{restartText(at(), Date.now())}</p>}</Show>
+      <Show when={restartAt()}>
+        {(at) => (
+          <p class={`${styles.notice} ${homeStyles.warning}`}>
+            <TriangleAlert class={styles.closedIcon} aria-hidden="true" />
+            {restartText(at(), Date.now())}
+          </p>
+        )}
+      </Show>
       <CornerNotes />
     </main>
   );

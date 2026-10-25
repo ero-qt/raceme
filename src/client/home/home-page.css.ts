@@ -1,5 +1,6 @@
 import { keyframes, style } from "@vanilla-extract/css";
 import { outlined } from "../styles/controls.css.ts";
+import { tokens } from "../styles/tokens.css.ts";
 
 export const field = style([
   outlined,
@@ -26,4 +27,10 @@ export const spinner = style({
   inlineSize: "1em",
   blockSize: "1em",
   animation: `${spin} 800ms linear infinite`,
+});
+
+export const warning = style({
+  display: "flex",
+  alignItems: "flex-start",
+  gap: tokens.space.s,
 });

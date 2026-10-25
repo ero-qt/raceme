@@ -513,8 +513,12 @@ describe("HomePage restart notice", () => {
     const view = render(() => <HomePage />);
 
     const text = new Date(restartAt).toISOString().slice(11, 16);
-    expect((await view.findByText(/^Server restart queued for/)).textContent).toBe(
+    const notice = (await view.findByText(/^Server restart queued for/)).closest("p");
+    expect(notice?.textContent).toBe(
       `Server restart queued for ${text} UTC (in 3 h 20 min). Rooms close then.`,
     );
+    // Uses the red of the other notices and the warning sign of the closed room.
+    expect(notice?.className).toContain(view.getByRole("status").className);
+    expect(notice?.querySelector("svg[aria-hidden='true']")).not.toBeNull();
   });
 });

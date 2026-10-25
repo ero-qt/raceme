@@ -105,4 +105,9 @@ describe("loadConfig", () => {
     expect(loadConfig({}).idleWarningMs).toBe(10 * 60_000);
     expect(loadConfig({ RACEME_IDLE_WARNING_MINUTES: "15" }).idleWarningMs).toBe(15 * 60_000);
   });
+
+  test("reads how long each entrant waits between chat lines", () => {
+    expect(loadConfig({}).chatEveryMs).toBe(3_000);
+    expect(loadConfig({ RACEME_CHAT_SECONDS: "5" }).chatEveryMs).toBe(5_000);
+  });
 });

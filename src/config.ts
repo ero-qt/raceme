@@ -25,6 +25,7 @@ export function loadConfig(env: Env): ServerConfig {
     // About 65,000 hashes, roughly a second in a phone's browser.
     surgeBits: 16,
     countdownMs: 10_000,
+    chatEveryMs: count("RACEME_CHAT_SECONDS", 3) * 1000,
     maxSocketsPerIp: count("RACEME_MAX_SOCKETS_PER_IP", 10),
     maxSockets: count("RACEME_MAX_SOCKETS", 8192),
     sweepIntervalMs: 60_000,

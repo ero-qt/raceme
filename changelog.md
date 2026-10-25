@@ -15,3 +15,4 @@ it follows [keep a changelog](https://keepachangelog.com) principles and raceme 
 - a short proof of work in the browser for new rooms while lots of rooms open at once, plus a limit on new rooms per network
 - a closed room keeps its results and downloads on screen with the reason it closed, also after a reload in the same tab
 - rooms where nobody has used the mouse, touch or keyboard for 2 hours close after a 10 minute warning, even with tabs still open, except while a race is running
+- a slow mode for chat, where each entrant can send 1 line of up to 512 characters every 3 seconds

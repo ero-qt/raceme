@@ -40,6 +40,8 @@ export interface ServerConfig {
   /** Sets how hard that proof is, as leading zero bits of a SHA-256. */
   surgeBits: number;
   countdownMs: number;
+  /** Lets each entrant send 1 chat line this often. */
+  chatEveryMs: number;
   maxSocketsPerIp: number;
   maxSockets: number;
   /** Checks for idle and cleared rooms this often. */
@@ -110,7 +112,13 @@ export function startServer(config: ServerConfig, clock = steadyClock): RunningS
       const response = await route(request, server);
       return response && withSecurityHeaders(response);
     },
-    websocket: roomSocketHandlers({ rooms, hub, limits, clock }),
+    websocket: roomSocketHandlers({
+      rooms,
+      hub,
+      limits,
+      clock,
+      chatEveryMs: config.chatEveryMs,
+    }),
   });
 
   const sweeper = setInterval(() => {

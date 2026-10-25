@@ -23,16 +23,19 @@ type EntrantActionType =
   | "forfeit"
   | "unforfeit";
 
+export const maxChatLength = 512;
+
 export type RoomRefusal =
   | RaceRefusal
   | "notHost"
   | "roomGone"
   | "badMessage"
   | "badChat"
+  | "slowMode"
   | "rateLimited";
 
 export type ServerMessage =
-  | { type: "welcome"; entrantId: string; isHost: boolean }
+  | { type: "welcome"; entrantId: string; isHost: boolean; chatEveryMs: number }
   | { type: "state"; race: RaceState; serverNow: number }
   | { type: "feed"; entries: FeedEntry[] }
   | { type: "refused"; refusal: RoomRefusal }

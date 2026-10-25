@@ -33,6 +33,8 @@ export interface RoomViewProps {
   send: (action: ClientAction) => void;
   /** Swaps the speedrun.com lookups of the host's goal picker, for tests. */
   catalog?: GoalCatalog | undefined;
+  /** Keeps `send` off this long after each chat line, matching the server's slow mode. */
+  chatEveryMs?: number;
   /** Shows the room as it was when the server closed it, with nothing left to do in it. */
   closed?: boolean;
 }
@@ -192,6 +194,7 @@ export function RoomView(props: RoomViewProps): JSX.Element {
                 messageBox = input;
               }}
               onSay={(text) => props.send({ type: "say", text })}
+              waitMs={props.chatEveryMs ?? 0}
             >
               <Index each={mainActions()}>{actionButton}</Index>
             </ChatForm>

@@ -1,5 +1,5 @@
 import type { ServerWebSocket, WebSocketHandler } from "bun";
-import { type ServerMessage, parseClientAction } from "../shared/protocol.ts";
+import { type ServerMessage, maxChatLength, parseClientAction } from "../shared/protocol.ts";
 import type { ClientLimits } from "./client-limits.ts";
 import type { TokenBucket } from "./rate-limit.ts";
 import { type RoomActionResult, type Session, chatLine, handleAction } from "./room-actions.ts";
@@ -28,8 +28,9 @@ export function roomSocketHandlers(deps: {
   hub: RoomHub<SocketData>;
   limits: ClientLimits;
   clock: () => number;
+  chatEveryMs: number;
 }): WebSocketHandler<SocketData> {
-  const { rooms, hub, limits, clock } = deps;
+  const { rooms, hub, limits, clock, chatEveryMs } = deps;
 
   function open(socket: Socket): void {
     limits.socketOpened(socket.data.ip);
@@ -43,7 +44,12 @@ export function roomSocketHandlers(deps: {
     room.connect(clock());
     room.attachSession(socket.data.sessionSecret);
 
-    send(socket, { type: "welcome", entrantId: socket.data.entrantId, isHost: socket.data.isHost });
+    send(socket, {
+      type: "welcome",
+      entrantId: socket.data.entrantId,
+      isHost: socket.data.isHost,
+      chatEveryMs,
+    });
     send(socket, { type: "state", race: room.race, serverNow: clock() });
     send(socket, { type: "feed", entries: [...room.feed.entries] });
 
@@ -90,7 +96,7 @@ export function roomSocketHandlers(deps: {
     }
 
     if (action.type === "say") {
-      const line = chatLine(room, socket.data, action.text, now);
+      const line = chatLine(room, socket.data, action.text, now, chatEveryMs);
       if (typeof line === "string") {
         send(socket, { type: "refused", refusal: line });
       } else {
@@ -123,7 +129,8 @@ export function roomSocketHandlers(deps: {
   }
 
   return {
-    maxPayloadLength: 2048,
+    // Fits a full chat line even when JSON escapes every character as the 6 bytes of `\uXXXX`.
+    maxPayloadLength: maxChatLength * 8,
     perMessageDeflate: true,
     // Drops clients that stop answering pings because dead sockets would keep using a slot.
     idleTimeout: 60,

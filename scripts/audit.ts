@@ -34,6 +34,7 @@ const server = startServer({
   surgeRoomsPerMinute: 1000,
   surgeBits: 8,
   countdownMs: 10_000,
+  chatEveryMs: 3_000,
   maxSocketsPerIp: 50,
   maxSockets: 100,
   sweepIntervalMs: 60_000,

@@ -71,6 +71,7 @@ export function RoomPage(props: { slug: string; openRoom?: (slug: string) => voi
                   feed={room.feed()}
                   send={room.send}
                   closed={room.gone()}
+                  chatEveryMs={room.chatEveryMs()}
                 />
                 <IdleWarning
                   closesAt={room.gone() ? null : room.idleClosesAt()}

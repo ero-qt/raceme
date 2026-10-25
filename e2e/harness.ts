@@ -53,6 +53,7 @@ export async function startHarness(overrides: Partial<ServerConfig> = {}): Promi
     surgeRoomsPerMinute: 1000,
     surgeBits: 8,
     countdownMs: 1_000,
+    chatEveryMs: 3_000,
     maxSocketsPerIp: 50,
     maxSockets: 200,
     sweepIntervalMs: 60_000,

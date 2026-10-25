@@ -1,6 +1,6 @@
 import { cleanText } from "../shared/clean-text.ts";
 import type { NewFeedEntry } from "../shared/feed-entry.ts";
-import type { ClientAction, RoomRefusal } from "../shared/protocol.ts";
+import { type ClientAction, type RoomRefusal, maxChatLength } from "../shared/protocol.ts";
 import { type RaceAction, type RaceState, apply } from "../shared/race/race.ts";
 import { announce } from "../shared/race/racebot.ts";
 import type { Room } from "./rooms.ts";
@@ -14,7 +14,6 @@ export type RoomActionResult =
   | { ok: true; state: RaceState; lines: string[] }
   | { ok: false; refusal: RoomRefusal };
 
-const maxChatLength = 300;
 const hostActions = new Set<ClientAction["type"]>([
   "setGoal",
   "end",
@@ -77,6 +76,7 @@ export function chatLine(
   session: Session,
   rawText: string,
   now: number,
+  chatEveryMs: number,
 ): NewFeedEntry | RoomRefusal {
   const entrant = room.race.entrants.find((e) => e.id === session.entrantId);
   if (!entrant) {
@@ -86,6 +86,9 @@ export function chatLine(
   const text = cleanText(rawText);
   if (text.length === 0 || text.length > maxChatLength) {
     return "badChat";
+  }
+  if (!room.takeChatTurn(entrant.id, now, chatEveryMs)) {
+    return "slowMode";
   }
 
   return { kind: "chat", name: entrant.name, text, at: now };

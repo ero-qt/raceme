@@ -1,4 +1,5 @@
-import { type JSX, type ParentProps, createSignal } from "solid-js";
+import { type JSX, type ParentProps, Show, createSignal, onCleanup } from "solid-js";
+import { maxChatLength } from "../../shared/protocol.ts";
 import { Button } from "../primitives/button.tsx";
 import { TextField } from "../primitives/text-field.tsx";
 import { actionLabel } from "./action-labels.ts";
@@ -32,17 +33,32 @@ export function ChatForm(
   props: ParentProps<{
     onSay: (text: string) => void;
     inputRef?: (input: HTMLInputElement) => void;
+    /** Keeps `send` off this long after each line, matching the server's slow mode. */
+    waitMs?: number;
   }>,
 ): JSX.Element {
   const [text, setText] = createSignal("");
+  const [waiting, setWaiting] = createSignal(false);
+  let waitTimer: ReturnType<typeof setTimeout> | undefined;
+  onCleanup(() => clearTimeout(waitTimer));
+
+  const startWait = () => {
+    const waitMs = props.waitMs ?? 0;
+    if (waitMs > 0) {
+      setWaiting(true);
+      waitTimer = setTimeout(() => setWaiting(false), waitMs);
+    }
+  };
+
   return (
     <form
       class={styles.chatRow}
       onSubmit={(event) => {
         event.preventDefault();
-        if (text().trim()) {
+        if (text().trim() && !waiting()) {
           props.onSay(text());
           setText("");
+          startWait();
         }
       }}
     >
@@ -51,13 +67,31 @@ export function ChatForm(
         hideLabel
         placeholder="chat"
         ref={(input: HTMLInputElement) => props.inputRef?.(input)}
-        maxLength={300}
+        maxLength={maxChatLength}
         autocomplete="off"
         value={text()}
         onInput={(e) => setText(e.currentTarget.value)}
       />
-      <Button type="submit" variant="ghost">
-        send
+      <Button
+        type="submit"
+        variant="ghost"
+        class={styles.sendButton}
+        disabled={waiting()}
+        aria-label="send"
+      >
+        <span class={styles.sendLabel} data-waiting={waiting()}>
+          send
+        </span>
+        <Show when={waiting()}>
+          <svg
+            class={styles.waitRing}
+            style={{ "animation-duration": `${props.waitMs}ms` }}
+            viewBox="0 0 20 20"
+            aria-hidden="true"
+          >
+            <circle cx="10" cy="10" r="8" pathLength="1" />
+          </svg>
+        </Show>
       </Button>
       {props.children}
     </form>

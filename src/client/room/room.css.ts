@@ -1,4 +1,4 @@
-import { globalStyle, style } from "@vanilla-extract/css";
+import { globalStyle, keyframes, style } from "@vanilla-extract/css";
 import { tokens } from "../styles/tokens.css.ts";
 
 export const page = style({
@@ -105,6 +105,30 @@ export const chatRow = style({
   display: "flex",
   alignItems: "flex-end",
   gap: tokens.space.s,
+});
+
+export const sendButton = style({ position: "relative" });
+
+export const sendLabel = style({
+  selectors: { "&[data-waiting=true]": { visibility: "hidden" } },
+});
+
+const drain = keyframes({ from: { strokeDashoffset: 0 }, to: { strokeDashoffset: 1 } });
+
+export const waitRing = style({
+  position: "absolute",
+  inset: 0,
+  margin: "auto",
+  inlineSize: "1.25em",
+  blockSize: "1.25em",
+  transform: "rotate(-90deg)",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 2.5,
+  strokeDasharray: 1,
+  animationName: drain,
+  animationTimingFunction: "linear",
+  animationFillMode: "forwards",
 });
 
 // Lets the message box shrink so `send` and the main buttons stay on its line on a phone.

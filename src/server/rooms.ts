@@ -27,6 +27,8 @@ export class Room {
   warnedOfClosing = false;
   #lastInputAt: number;
   warnedOfIdle = false;
+  /** Maps each entrant id to the server time of their last chat line. */
+  readonly #lastChatAt = new Map<string, number>();
 
   constructor(
     readonly slug: string,
@@ -51,6 +53,17 @@ export class Room {
     const wasWarned = this.warnedOfIdle;
     this.warnedOfIdle = false;
     return wasWarned;
+  }
+
+  /** Counts a chat line against the entrant's slow mode. Returns false while they must wait. */
+  takeChatTurn(entrantId: string, now: number, everyMs: number): boolean {
+    const last = this.#lastChatAt.get(entrantId);
+    if (last !== undefined && now - last < everyMs) {
+      return false;
+    }
+
+    this.#lastChatAt.set(entrantId, now);
+    return true;
   }
 
   get lastActivityAt(): number {

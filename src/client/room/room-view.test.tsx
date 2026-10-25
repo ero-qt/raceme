@@ -343,8 +343,8 @@ describe("RoomView actions", () => {
     ]);
     const view = renderRoom("a", false, state);
 
-    expect(view.getByRole("button", { name: ".unready" }).className).toBe(
-      view.getByRole("button", { name: "send" }).className,
+    expect(view.getByRole("button", { name: ".unready" }).classList[0]).toBe(
+      view.getByRole("button", { name: "send" }).classList[0],
     );
   });
 
@@ -532,12 +532,12 @@ describe("RoomView button colors", () => {
       throw new Error("race setup failed");
     }
     const view = renderRoom("a", false, afterBoth.state);
-    const send = view.getByRole("button", { name: "send" }).className;
+    const send = view.getByRole("button", { name: "send" }).classList[0];
 
-    expect(view.getByRole("button", { name: ".undone" }).className).toBe(send);
-    expect(view.getByRole("button", { name: ".rematch" }).className).not.toBe(send);
-    expect(view.getByRole("button", { name: ".rematch" }).className).not.toBe(
-      view.getByRole("button", { name: ".undone" }).className,
+    expect(view.getByRole("button", { name: ".undone" }).classList[0]).toBe(send);
+    expect(view.getByRole("button", { name: ".rematch" }).classList[0]).not.toBe(send);
+    expect(view.getByRole("button", { name: ".rematch" }).classList[0]).not.toBe(
+      view.getByRole("button", { name: ".undone" }).classList[0],
     );
   });
 });

@@ -15,6 +15,8 @@ export interface RoomConnection {
   idleClosesAt: Accessor<number | null>;
   /** Gives how long the room has gone without input, like `2 hours`, while it's warned as idle. */
   idleQuietFor: Accessor<string>;
+  /** Gives how long the server makes each entrant wait between chat lines. */
+  chatEveryMs: Accessor<number>;
   /** Turns true once the server closes the socket with the room-gone code. */
   gone: Accessor<boolean>;
   /** Gives the server time the room closed at, once it's gone. */
@@ -62,6 +64,7 @@ export function connectRoom(slug: string): RoomConnection {
   const [clockOffset, setClockOffset] = createSignal(0);
   const [notice, setNotice] = createSignal<string | null>(null);
   const [feed, setFeed] = createSignal<FeedEntry[]>([]);
+  const [chatEveryMs, setChatEveryMs] = createSignal(0);
   const [gone, setGone] = createSignal(false);
   const [closedAt, setClosedAt] = createSignal<number | null>(null);
   const [idleClosesAt, setIdleClosesAt] = createSignal<number | null>(null);
@@ -139,6 +142,7 @@ export function connectRoom(slug: string): RoomConnection {
     switch (message.type) {
       case "welcome":
         setMe({ entrantId: message.entrantId, isHost: message.isHost });
+        setChatEveryMs(message.chatEveryMs);
         break;
       case "state":
         setClockOffset(message.serverNow - Date.now());
@@ -179,6 +183,7 @@ export function connectRoom(slug: string): RoomConnection {
     clockOffset,
     notice,
     feed,
+    chatEveryMs,
     gone,
     closedAt,
     idleClosesAt,

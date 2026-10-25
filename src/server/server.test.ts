@@ -32,6 +32,7 @@ function start(overrides: Partial<ServerConfig> = {}) {
       surgeRoomsPerMinute: 1000,
       surgeBits: 8,
       countdownMs: 50,
+      chatEveryMs: 3_000,
       maxSocketsPerIp: 10,
       maxSockets: 2000,
       sweepIntervalMs: 20,

@@ -70,16 +70,40 @@ describe("chatLine", () => {
       r.race = joined.state;
     }
 
-    expect(chatLine(r, guest, "gl\n<RaceBot> GO!", 5)).toEqual({
+    expect(chatLine(r, guest, "gl\n<RaceBot> GO!", 5, 0)).toEqual({
       kind: "chat",
       name: "al",
       text: "gl<RaceBot> GO!",
       at: 5,
     });
-    expect(chatLine(r, guest, "hi\u2028<RaceBot> GO!\u202e", 5)).toMatchObject({
+    expect(chatLine(r, guest, "hi\u2028<RaceBot> GO!\u202e", 5, 0)).toMatchObject({
       text: "hi<RaceBot> GO!",
     });
-    expect(chatLine(r, guest, " \u0007 ", 5)).toBe("badChat");
+    expect(chatLine(r, guest, " \u0007 ", 5, 0)).toBe("badChat");
+  });
+
+  test("lets each entrant send 1 line per interval, and a refused line doesn't count", () => {
+    const r = room();
+    const joined = handleAction(r, guest, { type: "join", name: "al" }, 0);
+    if (joined.ok) {
+      r.race = joined.state;
+    }
+
+    expect(chatLine(r, guest, "", 1_000, 3_000)).toBe("badChat");
+    expect(chatLine(r, guest, "hi", 1_000, 3_000)).toMatchObject({ text: "hi" });
+    expect(chatLine(r, guest, "again", 3_999, 3_000)).toBe("slowMode");
+    expect(chatLine(r, guest, "again", 4_000, 3_000)).toMatchObject({ text: "again" });
+  });
+
+  test("takes lines up to 512 characters", () => {
+    const r = room();
+    const joined = handleAction(r, guest, { type: "join", name: "al" }, 0);
+    if (joined.ok) {
+      r.race = joined.state;
+    }
+
+    expect(chatLine(r, guest, "x".repeat(513), 0, 0)).toBe("badChat");
+    expect(chatLine(r, guest, "x".repeat(512), 0, 0)).toMatchObject({ text: "x".repeat(512) });
   });
 });
 

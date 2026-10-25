@@ -46,6 +46,7 @@ the race server reads these environment variables. behind a reverse proxy like c
 | `RACEME_IDLE_INPUT_MINUTES`     | `120`                          | minutes a room lives without input from anyone, even with tabs open, before the warning                    |
 | `RACEME_IDLE_WARNING_MINUTES`   | `10`                           | minutes between the idle warning and the room closing                                                      |
 | `RACEME_ROOM_HOURS`             | `48`                           | hours a room lives at most, however active it is                                                           |
+| `RACEME_CHAT_SECONDS`           | `3`                            | seconds each entrant waits between chat lines                                                              |
 | `RACEME_SURGE_ROOMS_PER_MINUTE` | `30`                           | rooms per minute, across all visitors, before new rooms need a proof of work                               |
 | `RACEME_MAX_SOCKETS_PER_IP`     | `10`                           | open sockets per IPv4 address or IPv6 /64                                                                  |
 | `RACEME_MAX_SOCKETS`            | `8192`                         | open sockets in total                                                                                      |

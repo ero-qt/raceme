@@ -34,6 +34,8 @@ export const headCell = style({
 export const cell = style({
   padding: tokens.space.s,
   borderBlockStart: `1px solid ${tokens.color.border}`,
+  // A cell's height works as a minimum, so rows without a button match rows with one.
+  blockSize: `calc(${tokens.target.min} + 2 * ${tokens.space.s})`,
 });
 
 export const timeCell = style([

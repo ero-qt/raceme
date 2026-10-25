@@ -14,8 +14,8 @@ import { resultsImage } from "./results-image.ts";
 import * as styles from "./room.css.ts";
 
 const copiedForMs = 2_000;
-// Highlights up to this many places in the image unless the viewer picks another number.
-const defaultTop = 10;
+// Lists up to this many places in the image unless the viewer picks another number.
+const defaultShown = 10;
 
 /**
  * Gives the small first line of the chat text, a link to raceme and the race's date and time in
@@ -42,11 +42,11 @@ function save(blob: Blob, fileName: string): void {
  * a name that opens a preview, room for a setting, then copy and download.
  */
 export function ResultsExport(props: { race: RaceState }): JSX.Element {
-  const placed = () => resultsImageRows(props.race).filter((row) => row.place !== "").length;
-  const [top, setTop] = createSignal(Math.min(defaultTop, placed()));
+  const total = () => resultsImageRows(props.race).length;
+  const [shown, setShown] = createSignal(Math.min(defaultShown, total()));
   const saveText = (make: (race: RaceState) => string, type: string, extension: "csv" | "json") =>
     save(new Blob([make(props.race)], { type }), exportFileName(props.race, extension));
-  const image = () => resultsImage(props.race, top());
+  const image = () => resultsImage(props.race, shown());
 
   return (
     <section class={styles.exportSection} aria-label="Results">
@@ -70,27 +70,27 @@ export function ResultsExport(props: { race: RaceState }): JSX.Element {
           <input
             class={numberField}
             type="number"
-            aria-label="places to highlight"
-            title="Places to highlight"
-            min={0}
-            max={placed()}
-            value={top()}
+            aria-label="places to show"
+            title="Places to show"
+            min={1}
+            max={total()}
+            value={shown()}
             // Redraws the preview on every arrow click or typed digit, not only when the field
             // loses focus.
             onInput={(event) => {
               const value = Number(event.currentTarget.value);
-              const allowed = Number.isInteger(value) && value >= 0 && value <= placed();
+              const allowed = Number.isInteger(value) && value >= 1 && value <= total();
               if (event.currentTarget.value !== "" && allowed) {
-                setTop(value);
+                setShown(value);
               }
             }}
             onChange={(event) => {
-              event.currentTarget.value = String(top());
+              event.currentTarget.value = String(shown());
             }}
           />
         }
       >
-        <ImagePreview image={image} top={top()} />
+        <ImagePreview image={image} shown={shown()} />
       </ExportRow>
     </section>
   );
@@ -173,10 +173,10 @@ function TextPreview(props: { name: string; text: string }): JSX.Element {
   );
 }
 
-function ImagePreview(props: { image: () => Promise<Blob>; top: number }): JSX.Element {
+function ImagePreview(props: { image: () => Promise<Blob>; shown: number }): JSX.Element {
   const [url] = createResource<string, number>(
-    () => props.top,
-    async (_top, { value: previous }) => {
+    () => props.shown,
+    async (_shown, { value: previous }) => {
       if (previous) {
         URL.revokeObjectURL(previous);
       }

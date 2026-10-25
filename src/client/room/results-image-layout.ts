@@ -9,6 +9,19 @@ export interface ResultsLayout {
   nameX: number;
 }
 
+// Draws the first 3 places big with medal colors, like a podium.
+const podiumSize = 3;
+
+/** Picks the first `shown` rows for the image and how many of them get the podium look. */
+export function pickImageRows(
+  all: ImageRow[],
+  shown: number,
+): { rows: ImageRow[]; podium: number } {
+  const rows = all.slice(0, shown);
+  const placed = rows.filter((row) => row.place !== "").length;
+  return { rows, podium: Math.min(podiumSize, placed) };
+}
+
 // Gives the space after the place number and the space before the time.
 const placeGap = 10;
 const timeGap = 24;

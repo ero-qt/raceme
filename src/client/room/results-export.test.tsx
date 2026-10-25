@@ -43,9 +43,11 @@ describe("ResultsExport", () => {
     expect([csv.selectionStart, csv.selectionEnd]).toEqual([0, csv.value.length]);
   });
 
-  test("highlights up to 10 places, never more than finished", () => {
+  test("lists up to 10 places in the image, never more than the race has", () => {
     const view = render(() => <ResultsExport race={race} />);
+    const field = view.getByLabelText("places to show") as HTMLInputElement;
 
-    expect((view.getByLabelText("places to highlight") as HTMLInputElement).value).toBe("1");
+    expect(field.value).toBe(String(Math.min(10, race.entrants.length)));
+    expect(field.min).toBe("1");
   });
 });

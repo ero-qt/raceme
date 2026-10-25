@@ -11,6 +11,10 @@ export interface RoomConnection {
   clockOffset: Accessor<number>;
   notice: Accessor<string | null>;
   feed: Accessor<FeedEntry[]>;
+  /** Gives when the room closes as idle, while the server warns about it. */
+  idleClosesAt: Accessor<number | null>;
+  /** Gives how long the room has gone without input, like `2 hours`, while it's warned as idle. */
+  idleQuietFor: Accessor<string>;
   /** Turns true once the server closes the socket with the room-gone code. */
   gone: Accessor<boolean>;
   /** Settles once the room has sent its first full picture. A room that is gone settles it too. */
@@ -30,6 +34,8 @@ export function connectRoom(slug: string): RoomConnection {
   const [notice, setNotice] = createSignal<string | null>(null);
   const [feed, setFeed] = createSignal<FeedEntry[]>([]);
   const [gone, setGone] = createSignal(false);
+  const [idleClosesAt, setIdleClosesAt] = createSignal<number | null>(null);
+  const [idleQuietFor, setIdleQuietFor] = createSignal("");
   const { promise: ready, resolve: markReady } = Promise.withResolvers<void>();
 
   let socket: WebSocket | null = null;
@@ -90,6 +96,13 @@ export function connectRoom(slug: string): RoomConnection {
       case "refused":
         setNotice(refusalText[message.refusal]);
         break;
+      case "idleWarning":
+        setIdleClosesAt(message.closesAt);
+        setIdleQuietFor(message.quietFor);
+        break;
+      case "idleCleared":
+        setIdleClosesAt(null);
+        break;
     }
   }
 
@@ -107,6 +120,8 @@ export function connectRoom(slug: string): RoomConnection {
     notice,
     feed,
     gone,
+    idleClosesAt,
+    idleQuietFor,
     ready,
     send: (action) => {
       if (socket?.readyState !== WebSocket.OPEN) {

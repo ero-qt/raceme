@@ -25,6 +25,7 @@ function start(overrides: Partial<ServerConfig> = {}) {
       speedrunApi: null,
       maxRooms: 10,
       idleMs: 60_000,
+      idleInputMs: 2 * 60 * 60_000,
       countdownMs: 50,
       maxSocketsPerIp: 10,
       maxSockets: 2000,
@@ -447,7 +448,7 @@ describe("server", () => {
     expect(warning).toBeTruthy();
   });
 
-  test("an idle room warns after 2 hours and closes 15 minutes later unless someone acts", async () => {
+  test("an idle room warns after 2 hours and closes 5 minutes later unless someone acts", async () => {
     const base = start({ idleMs: 100 * 60 * 60_000 });
     const { slug } = await createRoom(base);
     const client = new Client(
@@ -463,8 +464,28 @@ describe("server", () => {
     client.send({ type: "active" });
     await client.waitFor((m) => m.type === "idleCleared");
 
-    clockOffsetMs += 2 * 60 * 60_000 + 15 * 60_000;
+    clockOffsetMs += 2 * 60 * 60_000 + 5 * 60_000;
     expect(await client.closed).toBe(4404);
+  });
+
+  test("someone opening an idle room counts as activity and clears the warning", async () => {
+    const base = start({ idleMs: 100 * 60 * 60_000 });
+    const { slug } = await createRoom(base);
+    const first = new Client(
+      socketUrl(base, slug),
+      "raceme_session=one-secret-one-secret-one-secret-o",
+    );
+    await first.opened;
+    clockOffsetMs += 2 * 60 * 60_000;
+    await first.waitFor((m) => m.type === "idleWarning");
+
+    const late = new Client(
+      socketUrl(base, slug),
+      "raceme_session=two-secret-two-secret-two-secret-t",
+    );
+    await late.opened;
+
+    expect(await first.waitFor((m) => m.type === "idleCleared")).toBeTruthy();
   });
 
   test("a link to a room that is gone closes with code 4404", async () => {

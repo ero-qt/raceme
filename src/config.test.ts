@@ -77,4 +77,9 @@ describe("loadConfig", () => {
       "https://www.speedrun.com/api",
     );
   });
+
+  test("reads how long a room may go without input", () => {
+    expect(loadConfig({}).idleInputMs).toBe(2 * 60 * 60_000);
+    expect(loadConfig({ RACEME_IDLE_INPUT_MINUTES: "2" }).idleInputMs).toBe(2 * 60_000);
+  });
 });

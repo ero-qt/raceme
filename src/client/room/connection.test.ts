@@ -131,4 +131,22 @@ describe("connectRoom", () => {
       dispose();
     });
   });
+
+  test("keeps an idle warning until someone in the room acts", () => {
+    useStuckSocket();
+
+    createRoot((dispose) => {
+      const room = connectRoom("abcdefghij");
+      const socket = StuckSocket.opened[0];
+      socket?.onmessage?.({
+        data: JSON.stringify({ type: "idleWarning", closesAt: 900_000, quietFor: "2 hours" }),
+      });
+      expect(room.idleClosesAt()).toBe(900_000);
+
+      socket?.onmessage?.({ data: JSON.stringify({ type: "idleCleared" }) });
+      expect(room.idleClosesAt()).toBeNull();
+
+      dispose();
+    });
+  });
 });

@@ -18,6 +18,7 @@ export function loadConfig(env: Env): ServerConfig {
     speedrunApi: speedrunApi(env.RACEME_SPEEDRUN_API),
     maxRooms: count("RACEME_MAX_ROOMS", 500),
     idleMs: count("RACEME_IDLE_MINUTES", 360) * 60_000,
+    idleInputMs: count("RACEME_IDLE_INPUT_MINUTES", 120) * 60_000,
     countdownMs: 10_000,
     maxSocketsPerIp: count("RACEME_MAX_SOCKETS_PER_IP", 10),
     maxSockets: count("RACEME_MAX_SOCKETS", 2000),

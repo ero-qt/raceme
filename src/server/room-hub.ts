@@ -6,8 +6,6 @@ import { applyAndAnnounce, nextTickDelay } from "./room-actions.ts";
 import type { Room } from "./rooms.ts";
 
 // Tells the client the room is gone for good, so it stops reconnecting.
-const idleWarningLine =
-  "Nobody has done anything here for 2 hours, so this room closes in 15 minutes unless someone does.";
 
 export const roomGoneCode = 4404;
 
@@ -78,9 +76,10 @@ export class RoomHub<Data> {
   }
 
   /** Tells a room it ends at `closesAt` unless someone acts before then. */
-  warnIdle(room: Room, closesAt: number): void {
-    this.#send(room, { type: "idleWarning", closesAt });
-    this.publishLines(room, botLines([idleWarningLine], this.clock()));
+  warnIdle(room: Room, closesAt: number, quietFor: string): void {
+    this.#send(room, { type: "idleWarning", closesAt, quietFor });
+    const line = `Nobody has done anything here for ${quietFor}, so this room closes in 5 minutes unless someone does.`;
+    this.publishLines(room, botLines([line], this.clock()));
   }
 
   /** Stops a dropped room's countdown and closes its sockets with the room-gone code. */

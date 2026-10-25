@@ -138,14 +138,14 @@ describe("RoomRegistry idle rooms", () => {
     expect(rooms.idleWarnings(hours(2) + 1)).toEqual([]);
   });
 
-  test("drops a room 15 minutes after the warning when nobody acts", () => {
+  test("drops a room 5 minutes after the warning when nobody acts", () => {
     const rooms = registry({ idleMs: hours(100) });
     const room = created(rooms.create(settings, 0)).room;
     withEntrant(room, "a");
     room.connect(0);
 
-    expect(rooms.sweep(hours(2) + 15 * 60_000 - 1)).toEqual([]);
-    expect(rooms.sweep(hours(2) + 15 * 60_000)).toEqual([room.slug]);
+    expect(rooms.sweep(hours(2) + 5 * 60_000 - 1)).toEqual([]);
+    expect(rooms.sweep(hours(2) + 5 * 60_000)).toEqual([room.slug]);
   });
 
   test("input clears the warning and starts the 2 hours over", () => {

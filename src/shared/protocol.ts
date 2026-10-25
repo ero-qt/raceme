@@ -36,7 +36,7 @@ export type ServerMessage =
   | { type: "state"; race: RaceState; serverNow: number }
   | { type: "feed"; entries: FeedEntry[] }
   | { type: "refused"; refusal: RoomRefusal }
-  | { type: "idleWarning"; closesAt: number }
+  | { type: "idleWarning"; closesAt: number; quietFor: string }
   | { type: "idleCleared" };
 
 const maxMessageLength = 1024;

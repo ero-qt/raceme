@@ -12,9 +12,7 @@ const unusedRoomMs = 10 * 60_000;
 // Ends rooms kept open forever by a tab left running, however active they look.
 export const roomLifetimeMs = 72 * 60 * 60_000;
 const closingWarningMs = 60 * 60_000;
-// An open tab nobody touches would keep a room alive, so rooms without input end on their own.
-export const idleInputMs = 2 * 60 * 60_000;
-export const idleGraceMs = 15 * 60_000;
+export const idleGraceMs = 5 * 60_000;
 
 export class Room {
   readonly #hostToken: string;
@@ -135,6 +133,11 @@ export interface RoomRegistryOptions {
   maxRooms: number;
   /** Drops a room after this many ms with nobody connected and no action in it. */
   idleMs: number;
+  /**
+   * Warns a room after this many ms without input and drops it 5 minutes later, because an open
+   * tab nobody touches would keep it alive. Defaults to 2 hours.
+   */
+  idleInputMs?: number;
 }
 
 export type CreateRoomResult =
@@ -146,6 +149,10 @@ export class RoomRegistry {
   readonly #rooms = new Map<string, Room>();
 
   constructor(readonly options: RoomRegistryOptions) {}
+
+  get #idleInputMs(): number {
+    return this.options.idleInputMs ?? 2 * 60 * 60_000;
+  }
 
   get size(): number {
     return this.#rooms.size;
@@ -176,7 +183,7 @@ export class RoomRegistry {
   idleWarnings(now: number): string[] {
     const idle: string[] = [];
     for (const [slug, room] of this.#rooms) {
-      if (!room.warnedOfIdle && now - room.lastInputAt >= idleInputMs) {
+      if (!room.warnedOfIdle && now - room.lastInputAt >= this.#idleInputMs) {
         room.warnedOfIdle = true;
         idle.push(slug);
       }
@@ -207,7 +214,7 @@ export class RoomRegistry {
       const unused = empty && room.race.entrants.length === 0 && quietFor > unusedRoomMs;
       const cleared = room.clearAt !== null && now >= room.clearAt;
       const expired = now >= room.openedAt + roomLifetimeMs;
-      const abandoned = now - room.lastInputAt >= idleInputMs + idleGraceMs;
+      const abandoned = now - room.lastInputAt >= this.#idleInputMs + idleGraceMs;
 
       if (idle || unused || cleared || expired || abandoned) {
         this.#rooms.delete(slug);

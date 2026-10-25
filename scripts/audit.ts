@@ -28,6 +28,7 @@ const server = startServer({
   speedrunApi: null,
   maxRooms: 10,
   idleMs: 60_000,
+  idleInputMs: 2 * 60 * 60_000,
   countdownMs: 10_000,
   maxSocketsPerIp: 50,
   maxSockets: 100,

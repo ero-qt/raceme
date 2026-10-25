@@ -1,8 +1,12 @@
-import { type JSX, Show, createEffect, createResource, createSignal, onCleanup } from "solid-js";
+import { type JSX, Show, createEffect, createResource, onCleanup } from "solid-js";
 import { HomePage } from "../home/home-page.tsx";
 import { refusalText } from "./action-labels.ts";
-import { type RoomConnection, connectRoom } from "./connection.ts";
+import { connectRoom } from "./connection.ts";
+import { IdleWarning, timeLeft, useActivityPings } from "./idle-warning.tsx";
 import { RoomView } from "./room-view.tsx";
+import { useServerClock } from "./server-clock.ts";
+
+const blinkForMs = 60_000;
 
 /** Connects to the room in the URL and shows it once the room has sent its first full picture. */
 export function RoomPage(props: { slug: string; openRoom?: (slug: string) => void }): JSX.Element {
@@ -12,8 +16,20 @@ export function RoomPage(props: { slug: string; openRoom?: (slug: string) => voi
   // Reading this resource suspends the page, so a transition keeps the old page up until then.
   const [ready] = createResource(() => room.ready.then(() => true));
 
+  useActivityPings({
+    send: () => room.send({ type: "active" }),
+    warned: () => room.idleClosesAt() !== null,
+  });
   createEffect(() => {
-    document.title = `${room.race()?.goal ?? "Race"} · raceme`;
+    const closesAt = room.idleClosesAt();
+    // In the last minute a warning sign comes and goes every second, so the tab blinks in a row
+    // of tabs.
+    const now = serverNow();
+    const lastMinute = closesAt !== null && closesAt - now <= blinkForMs;
+    const blink = lastMinute && Math.floor(now / 1000) % 2 === 0 ? "⚠ " : "";
+    const warning =
+      closesAt === null ? "" : `${blink}(${timeLeft(closesAt, now)}) still racing? · `;
+    document.title = `${warning}${room.race()?.goal ?? "Race"} · raceme`;
   });
   onCleanup(() => {
     document.title = "raceme";
@@ -35,45 +51,26 @@ export function RoomPage(props: { slug: string; openRoom?: (slug: string) => voi
         {(me) => (
           <Show when={room.race()} fallback={connecting}>
             {(race) => (
-              <RoomView
-                race={race()}
-                me={me()}
-                now={serverNow()}
-                inviteUrl={location.href}
-                notice={room.notice()}
-                feed={room.feed()}
-                send={room.send}
-              />
+              <>
+                <RoomView
+                  race={race()}
+                  me={me()}
+                  now={serverNow()}
+                  inviteUrl={location.href}
+                  notice={room.notice()}
+                  feed={room.feed()}
+                  send={room.send}
+                />
+                <IdleWarning
+                  closesAt={room.idleClosesAt()}
+                  now={serverNow()}
+                  quietFor={room.idleQuietFor()}
+                />
+              </>
             )}
           </Show>
         )}
       </Show>
     </Show>
   );
-}
-
-/**
- * Returns the server's time, read fresh on every access and redrawn every frame while a clock
- * runs. A timer would leave the clock stale by up to a second, because browsers throttle timers.
- */
-function useServerClock(room: RoomConnection): () => number {
-  const [frame, setFrame] = createSignal(0);
-  let request = 0;
-  const draw = () => {
-    setFrame((count) => count + 1);
-    request = requestAnimationFrame(draw);
-  };
-  createEffect(() => {
-    const phase = room.race()?.phase;
-    cancelAnimationFrame(request);
-    if (phase === "countdown" || phase === "running") {
-      request = requestAnimationFrame(draw);
-    }
-  });
-  onCleanup(() => cancelAnimationFrame(request));
-
-  return () => {
-    frame();
-    return Date.now() + room.clockOffset();
-  };
 }

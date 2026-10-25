@@ -28,6 +28,8 @@ export interface ServerConfig {
   speedrunApi: string | null;
   maxRooms: number;
   idleMs: number;
+  /** Ends a room after this long without input from anyone, even with tabs open. */
+  idleInputMs: number;
   countdownMs: number;
   maxSocketsPerIp: number;
   maxSockets: number;
@@ -42,6 +44,16 @@ export interface RunningServer {
 }
 
 const maxRequestBytes = 4096;
+
+/** Writes a duration of whole minutes in words for RaceBot, like `2 hours` or `90 minutes`. */
+function spokenDuration(ms: number): string {
+  const minutes = Math.round(ms / 60_000);
+  if (minutes % 60 === 0) {
+    const hours = minutes / 60;
+    return `${hours} ${hours === 1 ? "hour" : "hours"}`;
+  }
+  return `${minutes} ${minutes === 1 ? "minute" : "minutes"}`;
+}
 const closingWarning =
   "This room closes in 1 hour. Rooms last at most 72 hours, so start a new one to keep racing.";
 
@@ -54,7 +66,11 @@ export function steadyClock(): number {
 
 /** Starts raceme's HTTP and websocket server with every room kept in memory. */
 export function startServer(config: ServerConfig, clock = steadyClock): RunningServer {
-  const rooms = new RoomRegistry({ maxRooms: config.maxRooms, idleMs: config.idleMs });
+  const rooms = new RoomRegistry({
+    maxRooms: config.maxRooms,
+    idleMs: config.idleMs,
+    idleInputMs: config.idleInputMs,
+  });
   const limits = new ClientLimits(config, clock);
   const hub = new RoomHub<SocketData>((slug, message) => server.publish(slug, message), clock);
   const catalog =
@@ -77,7 +93,7 @@ export function startServer(config: ServerConfig, clock = steadyClock): RunningS
     for (const slug of rooms.idleWarnings(now)) {
       const room = rooms.get(slug);
       if (room) {
-        hub.warnIdle(room, now + idleGraceMs);
+        hub.warnIdle(room, now + idleGraceMs, spokenDuration(config.idleInputMs));
       }
     }
     for (const slug of rooms.closingSoon(now)) {

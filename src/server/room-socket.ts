@@ -46,6 +46,11 @@ export function roomSocketHandlers(deps: {
     send(socket, { type: "welcome", entrantId: socket.data.entrantId, isHost: socket.data.isHost });
     send(socket, { type: "state", race: room.race, serverNow: clock() });
     send(socket, { type: "feed", entries: [...room.feed.entries] });
+
+    // Someone opening the room is someone at the screen, so it counts as input too.
+    if (room.noteInput(clock())) {
+      hub.publish(room.slug, JSON.stringify({ type: "idleCleared" } satisfies ServerMessage));
+    }
   }
 
   function close(socket: Socket): void {

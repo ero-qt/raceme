@@ -231,6 +231,15 @@ describe("RoomView layout", () => {
     expect((view.getByRole("button", { name: "send" }) as HTMLButtonElement).disabled).toBe(true);
   });
 
+  test("a race ended before it started keeps showing who was ready, not Racing", () => {
+    const ended = raceAfter([...joinedBoth, { type: "ready", entrantId: "a" }, { type: "end" }]);
+    const view = renderRoom("a", true, ended);
+
+    expect(rowOf(view, "alice").textContent).toContain("Ready");
+    expect(rowOf(view, "bob").textContent).toContain("Not ready");
+    expect(view.queryByText("Racing")).toBeNull();
+  });
+
   test("entrants come after the chat box", () => {
     const view = renderRoom("a");
     const message = view.getByLabelText("Message");

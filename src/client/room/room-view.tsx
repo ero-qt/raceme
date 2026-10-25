@@ -238,7 +238,7 @@ export function RoomView(props: RoomViewProps): JSX.Element {
         >
           <EntrantTable
             rows={standings(props.race)}
-            started={!beforeStart()}
+            started={!beforeStart() && props.race.startsAt !== null}
             digits={precision.digits()}
             rowActions={rowActions}
             muteButton={props.me.isHost && !props.closed ? muteButton : undefined}

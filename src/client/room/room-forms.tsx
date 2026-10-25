@@ -39,6 +39,8 @@ export function JoinForm(props: {
 export function ChatForm(
   props: ParentProps<{
     onSay: (text: string) => void;
+    /** Runs a command line like `.done` right away, even during the slow mode wait. */
+    onCommand?: (text: string) => boolean;
     inputRef?: (input: HTMLInputElement) => void;
     /** Keeps `send` off this long after each line, matching the server's slow mode. */
     waitMs?: number;
@@ -59,16 +61,25 @@ export function ChatForm(
     }
   };
 
+  const sendLine = () => {
+    if (!text().trim() || props.muted) {
+      return;
+    }
+    if (props.onCommand?.(text())) {
+      setText("");
+    } else if (!waiting()) {
+      props.onSay(text());
+      setText("");
+      startWait();
+    }
+  };
+
   return (
     <form
       class={styles.chatRow}
       onSubmit={(event) => {
         event.preventDefault();
-        if (text().trim() && !waiting() && !props.muted) {
-          props.onSay(text());
-          setText("");
-          startWait();
-        }
+        sendLine();
       }}
     >
       <TextField
@@ -81,6 +92,13 @@ export function ChatForm(
         autocomplete="off"
         value={text()}
         onInput={(e) => setText(e.currentTarget.value)}
+        // Browsers skip Enter's submit while `send` is off, so a command still goes out in the wait.
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            sendLine();
+          }
+        }}
       />
       <Button
         type="submit"

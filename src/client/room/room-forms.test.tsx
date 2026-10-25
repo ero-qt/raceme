@@ -23,4 +23,25 @@ describe("ChatForm", () => {
     await new Promise((resolve) => setTimeout(resolve, 80));
     expect(send.disabled).toBe(false);
   });
+
+  test("runs a command during the slow mode wait", () => {
+    const said: string[] = [];
+    const commands: string[] = [];
+    const view = render(() => (
+      <ChatForm
+        onSay={(text) => said.push(text)}
+        onCommand={(text) => text === ".done" && commands.push(text) > 0}
+        waitMs={10_000}
+      />
+    ));
+    const input = view.getByLabelText("Message") as HTMLInputElement;
+
+    fireEvent.input(input, { target: { value: "gl" } });
+    fireEvent.keyDown(input, { key: "Enter" });
+    fireEvent.input(input, { target: { value: ".done" } });
+    fireEvent.keyDown(input, { key: "Enter" });
+
+    expect(said).toEqual(["gl"]);
+    expect(commands).toEqual([".done"]);
+  });
 });

@@ -317,6 +317,26 @@ describe("RoomView layout", () => {
     );
   });
 
+  test("a command typed in the chat box runs it instead of posting it", () => {
+    const view = renderRoom("a");
+    const message = view.getByLabelText("Message");
+
+    fireEvent.input(message, { target: { value: ".ready" } });
+    fireEvent.submit(message.closest("form") as HTMLFormElement);
+    fireEvent.input(message, { target: { value: "gl" } });
+    fireEvent.submit(message.closest("form") as HTMLFormElement);
+
+    expect(view.sent).toEqual([{ type: "ready" }, { type: "say", text: "gl" }]);
+  });
+
+  test("Enter anywhere on the page jumps into the chat box", () => {
+    const view = renderRoom("a");
+
+    fireEvent.keyDown(document.body, { key: "Enter" });
+
+    expect(document.activeElement).toBe(view.getByLabelText("Message"));
+  });
+
   test("entrants come after the chat box", () => {
     const view = renderRoom("a");
     const message = view.getByLabelText("Message");

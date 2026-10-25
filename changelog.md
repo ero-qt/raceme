@@ -16,5 +16,6 @@ it follows [keep a changelog](https://keepachangelog.com) principles and raceme 
 - a closed room keeps its results and downloads on screen with the reason it closed, also after a reload in the same tab
 - rooms where nobody has used the mouse, touch or keyboard for 2 hours close after a 10 minute warning, even with tabs still open, except while a race is running
 - a slow mode for chat, where each entrant can send 1 line of up to 512 characters every 3 seconds
+- SRL commands like `.ready` and `.done` typed in the chat box, plus Enter anywhere on the page to jump into the chat box
 - a mute button for the host next to each entrant, which turns off that entrant's chat until the host unmutes them
 - a lock for the host that closes entry before the start, plus a limit on how many can enter

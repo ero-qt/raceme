@@ -1,5 +1,5 @@
 import { TriangleAlert, Volume2, VolumeOff } from "lucide-solid";
-import { type Accessor, Index, type JSX, Show, createEffect, on } from "solid-js";
+import { type Accessor, Index, type JSX, Show, createEffect, on, onCleanup } from "solid-js";
 import type { FeedEntry } from "../../shared/feed-entry.ts";
 import type { ClientAction } from "../../shared/protocol.ts";
 import { type RaceState, type Standing, standings } from "../../shared/race/race.ts";
@@ -7,6 +7,7 @@ import type { GoalCatalog } from "../home/goal-picker.tsx";
 import { Button } from "../primitives/button.tsx";
 import { actionLabel } from "./action-labels.ts";
 import { type ActionType, availableActions } from "./available-actions.ts";
+import { chatCommand } from "./chat-command.ts";
 import { EntrantTable } from "./entrant-table.tsx";
 import { EntrantsHeader } from "./entrants-header.tsx";
 import { FeedLog } from "./feed-log.tsx";
@@ -126,6 +127,18 @@ export function RoomView(props: RoomViewProps): JSX.Element {
 
   let messageBox: HTMLInputElement | undefined;
   let chat: HTMLElement | undefined;
+
+  // Enter on the page goes to the chat box, where commands like `.done` work, so a stray key
+  // press never runs an action by itself.
+  const jumpToChat = (event: KeyboardEvent) => {
+    const onPage = document.activeElement === null || document.activeElement === document.body;
+    if (event.key === "Enter" && onPage && messageBox && !messageBox.disabled) {
+      event.preventDefault();
+      messageBox.focus();
+    }
+  };
+  document.addEventListener("keydown", jumpToChat);
+  onCleanup(() => document.removeEventListener("keydown", jumpToChat));
   createEffect(
     on(entered, (isIn, wasIn) => {
       if (isIn && wasIn === false) {
@@ -211,6 +224,13 @@ export function RoomView(props: RoomViewProps): JSX.Element {
                 messageBox = input;
               }}
               onSay={(text) => props.send({ type: "say", text })}
+              onCommand={(text) => {
+                const command = chatCommand(text, props.race, props.me.entrantId);
+                if (command) {
+                  props.send(command);
+                }
+                return command !== null;
+              }}
               waitMs={props.chatEveryMs ?? 0}
               muted={props.race.muted.includes(props.me.entrantId)}
             >

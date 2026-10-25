@@ -2,7 +2,8 @@ const contentSecurityPolicy = [
   "default-src 'none'",
   "script-src 'self'",
   "style-src 'self'",
-  "img-src 'self' data:",
+  // Lets the page show the results image it draws itself, which never leaves the browser.
+  "img-src 'self' data: blob:",
   "font-src 'self'",
   "connect-src 'self'",
   "base-uri 'none'",

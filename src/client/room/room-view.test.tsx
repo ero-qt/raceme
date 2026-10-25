@@ -528,10 +528,12 @@ describe("RoomView actions", () => {
   });
 
   test("results can be downloaded once the race is over, not before", () => {
-    expect(renderRoom("x").queryByRole("link", { name: "download .csv" })).toBeNull();
+    expect(renderRoom("x").queryByRole("button", { name: "download csv" })).toBeNull();
 
     const state: RaceState = { ...race, phase: "finished", startsAt: 0, endedAt: 1 };
-    expect(renderRoom("x", false, state).getByRole("link", { name: "download .csv" })).toBeTruthy();
+    expect(
+      renderRoom("x", false, state).getByRole("button", { name: "download csv" }),
+    ).toBeTruthy();
   });
 
   // SRL called a finished race "Complete".
@@ -657,7 +659,7 @@ describe("RoomView after the room closed", () => {
     expect(view.queryByRole("button", { name: ".end" })).toBeNull();
     expect(view.queryByLabelText("Goal")).toBeNull();
     expect(view.getByRole("table", { name: "Entrants" })).toBeTruthy();
-    expect(view.getByRole("link", { name: /csv/ })).toBeTruthy();
+    expect(view.getByRole("button", { name: "download csv" })).toBeTruthy();
     expect(view.getByRole("status").textContent).toContain("gone once you close it");
   });
 });

@@ -264,6 +264,7 @@ export function RoomView(props: RoomViewProps): JSX.Element {
           muteButton={props.me.isHost && !props.closed ? muteButton : undefined}
         />
         <Show when={(over() || props.closed) && props.race.entrants.length > 0}>
+          <hr class={styles.rule} />
           <ResultsExport race={props.race} />
         </Show>
       </section>

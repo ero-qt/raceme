@@ -34,7 +34,7 @@ describe("privacy", () => {
 
     const [download] = await Promise.all([
       page.waitForEvent("download"),
-      page.getByRole("link", { name: "download .csv" }).click(),
+      page.getByRole("button", { name: "download csv" }).click(),
     ]);
     await download.path();
 

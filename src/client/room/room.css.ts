@@ -1,5 +1,12 @@
 import { globalStyle, keyframes, style } from "@vanilla-extract/css";
-import { controlBorder, divider, inlineEdit, warningPanel } from "../styles/controls.css.ts";
+import {
+  controlBorder,
+  divider,
+  inlineEdit,
+  outlined,
+  panel,
+  warningPanel,
+} from "../styles/controls.css.ts";
 import { tokens } from "../styles/tokens.css.ts";
 
 export const page = style({
@@ -76,7 +83,10 @@ export const closedReason = style({
   fontWeight: 700,
 });
 
-export const rule = style([divider, { margin: 0, borderInline: "none", borderBlockEnd: "none" }]);
+export const rule = style([
+  divider,
+  { marginBlock: tokens.space.s, marginInline: 0, borderInline: "none", borderBlockEnd: "none" },
+]);
 
 export const closedIcon = style({
   flex: "none",
@@ -245,6 +255,60 @@ export const roomTimer = style({
   fontWeight: 400,
   fontVariantNumeric: "tabular-nums",
 });
+
+export const exportSection = style({
+  display: "grid",
+  gridTemplateColumns: "minmax(0, 1fr) auto auto auto",
+  alignItems: "start",
+  gap: tokens.space.s,
+});
+
+export const exportSetting = style({ display: "flex", alignItems: "center" });
+
+export const exportImage = style([
+  panel,
+  { display: "block", maxInlineSize: "100%", marginBlockStart: tokens.space.xs },
+]);
+
+// Takes the columns of the parts a format doesn't offer, so every row fills the grid.
+export const exportDetails = style({
+  minInlineSize: 0,
+  selectors: {
+    '&[data-span="2"]': { gridColumn: "span 2" },
+    '&[data-span="3"]': { gridColumn: "span 3" },
+    '&[data-span="4"]': { gridColumn: "span 4" },
+  },
+});
+
+export const exportSummary = style([
+  outlined,
+  {
+    display: "flex",
+    alignItems: "center",
+    minBlockSize: tokens.target.min,
+    minInlineSize: "6ch",
+    paddingInline: tokens.space.m,
+    cursor: "pointer",
+    color: tokens.color.text0,
+    background: tokens.color.bg1,
+  },
+]);
+
+export const exportText = style([
+  panel,
+  {
+    display: "block",
+    inlineSize: "100%",
+    marginBlockStart: tokens.space.xs,
+    padding: tokens.space.s,
+    resize: "vertical",
+    font: "inherit",
+    fontFamily: tokens.font.mono,
+    fontSize: "0.8125rem",
+    color: tokens.color.text0,
+    background: tokens.color.bg1,
+  },
+]);
 
 export const rowIcon = style({
   inlineSize: "1.25em",

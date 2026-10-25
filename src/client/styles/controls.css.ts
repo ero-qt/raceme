@@ -1,4 +1,4 @@
-import { style } from "@vanilla-extract/css";
+import { globalStyle, style } from "@vanilla-extract/css";
 import { tokens } from "./tokens.css.ts";
 
 /** Gives every control the same border box, invisible until a style below colors it. */
@@ -50,3 +50,24 @@ export const warningPanel = style([
 
 /** Draws the thin line between table rows and page sections. */
 export const divider = style({ borderBlockStart: `1px solid ${tokens.color.border}` });
+
+/** Makes a number field look editable, with its up and down arrows always showing. */
+export const numberField = style([
+  outlined,
+  {
+    minBlockSize: tokens.target.min,
+    inlineSize: "calc(3ch + 3rem)",
+    paddingInline: tokens.space.s,
+    font: "inherit",
+    color: tokens.color.text0,
+    background: tokens.color.bg1,
+  },
+]);
+
+// Chromium and Safari only show a number field's arrows on hover by default.
+globalStyle(
+  `${numberField}::-webkit-inner-spin-button, ${numberField}::-webkit-outer-spin-button`,
+  {
+    opacity: 1,
+  },
+);

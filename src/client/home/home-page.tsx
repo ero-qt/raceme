@@ -3,6 +3,9 @@ import { type JSX, Show, createSignal } from "solid-js";
 import { Button } from "../primitives/button.tsx";
 import * as titleStyles from "../room/goal-title.css.ts";
 import * as styles from "../room/room.css.ts";
+import { type CatalogEntry, loadCategoriesFromServer, searchGamesOnServer } from "./game-search.ts";
+import { rememberGoal } from "./goal-history.ts";
+import { GoalPicker, useGamePicker } from "./goal-picker.tsx";
 import * as homeStyles from "./home-page.css.ts";
 import { useRoomCheck } from "./room-check.ts";
 import { parseRoomCode } from "./room-code.ts";
@@ -20,6 +23,9 @@ export function HomePage(props: {
   checkDelayMs?: number;
   /** Shows a message from the start, like why the visitor ended up here. */
   notice?: string;
+  searchGames?: (query: string) => Promise<CatalogEntry[] | null>;
+  loadCategories?: (gameId: string) => Promise<CatalogEntry[]>;
+  searchDelayMs?: number;
 }): JSX.Element {
   const [value, setValue] = createSignal("");
   const [notice, setNotice] = createSignal<string | null>(props.notice ?? null);
@@ -35,6 +41,13 @@ export function HomePage(props: {
     const slug = parseRoomCode(value());
     return slug !== null && slug === roomCheck.confirmed() ? slug : null;
   };
+  const picker = useGamePicker(value, {
+    noRoomHasCode: roomCheck.absent,
+    searchGames: props.searchGames ?? searchGamesOnServer,
+    loadCategories: props.loadCategories ?? loadCategoriesFromServer,
+    ...(props.searchDelayMs !== undefined ? { delayMs: props.searchDelayMs } : {}),
+  });
+
   const open = (slug: string) =>
     props.open ? props.open(slug) : location.assign(`${import.meta.env.BASE_URL}r/${slug}`);
 
@@ -63,7 +76,7 @@ export function HomePage(props: {
     const response = await fetch(`${import.meta.env.BASE_URL}api/rooms`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ goal: value() }),
+      body: JSON.stringify({ goal: picker.goal() }),
     }).catch(() => null);
 
     if (!response?.ok) {
@@ -72,6 +85,7 @@ export function HomePage(props: {
       return;
     }
 
+    rememberGoal(picker.goal());
     const { slug } = (await response.json()) as { slug: string };
     open(slug);
   }
@@ -86,18 +100,15 @@ export function HomePage(props: {
           void submit();
         }}
       >
-        <div class={titleStyles.goal}>
-          <input
-            class={`${titleStyles.input} ${homeStyles.field}`}
-            aria-label="Goal or room code"
-            placeholder="set a goal or paste a room code"
-            maxLength={200}
-            autocomplete="off"
-            spellcheck={false}
-            data-kind={code() ? "code" : "goal"}
-            onInput={(e) => setValue(e.currentTarget.value)}
-          />
-        </div>
+        <GoalPicker
+          picker={picker}
+          label="Goal or room code"
+          placeholder="set a goal or paste a room code"
+          inputClass={`${titleStyles.input} ${homeStyles.field}`}
+          kind={code() ? "code" : "goal"}
+          value={value()}
+          onInput={setValue}
+        />
         <Show
           when={code()}
           fallback={

@@ -8,6 +8,12 @@ import { botLines } from "./room-hub.ts";
 import type { SocketData } from "./room-socket.ts";
 import type { Room, RoomRegistry } from "./rooms.ts";
 import type { ServerConfig } from "./server.ts";
+import {
+  type CatalogEntry,
+  type CatalogResult,
+  type SpeedrunCatalog,
+  isGameId,
+} from "./speedrun.ts";
 import { serveStatic } from "./static.ts";
 import { randomSecret } from "./tokens.ts";
 
@@ -15,6 +21,7 @@ interface RouteDeps {
   config: ServerConfig;
   rooms: RoomRegistry;
   limits: ClientLimits;
+  catalog: SpeedrunCatalog | null;
   clock: () => number;
 }
 
@@ -24,6 +31,8 @@ const sessionCookie = "raceme_session";
 const sessionMaxAgeSeconds = 30 * 24 * 60 * 60;
 const roomSocketPath = /^\/api\/rooms\/([a-z2-7]{10})\/ws$/;
 const roomCheckPath = /^\/api\/rooms\/([a-z2-7]{10})$/;
+const categoriesPath = /^\/api\/games\/([^/]+)\/categories$/;
+const roomCodeToken = /(?<![a-z0-9])[a-z2-7]{10}(?![a-z0-9])/g;
 
 /** Builds the HTTP router: room creation, room checks, socket upgrades and the built page. */
 export function createRouter(deps: RouteDeps): Router {
@@ -43,6 +52,13 @@ export function createRouter(deps: RouteDeps): Router {
     const checkSlug = roomCheckPath.exec(path)?.[1];
     if (checkSlug) {
       return request.method === "GET" ? checkRoom(deps, checkSlug, ip) : status(405);
+    }
+    if (path === "/api/games") {
+      return request.method === "GET" ? searchGames(deps, url, ip) : status(405);
+    }
+    const gameId = categoriesPath.exec(path)?.[1];
+    if (gameId) {
+      return request.method === "GET" ? listCategories(deps, gameId, ip) : status(405);
     }
     const socketSlug = roomSocketPath.exec(path)?.[1];
     if (socketSlug) {
@@ -117,6 +133,55 @@ function checkRoom({ rooms, limits }: RouteDeps, slug: string, ip: string): Resp
 
   // Answers 200 either way so browsers don't log a missing room as a failed request.
   return json({ exists: rooms.get(slug) !== undefined });
+}
+
+/** Finds speedrun.com games for the start page's picker, through the server so browsers never contact it. */
+async function searchGames(deps: RouteDeps, url: URL, ip: string): Promise<Response> {
+  const { catalog, limits, rooms } = deps;
+  if (catalog === null) {
+    return status(404);
+  }
+  if (!limits.lookUpGame(ip)) {
+    return status(429);
+  }
+
+  const query = url.searchParams.get("q") ?? "";
+  const codes = roomCodesIn(query);
+  // A search with a code costs a room lookup as well, so it never finds live rooms cheaper than the room check.
+  if (codes.length > 0 && !limits.lookUpRoom(ip)) {
+    return status(429);
+  }
+  // A pasted invite link must never reach speedrun.com, whatever the browser sends.
+  if (codes.some((code) => rooms.get(code) !== undefined)) {
+    return json({ games: [] });
+  }
+
+  return catalogResponse(await catalog.searchGames(query), (games) => ({ games }));
+}
+
+/** Lists a speedrun.com game's categories for the picker's category select. */
+async function listCategories(deps: RouteDeps, gameId: string, ip: string): Promise<Response> {
+  const { catalog, limits } = deps;
+  if (catalog === null || !isGameId(gameId)) {
+    return status(404);
+  }
+  if (!limits.lookUpGame(ip)) {
+    return status(429);
+  }
+
+  return catalogResponse(await catalog.categories(gameId), (categories) => ({ categories }));
+}
+
+function catalogResponse(
+  result: CatalogResult,
+  body: (entries: CatalogEntry[]) => object,
+): Response {
+  return result === "unavailable" ? status(503) : json(body(result));
+}
+
+/** Finds every token shaped like a room code, on its own or at the end of an invite link. */
+function roomCodesIn(text: string): string[] {
+  return [...text.toLowerCase().matchAll(roomCodeToken)].map((match) => match[0]);
 }
 
 interface UpgradeRequest {

@@ -10,6 +10,17 @@ describe("parseRoomCode", () => {
     expect(parseRoomCode("https://ero-qt.eu/apps/raceme/r/duxanagxds")).toBe("duxanagxds");
   });
 
+  test("accepts a link copied with a trailing slash, a query or punctuation after it", () => {
+    for (const text of [
+      "https://ero-qt.eu/apps/raceme/r/duxanagxds/",
+      "https://ero-qt.eu/apps/raceme/r/duxanagxds?from=chat",
+      "ero-qt.eu/apps/raceme/r/duxanagxds#top",
+      "duxanagxds.",
+    ]) {
+      expect(parseRoomCode(text)).toBe("duxanagxds");
+    }
+  });
+
   test("rejects anything else", () => {
     expect(parseRoomCode("duxanagxd")).toBeNull();
     expect(parseRoomCode("duxanagxd1")).toBeNull();

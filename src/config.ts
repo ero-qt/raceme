@@ -15,6 +15,7 @@ export function loadConfig(env: Env): ServerConfig {
     origin: env.RACEME_ORIGIN ?? null,
     staticDir: env.RACEME_STATIC_DIR ?? null,
     trustProxy: env.RACEME_TRUST_PROXY === "1",
+    speedrunApi: speedrunApi(env.RACEME_SPEEDRUN_API),
     maxRooms: count("RACEME_MAX_ROOMS", 500),
     idleMs: count("RACEME_IDLE_MINUTES", 360) * 60_000,
     countdownMs: 10_000,
@@ -37,6 +38,16 @@ function positiveInteger(env: Env, name: string, fallback: number): number {
     throw new Error(`${name} must be a whole number above 0, got '${raw}'.`);
   }
   return value;
+}
+
+const defaultSpeedrunApi = "https://www.speedrun.com/api";
+
+function speedrunApi(raw: string | undefined): string | null {
+  if (raw === "off") {
+    return null;
+  }
+
+  return (raw || defaultSpeedrunApi).replace(/\/+$/, "");
 }
 
 const loopbackHosts = new Set(["127.0.0.1", "::1", "localhost"]);

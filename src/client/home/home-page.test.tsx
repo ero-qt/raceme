@@ -5,14 +5,41 @@ import { HomePage } from "./home-page.tsx";
 const realFetch = globalThis.fetch;
 afterEach(() => {
   globalThis.fetch = realFetch;
+  localStorage.clear();
   cleanup();
 });
 
+function acceptRooms() {
+  const fetchMock = mock(async () => Response.json({ slug: "duxanagxds" }, { status: 201 }));
+  globalThis.fetch = fetchMock as unknown as typeof fetch;
+  return () => {
+    const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    return JSON.parse(String(init.body)).goal as string;
+  };
+}
+
+const games = [
+  { id: "o1y9wo6q", name: "Super Mario 64" },
+  { id: "9d3rnedl", name: "Super Mario 64 DS" },
+];
+const categories = [
+  { id: "7dgrrxk4", name: "120 Star" },
+  { id: "n2y55mko", name: "16 Star" },
+];
+
 function renderHome(
   existing: string[] = ["duxanagxds"],
-  options: { checkDelayMs?: number; checkFails?: boolean } = {},
+  options: {
+    checkDelayMs?: number;
+    checkFails?: boolean;
+    games?: typeof games;
+    categories?: typeof categories;
+    /** Never answers searches for this text, like a lookup that hangs. */
+    slowQuery?: string;
+  } = {},
 ) {
   const opened: string[] = [];
+  const searched: string[] = [];
   const view = render(() => (
     <HomePage
       open={(slug) => opened.push(slug)}
@@ -23,12 +50,25 @@ function renderHome(
         return existing.includes(slug);
       }}
       checkDelayMs={options.checkDelayMs ?? 0}
+      searchGames={async (query) => {
+        searched.push(query);
+        if (query === options.slowQuery) {
+          return new Promise(() => {});
+        }
+        const known = options.games ?? games;
+        return known.filter((game) => game.name.toLowerCase().includes(query.toLowerCase()));
+      }}
+      loadCategories={async () => options.categories ?? categories}
+      searchDelayMs={0}
     />
   ));
   const field = view.getByLabelText("Goal or room code") as HTMLInputElement;
   const type = (value: string) => fireEvent.input(field, { target: { value } });
   const submit = () => fireEvent.submit(field.closest("form") as HTMLFormElement);
-  return { ...view, opened, field, type, submit };
+  // speedrun.com starts folded, so its header has to be opened before it searches.
+  const unfoldSpeedrun = () =>
+    fireEvent.click(view.getByRole("option", { name: /^speedrun\.com/ }));
+  return { ...view, opened, searched, field, type, submit, unfoldSpeedrun };
 }
 
 describe("HomePage", () => {
@@ -139,5 +179,207 @@ describe("HomePage", () => {
     expect((home.getByRole("button", { name: ".startrace" }) as HTMLButtonElement).disabled).toBe(
       false,
     );
+  });
+});
+
+describe("HomePage suggestions", () => {
+  test("typing a game name lists speedrun.com games", async () => {
+    const home = renderHome();
+    home.type("mario");
+
+    home.unfoldSpeedrun();
+
+    await waitFor(() => expect(home.getByRole("option", { name: "Super Mario 64" })).toBeTruthy());
+  });
+
+  test("a picked game offers its categories and the goal joins both", async () => {
+    const goalSent = acceptRooms();
+    const home = renderHome();
+    home.type("mario");
+    home.unfoldSpeedrun();
+    await waitFor(() => home.getByRole("option", { name: "Super Mario 64" }));
+
+    fireEvent.click(home.getByRole("option", { name: "Super Mario 64" }));
+    const category = (await waitFor(() =>
+      home.getByRole("combobox", { name: "Category" }),
+    )) as HTMLSelectElement;
+    fireEvent.change(category, { target: { value: "16 Star" } });
+    home.submit();
+
+    await waitFor(() => expect(home.opened).toEqual(["duxanagxds"]));
+    expect(home.field.value).toBe("Super Mario 64");
+    expect(goalSent()).toBe("Super Mario 64 - 16 Star");
+  });
+
+  test("editing the field after picking a game drops the category", async () => {
+    const home = renderHome();
+    home.type("mario");
+    home.unfoldSpeedrun();
+    await waitFor(() => home.getByRole("option", { name: "Super Mario 64" }));
+    fireEvent.click(home.getByRole("option", { name: "Super Mario 64" }));
+    await waitFor(() => home.getByRole("combobox", { name: "Category" }));
+
+    home.type("Super Mario 64 any%");
+
+    expect(home.queryByRole("combobox", { name: "Category" })).toBeNull();
+  });
+
+  test("an opened room's goal shows under your goals next time", async () => {
+    const goalSent = acceptRooms();
+    const first = renderHome();
+    first.type("sm64 70 star");
+    first.submit();
+    await waitFor(() => expect(first.opened).toEqual(["duxanagxds"]));
+    expect(goalSent()).toBe("sm64 70 star");
+    cleanup();
+
+    const home = renderHome();
+    home.type("sm64");
+
+    await waitFor(() => expect(home.getByRole("group", { name: "your goals" })).toBeTruthy());
+    expect(home.getByRole("option", { name: "sm64 70 star" })).toBeTruthy();
+  });
+
+  test("the × removes a past goal for good", async () => {
+    localStorage.setItem("raceme.goalHistory", JSON.stringify(["sm64 70 star"]));
+    const home = renderHome();
+    home.type("sm64");
+    await waitFor(() => home.getByRole("option", { name: "sm64 70 star" }));
+
+    fireEvent.click(home.getByTitle("Remove from your goals"));
+
+    expect(home.queryByRole("option", { name: "sm64 70 star" })).toBeNull();
+    expect(localStorage.getItem("raceme.goalHistory")).toBeNull();
+  });
+
+  test("speedrun.com starts folded and asks nothing until it's opened", async () => {
+    const home = renderHome();
+    home.type("mario");
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(home.searched).toEqual([]);
+
+    home.unfoldSpeedrun();
+
+    await waitFor(() => expect(home.searched).toEqual(["mario"]));
+  });
+
+  // A pasted room code must never reach speedrun.com, however the link was copied.
+  test("never searches speedrun.com for a room code", async () => {
+    const home = renderHome();
+    home.type("mario");
+    home.unfoldSpeedrun();
+    await waitFor(() => expect(home.searched).toEqual(["mario"]));
+
+    for (const text of [
+      "https://ero-qt.eu/apps/raceme/r/duxanagxds",
+      "https://ero-qt.eu/apps/raceme/r/duxanagxds/",
+      "https://ero-qt.eu/apps/raceme/r/duxanagxds?from=chat",
+      "duxanagxds.",
+    ]) {
+      home.type(text);
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+
+    expect(home.searched).toEqual(["mario"]);
+  });
+
+  // "bloodborne" has the shape of a room code, but no room has that code.
+  test("searches a code-shaped word once the check finds no such room", async () => {
+    const home = renderHome([]);
+    home.type("mario");
+    home.unfoldSpeedrun();
+
+    home.type("bloodborne");
+
+    await waitFor(() => expect(home.searched).toContain("bloodborne"));
+  });
+
+  test("drops the old games while new text is still being looked up", async () => {
+    const home = renderHome(["duxanagxds"], { slowQuery: "zelda" });
+    home.type("mario");
+    home.unfoldSpeedrun();
+    await waitFor(() => home.getByRole("option", { name: "Super Mario 64" }));
+
+    home.type("zelda");
+
+    expect(home.queryByRole("option", { name: "Super Mario 64" })).toBeNull();
+  });
+
+  test("keeps the games that still match while longer text is looked up, so the list doesn't blink", async () => {
+    const home = renderHome(["duxanagxds"], { slowQuery: "mario 64 ds" });
+    home.type("mario");
+    home.unfoldSpeedrun();
+    await waitFor(() => home.getByRole("option", { name: "Super Mario 64 DS" }));
+
+    home.type("mario 64 ds");
+
+    expect(home.getByRole("option", { name: "Super Mario 64 DS" })).toBeTruthy();
+    expect(home.queryByRole("option", { name: "Super Mario 64" })).toBeNull();
+  });
+
+  test("keeps the joined goal within the 200 characters a room allows", async () => {
+    const goalSent = acceptRooms();
+    const long = { id: "o1y9wo6q", name: "G".repeat(100) };
+    const home = renderHome(["duxanagxds"], {
+      games: [long],
+      categories: [{ id: "n2y55mko", name: "C".repeat(100) }],
+    });
+    home.type("ggg");
+    home.unfoldSpeedrun();
+    fireEvent.click(await waitFor(() => home.getByRole("option", { name: long.name })));
+    const category = (await waitFor(() =>
+      home.getByRole("combobox", { name: "Category" }),
+    )) as HTMLSelectElement;
+    fireEvent.change(category, { target: { value: "C".repeat(100) } });
+
+    home.submit();
+
+    await waitFor(() => expect(home.opened).toEqual(["duxanagxds"]));
+    expect(goalSent()).toHaveLength(200);
+  });
+
+  test("clicking the empty field lists recent goals", async () => {
+    localStorage.setItem("raceme.goalHistory", JSON.stringify(["sm64 70 star", "oot any%"]));
+    const home = renderHome();
+
+    fireEvent.click(home.field);
+
+    expect(home.getByRole("group", { name: "your goals" })).toBeTruthy();
+    expect(home.getByRole("option", { name: "oot any%" })).toBeTruthy();
+  });
+
+  test("your own text is always the last of your goals, to show any goal works", async () => {
+    const goalSent = acceptRooms();
+    const home = renderHome();
+    home.type("bingo blackout");
+
+    const typed = home.getByRole("option", { name: "use bingo blackout as the goal" });
+    fireEvent.click(typed);
+    home.submit();
+
+    await waitFor(() => expect(home.opened).toEqual(["duxanagxds"]));
+    expect(goalSent()).toBe("bingo blackout");
+  });
+
+  test("leaves out your own text when it's already one of your goals", () => {
+    localStorage.setItem("raceme.goalHistory", JSON.stringify(["sm64 70 star"]));
+    const home = renderHome();
+
+    home.type("sm64 70 star");
+
+    expect(home.queryByRole("option", { name: /^use / })).toBeNull();
+  });
+
+  test("asks for each search text once per page, so going back a letter costs nothing", async () => {
+    const home = renderHome();
+    home.type("m");
+    home.unfoldSpeedrun();
+
+    for (const text of ["mario", "mari", "mario"]) {
+      home.type(text);
+      await new Promise((resolve) => setTimeout(resolve, 5));
+    }
+
+    expect(home.searched).toEqual(["mario", "mari"]);
   });
 });

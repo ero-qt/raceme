@@ -25,6 +25,7 @@ const server = startServer({
   origin: null,
   staticDir: join(root, "dist", "client"),
   trustProxy: false,
+  speedrunApi: null,
   maxRooms: 10,
   idleMs: 60_000,
   countdownMs: 10_000,

@@ -16,6 +16,8 @@ async function askServer(slug: string): Promise<boolean> {
 export interface RoomCheck {
   /** Gives the room code from the text once the server confirmed the room is live. */
   confirmed: Accessor<string | null>;
+  /** Gives the code-shaped text once the server confirmed no room has that code. */
+  absent: Accessor<string | null>;
   /** Checks a code right away, giving `null` when the check itself failed. */
   checkNow: (slug: string) => Promise<boolean | null>;
 }
@@ -29,6 +31,7 @@ export function useRoomCheck(
   options: { roomExists?: (slug: string) => Promise<boolean>; delayMs?: number },
 ): RoomCheck {
   const [confirmed, setConfirmed] = createSignal<string | null>(null);
+  const [absent, setAbsent] = createSignal<string | null>(null);
   let timer: ReturnType<typeof setTimeout> | undefined;
   onCleanup(() => clearTimeout(timer));
 
@@ -38,6 +41,7 @@ export function useRoomCheck(
       const exists = await (options.roomExists ?? askServer)(slug);
       if (parseRoomCode(text()) === slug) {
         setConfirmed(exists ? slug : null);
+        setAbsent(exists ? null : slug);
       }
       return exists;
     } catch {
@@ -49,6 +53,7 @@ export function useRoomCheck(
     on(text, (value) => {
       clearTimeout(timer);
       const slug = parseRoomCode(value);
+      setAbsent(null);
       if (!slug) {
         setConfirmed(null);
         return;
@@ -58,5 +63,5 @@ export function useRoomCheck(
     }),
   );
 
-  return { confirmed, checkNow };
+  return { confirmed, absent, checkNow };
 }

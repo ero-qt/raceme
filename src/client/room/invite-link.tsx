@@ -2,6 +2,9 @@ import { ClipboardCheck, Link, TriangleAlert } from "lucide-solid";
 import { type JSX, Show, createSignal, onCleanup } from "solid-js";
 import * as styles from "./invite-link.css.ts";
 
+// Stands in for the link so the real one never sits in the page until someone asks for it. The
+// scheme is all x too, so the built page contains no outside host.
+const decoy = "xxxxx://xxxxxxxxx/xxxx/xxxxxx/x/xxxxxxxxxx";
 const copiedForMs = 2_000;
 const revealWarning = "You are about to reveal the invite link!";
 
@@ -61,28 +64,33 @@ export function InviteLink(props: { url: string }): JSX.Element {
       <p class={styles.visuallyHidden} role="status">
         <Show when={visibility() === "warned"}>{revealWarning}</Show>
       </p>
-      <button
-        type="button"
-        class={styles.reveal}
-        // Once the warning or the link shows, the visible text names the button.
-        aria-label={visibility() === "hidden" ? "Show invite link" : undefined}
-        onClick={advance}
-        onMouseLeave={hide}
-        onBlur={hide}
-      >
-        <Show
-          when={visibility() !== "hidden"}
-          fallback={<span class={styles.decoy} aria-hidden="true" />}
+      <div class={styles.revealArea}>
+        <button
+          type="button"
+          class={styles.reveal}
+          // Once the warning or the link shows, the visible text becomes the button's label.
+          aria-label={visibility() === "hidden" ? "Show invite link" : undefined}
+          onClick={advance}
+          onMouseLeave={hide}
+          onBlur={hide}
         >
-          <Show
-            when={visibility() === "warned"}
-            fallback={<span class={styles.text}>{props.url}</span>}
-          >
-            <TriangleAlert class={styles.icon} aria-hidden="true" />
-            <span class={styles.text}>{revealWarning}</span>
+          <Show when={visibility() !== "hidden"}>
+            <Show
+              when={visibility() === "warned"}
+              fallback={<span class={styles.text}>{props.url}</span>}
+            >
+              <TriangleAlert class={styles.icon} aria-hidden="true" />
+              <span class={styles.text}>{revealWarning}</span>
+            </Show>
           </Show>
+        </button>
+        {/* Sits beside the button instead of inside it, so its text isn't read as the button's label. */}
+        <Show when={visibility() === "hidden"}>
+          <span class={styles.decoy} aria-hidden="true">
+            {decoy}
+          </span>
         </Show>
-      </button>
+      </div>
     </div>
   );
 }

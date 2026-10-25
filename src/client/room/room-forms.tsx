@@ -16,6 +16,8 @@ export function JoinForm(props: { onSubmit: (name: string) => void }): JSX.Eleme
     >
       <TextField
         label="Your name"
+        hideLabel
+        placeholder="your name"
         maxLength={24}
         autocomplete="nickname"
         onInput={(e) => setName(e.currentTarget.value)}
@@ -46,6 +48,8 @@ export function ChatForm(
     >
       <TextField
         label="Message"
+        hideLabel
+        placeholder="chat"
         ref={(input: HTMLInputElement) => props.inputRef?.(input)}
         maxLength={300}
         autocomplete="off"

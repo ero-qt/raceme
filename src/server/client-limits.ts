@@ -9,12 +9,15 @@ const roomCreation: BucketShape = { capacity: 5, perSecond: 0.1 };
 // Room checks and room sockets share this one, since both reveal whether a code is live.
 const roomLookup: BucketShape = { capacity: 30, perSecond: 0.5 };
 const messages: BucketShape = { capacity: 30, perSecond: 10 };
+// Well under the server-wide budget for speedrun.com, so a few visitors can't use it all up.
+const gameLookup: BucketShape = { capacity: 20, perSecond: 0.2 };
 
 /** Keeps the per-IP rate limits and open-socket counts that protect the server from abuse. */
 export class ClientLimits {
   readonly #creations = new Map<string, TokenBucket>();
   readonly #lookups = new Map<string, TokenBucket>();
   readonly #messages = new Map<string, TokenBucket>();
+  readonly #gameLookups = new Map<string, TokenBucket>();
   readonly #socketsPerIp = new Map<string, number>();
   #openSockets = 0;
 
@@ -29,6 +32,10 @@ export class ClientLimits {
 
   lookUpRoom(ip: string): boolean {
     return this.#take(this.#lookups, ip, roomLookup);
+  }
+
+  lookUpGame(ip: string): boolean {
+    return this.#take(this.#gameLookups, ip, gameLookup);
   }
 
   sendMessage(ip: string): boolean {
@@ -57,7 +64,7 @@ export class ClientLimits {
 
   /** Forgets IPs whose buckets refilled, so the maps only keep recently active clients. */
   sweep(now: number): void {
-    for (const buckets of [this.#creations, this.#lookups, this.#messages]) {
+    for (const buckets of [this.#creations, this.#lookups, this.#messages, this.#gameLookups]) {
       for (const [ip, bucket] of buckets) {
         if (bucket.isFull(now)) {
           buckets.delete(ip);

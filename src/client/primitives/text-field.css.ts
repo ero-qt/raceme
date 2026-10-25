@@ -12,6 +12,17 @@ export const label = style({
   fontWeight: 700,
   color: tokens.color.text1,
   fontSize: "0.8125rem",
+  selectors: {
+    // Stays in the page for screen readers while a placeholder stands in for it on screen.
+    '&[data-hidden="true"]': {
+      position: "absolute",
+      inlineSize: "1px",
+      blockSize: "1px",
+      overflow: "hidden",
+      clipPath: "inset(50%)",
+      whiteSpace: "nowrap",
+    },
+  },
 });
 
 export const input = style({

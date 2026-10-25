@@ -22,6 +22,7 @@ function start(overrides: Partial<ServerConfig> = {}) {
       origin,
       staticDir: null,
       trustProxy: false,
+      speedrunApi: null,
       maxRooms: 10,
       idleMs: 60_000,
       countdownMs: 50,
@@ -334,6 +335,92 @@ describe("server", () => {
 
     expect(rewelcome).toEqual(welcome);
     expect(rewelcome.type === "welcome" && rewelcome.isHost).toBe(true);
+  });
+
+  describe("game picker", () => {
+    let upstream: ReturnType<typeof Bun.serve> | undefined;
+    let upstreamRequests = 0;
+    afterEach(() => {
+      upstream?.stop();
+      upstreamRequests = 0;
+    });
+
+    // Stands in for speedrun.com so the tests never leave this machine.
+    function fakeSpeedrun(): string {
+      upstream = Bun.serve({
+        port: 0,
+        hostname: "127.0.0.1",
+        fetch(request) {
+          upstreamRequests++;
+          const url = new URL(request.url);
+          if (url.pathname === "/api/v1/games") {
+            const game = { id: "o1y9wo6q", names: { international: "Super Mario 64" } };
+            return Response.json({ data: [game] });
+          }
+          if (url.pathname === "/api/v1/games/o1y9wo6q/categories") {
+            return Response.json({ data: [{ id: "n2y55mko", name: "16 Star", type: "per-game" }] });
+          }
+          return new Response(null, { status: 404 });
+        },
+      });
+      return `http://127.0.0.1:${upstream.port}/api`;
+    }
+
+    test("finds games and their categories through the server", async () => {
+      const base = start({ speedrunApi: fakeSpeedrun() });
+
+      const games = await (await fetch(`${base}/api/games?q=mario`)).json();
+      const categories = await (await fetch(`${base}/api/games/o1y9wo6q/categories`)).json();
+
+      expect(games).toEqual({ games: [{ id: "o1y9wo6q", name: "Super Mario 64" }] });
+      expect(categories).toEqual({ categories: [{ id: "n2y55mko", name: "16 Star" }] });
+    });
+
+    test("answers 503 when speedrun.com can't be reached", async () => {
+      const base = start({ speedrunApi: "http://127.0.0.1:9/api" });
+
+      expect((await fetch(`${base}/api/games?q=mario`)).status).toBe(503);
+    });
+
+    test("is gone when the picker is turned off", async () => {
+      const base = start();
+
+      expect((await fetch(`${base}/api/games?q=mario`)).status).toBe(404);
+    });
+
+    test("rate limits lookups per IP", async () => {
+      const base = start({ speedrunApi: fakeSpeedrun() });
+
+      const statuses: number[] = [];
+      for (let i = 0; i < 21; i++) {
+        statuses.push((await fetch(`${base}/api/games?q=mario`)).status);
+      }
+
+      expect(statuses.at(-1)).toBe(429);
+    });
+
+    // A pasted invite link must never reach speedrun.com, whatever the browser sends.
+    test("never forwards a search that contains a live room's code", async () => {
+      const base = start({ speedrunApi: fakeSpeedrun() });
+      const { slug } = await createRoom(base);
+
+      for (const q of [
+        slug,
+        `https://ero-qt.eu/apps/raceme/r/${slug}/`,
+        `join ${slug.toUpperCase()}.`,
+      ]) {
+        const response = await fetch(`${base}/api/games?${new URLSearchParams({ q })}`);
+        expect(await response.json()).toEqual({ games: [] });
+      }
+
+      expect(upstreamRequests).toBe(0);
+    });
+
+    test("answers 404 for a game id that can't be a speedrun.com id", async () => {
+      const base = start({ speedrunApi: fakeSpeedrun() });
+
+      expect((await fetch(`${base}/api/games/..%2Fusers/categories`)).status).toBe(404);
+    });
   });
 
   test("a link to a room that is gone closes with code 4404", async () => {

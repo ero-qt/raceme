@@ -10,4 +10,14 @@ describe("TextField", () => {
     ));
     expect((getByLabelText("Your name") as HTMLInputElement).getAttribute("type")).toBe("text");
   });
+
+  // A placeholder alone vanishes once typing starts, so the label stays for screen readers.
+  test("can hide its label and show a placeholder instead, keeping the name", () => {
+    const { getByLabelText, getByText } = render(() => (
+      <TextField label="Your name" hideLabel placeholder="your name" />
+    ));
+
+    expect((getByLabelText("Your name") as HTMLInputElement).placeholder).toBe("your name");
+    expect(getByText("Your name").dataset.hidden).toBe("true");
+  });
 });

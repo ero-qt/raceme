@@ -1,3 +1,4 @@
+import { TriangleAlert } from "lucide-solid";
 import { type Accessor, Index, type JSX, Show, createEffect, on } from "solid-js";
 import type { FeedEntry } from "../../shared/feed-entry.ts";
 import type { ClientAction } from "../../shared/protocol.ts";
@@ -32,6 +33,8 @@ export interface RoomViewProps {
   send: (action: ClientAction) => void;
   /** Swaps the speedrun.com lookups of the host's goal picker, for tests. */
   catalog?: GoalCatalog | undefined;
+  /** Shows the room as it was when the server closed it, with nothing left to do in it. */
+  closed?: boolean;
 }
 
 const roomStatus: Record<RaceState["phase"], Status> = {
@@ -85,7 +88,7 @@ export function RoomView(props: RoomViewProps): JSX.Element {
     </Button>
   );
   const rowActions = (row: Standing) =>
-    row.id === props.me.entrantId ? (
+    props.closed ? null : row.id === props.me.entrantId ? (
       <Index each={sideActions()}>{actionButton}</Index>
     ) : (
       <Show when={props.me.isHost && beforeStart()}>
@@ -130,51 +133,71 @@ export function RoomView(props: RoomViewProps): JSX.Element {
 
   return (
     <main class={styles.page}>
+      <Show when={props.closed}>
+        <div class={styles.closedNotice} role="status">
+          <p class={styles.closedReason}>{props.notice}</p>
+          <p class={styles.closedBox}>
+            <TriangleAlert class={styles.closedIcon} aria-hidden="true" />
+            <span>
+              This page is only kept in this tab.
+              <br />
+              Save the results now, they're gone once you close it.
+            </span>
+          </p>
+        </div>
+        <hr class={styles.closedRule} />
+      </Show>
       <GoalTitle
         goal={props.race.goal}
-        editable={props.me.isHost && beforeStart()}
+        editable={props.me.isHost && beforeStart() && !props.closed}
         onSubmit={(goal) => props.send({ type: "setGoal", goal })}
         catalog={props.catalog}
       />
       <div class={styles.clockLine}>
         <RaceClock elapsed={elapsed()} digits={precision.digits()} onPick={precision.pick} />
-        <Show when={props.me.isHost && !over()}>
+        <Show when={props.me.isHost && !over() && !props.closed}>
           <Button variant="danger" onClick={() => props.send({ type: "end" })}>
             {actionLabel.end}
           </Button>
         </Show>
       </div>
-      <InviteLink url={props.inviteUrl} />
-      <p class={styles.notice} role="status">
-        {props.notice}
-      </p>
-      <section class={styles.chat} aria-label="Chat" ref={chat}>
-        <FeedLog entries={props.feed} />
-        <Show
-          when={entered()}
-          fallback={
-            <Show
-              when={actions().includes("join")}
-              fallback={
-                <div class={styles.row}>
-                  <Index each={mainActions()}>{actionButton}</Index>
-                </div>
-              }
-            >
-              <JoinForm onSubmit={(name) => props.send({ type: "join", name })} />
-            </Show>
-          }
-        >
-          <ChatForm
-            inputRef={(input) => {
-              messageBox = input;
-            }}
-            onSay={(text) => props.send({ type: "say", text })}
+      <Show when={!props.closed}>
+        <InviteLink url={props.inviteUrl} />
+      </Show>
+      <Show when={!props.closed}>
+        <p class={styles.notice} role="status">
+          {props.notice}
+        </p>
+      </Show>
+      <Show when={!props.closed}>
+        <section class={styles.chat} aria-label="Chat" ref={chat}>
+          <FeedLog entries={props.feed} />
+          <Show
+            when={entered()}
+            fallback={
+              <Show
+                when={actions().includes("join")}
+                fallback={
+                  <div class={styles.row}>
+                    <Index each={mainActions()}>{actionButton}</Index>
+                  </div>
+                }
+              >
+                <JoinForm onSubmit={(name) => props.send({ type: "join", name })} />
+              </Show>
+            }
           >
-            <Index each={mainActions()}>{actionButton}</Index>
-          </ChatForm>
-        </Show>
-      </section>
+            <ChatForm
+              inputRef={(input) => {
+                messageBox = input;
+              }}
+              onSay={(text) => props.send({ type: "say", text })}
+            >
+              <Index each={mainActions()}>{actionButton}</Index>
+            </ChatForm>
+          </Show>
+        </section>
+      </Show>
       <section class={styles.entrants}>
         <div class={styles.entrantsHeader}>
           <h2 class={styles.entrantsTitle}>Entrants</h2>
@@ -196,7 +219,7 @@ export function RoomView(props: RoomViewProps): JSX.Element {
             rowActions={rowActions}
           />
         </Show>
-        <Show when={over()}>
+        <Show when={(over() || props.closed) && props.race.entrants.length > 0}>
           <ResultsExport race={props.race} />
         </Show>
       </section>

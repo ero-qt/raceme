@@ -3,7 +3,7 @@ import { ClientLimits } from "./client-limits.ts";
 import { withSecurityHeaders } from "./http.ts";
 import { RoomHub, botLines } from "./room-hub.ts";
 import { type SocketData, roomSocketHandlers } from "./room-socket.ts";
-import { RoomRegistry } from "./rooms.ts";
+import { type CloseReason, RoomRegistry } from "./rooms.ts";
 import { createRouter } from "./routes.ts";
 import { SpeedrunCatalog } from "./speedrun.ts";
 import { SurgeGuard } from "./surge.ts";
@@ -53,6 +53,17 @@ export interface RunningServer {
 }
 
 const maxRequestBytes = 4096;
+
+/** Explains why a room closed, sent as the socket's close reason for the closed page. */
+function closeText(reason: CloseReason): string {
+  const texts: Record<CloseReason, string> = {
+    ended: "Room closed: the race ended.",
+    expired: "Room closed: time limit reached.",
+    idle: "Room closed: no activity.",
+    empty: "Room closed: everyone left.",
+  };
+  return texts[reason];
+}
 
 /** Writes a duration of whole minutes in words for RaceBot, like `2 hours` or `90 minutes`. */
 function spokenDuration(ms: number): string {
@@ -117,8 +128,8 @@ export function startServer(config: ServerConfig, clock = steadyClock): RunningS
         hub.publishLines(room, botLines([line], now));
       }
     }
-    for (const slug of rooms.sweep(now)) {
-      hub.closeRoom(slug);
+    for (const { slug, reason } of rooms.sweepWithReasons(now)) {
+      hub.closeRoom(slug, closeText(reason));
     }
     limits.sweep(now);
   }, config.sweepIntervalMs);

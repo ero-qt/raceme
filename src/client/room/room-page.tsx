@@ -20,8 +20,11 @@ export function RoomPage(props: { slug: string; openRoom?: (slug: string) => voi
     send: () => room.send({ type: "active" }),
     warned: () => room.idleClosesAt() !== null,
   });
+  // A closed room keeps showing the time it closed at, so a race cut off by the server stops.
+  const shownNow = () => room.closedAt() ?? serverNow();
+
   createEffect(() => {
-    const closesAt = room.idleClosesAt();
+    const closesAt = room.gone() ? null : room.idleClosesAt();
     // In the last minute a warning sign comes and goes every second, so the tab blinks in a row
     // of tabs.
     const now = serverNow();
@@ -42,11 +45,18 @@ export function RoomPage(props: { slug: string; openRoom?: (slug: string) => voi
   );
 
   const closed = (
-    <HomePage notice={refusalText.roomGone} {...(props.openRoom ? { open: props.openRoom } : {})} />
+    <HomePage
+      notice={room.notice() ?? refusalText.roomGone}
+      {...(props.openRoom ? { open: props.openRoom } : {})}
+    />
   );
 
   return (
-    <Show when={!(ready() && room.gone())} fallback={closed}>
+    // A closed room nobody entered has no results worth keeping, so it shows the start page.
+    <Show
+      when={!(ready() && room.gone() && (room.race()?.entrants.length ?? 0) === 0)}
+      fallback={closed}
+    >
       <Show when={ready() && room.me()} fallback={connecting}>
         {(me) => (
           <Show when={room.race()} fallback={connecting}>
@@ -55,14 +65,15 @@ export function RoomPage(props: { slug: string; openRoom?: (slug: string) => voi
                 <RoomView
                   race={race()}
                   me={me()}
-                  now={serverNow()}
+                  now={shownNow()}
                   inviteUrl={location.href}
                   notice={room.notice()}
                   feed={room.feed()}
                   send={room.send}
+                  closed={room.gone()}
                 />
                 <IdleWarning
-                  closesAt={room.idleClosesAt()}
+                  closesAt={room.gone() ? null : room.idleClosesAt()}
                   now={serverNow()}
                   quietFor={room.idleQuietFor()}
                 />

@@ -184,6 +184,25 @@ describe("RoomRegistry idle rooms", () => {
   });
 });
 
+describe("RoomRegistry.sweepWithReasons", () => {
+  const hours = (n: number) => n * 60 * 60_000;
+
+  test("says why each room closed", () => {
+    const rooms = registry({ idleMs: hours(2), roomLifetimeMs: hours(48) });
+    const ended = created(rooms.create(settings, 0)).room;
+    withEntrant(ended, "a");
+    ended.clearAt = 60_000;
+    const quiet = created(rooms.create(settings, 0)).room;
+    withEntrant(quiet, "b");
+    quiet.connect(0);
+
+    expect(rooms.sweepWithReasons(60_000)).toEqual([{ slug: ended.slug, reason: "ended" }]);
+    expect(rooms.sweepWithReasons(hours(2) + 10 * 60_000)).toEqual([
+      { slug: quiet.slug, reason: "idle" },
+    ]);
+  });
+});
+
 describe("Room sessions", () => {
   test("frees the id of a session that leaves without entering", () => {
     const room = created(registry().create(settings, 0)).room;

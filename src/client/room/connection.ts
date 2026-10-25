@@ -17,6 +17,8 @@ export interface RoomConnection {
   idleQuietFor: Accessor<string>;
   /** Turns true once the server closes the socket with the room-gone code. */
   gone: Accessor<boolean>;
+  /** Gives the server time the room closed at, once it's gone. */
+  closedAt: Accessor<number | null>;
   /** Settles once the room has sent its first full picture. A room that is gone settles it too. */
   ready: Promise<void>;
   send: (action: ClientAction) => void;
@@ -26,6 +28,33 @@ const roomGoneCode = 4404;
 const maxRetryMs = 10_000;
 const maxFeedEntries = 200;
 
+interface ClosedRoom {
+  race: RaceState;
+  me: { entrantId: string; isHost: boolean };
+  notice: string;
+  closedAt: number;
+}
+
+function closedRoomKey(slug: string): string {
+  return `raceme.closedRoom.${slug}`;
+}
+
+function loadClosedRoom(slug: string): ClosedRoom | null {
+  try {
+    return JSON.parse(sessionStorage.getItem(closedRoomKey(slug)) ?? "null") as ClosedRoom | null;
+  } catch {
+    return null;
+  }
+}
+
+function saveClosedRoom(slug: string, room: ClosedRoom): void {
+  try {
+    sessionStorage.setItem(closedRoomKey(slug), JSON.stringify(room));
+  } catch {
+    // Private windows may refuse storage. A reload then shows the generic closed page.
+  }
+}
+
 /** Keeps a websocket to the room open for as long as the calling component lives. */
 export function connectRoom(slug: string): RoomConnection {
   const [race, setRace] = createSignal<RaceState | null>(null);
@@ -34,6 +63,7 @@ export function connectRoom(slug: string): RoomConnection {
   const [notice, setNotice] = createSignal<string | null>(null);
   const [feed, setFeed] = createSignal<FeedEntry[]>([]);
   const [gone, setGone] = createSignal(false);
+  const [closedAt, setClosedAt] = createSignal<number | null>(null);
   const [idleClosesAt, setIdleClosesAt] = createSignal<number | null>(null);
   const [idleQuietFor, setIdleQuietFor] = createSignal("");
   const { promise: ready, resolve: markReady } = Promise.withResolvers<void>();
@@ -63,9 +93,7 @@ export function connectRoom(slug: string): RoomConnection {
       }
 
       if (event.code === roomGoneCode) {
-        setNotice(refusalText.roomGone);
-        setGone(true);
-        markReady();
+        closeRoom(event.reason);
         return;
       }
 
@@ -73,6 +101,38 @@ export function connectRoom(slug: string): RoomConnection {
       retryTimer = setTimeout(open, retryMs);
       retryMs = Math.min(retryMs * 2, maxRetryMs);
     };
+  }
+
+  /** Shows the room as closed and keeps it for this tab. An earlier load's copy fills in after a reload. */
+  function closeRoom(reason: string | undefined): void {
+    const saved = loadClosedRoom(slug);
+    const notice = reason?.startsWith("Room closed:") ? reason : refusalText.roomGone;
+    const currentRace = race();
+    const currentMe = me();
+    if (currentRace && currentMe) {
+      const closed: ClosedRoom = {
+        race: currentRace,
+        me: currentMe,
+        notice,
+        closedAt: Date.now() + clockOffset(),
+      };
+      saveClosedRoom(slug, closed);
+      showClosed(closed);
+    } else if (saved) {
+      showClosed(saved);
+    } else {
+      setNotice(notice);
+    }
+
+    setGone(true);
+    markReady();
+  }
+
+  function showClosed(closed: ClosedRoom): void {
+    setRace(closed.race);
+    setMe(closed.me);
+    setNotice(closed.notice);
+    setClosedAt(closed.closedAt);
   }
 
   function receive(message: ServerMessage): void {
@@ -120,10 +180,15 @@ export function connectRoom(slug: string): RoomConnection {
     notice,
     feed,
     gone,
+    closedAt,
     idleClosesAt,
     idleQuietFor,
     ready,
     send: (action) => {
+      // Sends nothing once the room is closed so the close reason stays on screen.
+      if (gone()) {
+        return;
+      }
       if (socket?.readyState !== WebSocket.OPEN) {
         setNotice("Not connected. Try again in a moment.");
         return;

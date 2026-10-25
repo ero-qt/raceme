@@ -149,4 +149,75 @@ describe("connectRoom", () => {
       dispose();
     });
   });
+
+  test("keeps the reason a room closed for", () => {
+    useStuckSocket();
+
+    createRoot((dispose) => {
+      const room = connectRoom("abcdefghij");
+      (StuckSocket.opened[0]?.onclose as unknown as (e: object) => void)?.({
+        code: 4404,
+        reason: "Room closed: time limit reached.",
+      });
+
+      expect(room.gone()).toBe(true);
+      expect(room.notice()).toBe("Room closed: time limit reached.");
+
+      dispose();
+    });
+  });
+
+  test("keeps the close reason when someone acts after the room closed", () => {
+    useStuckSocket();
+
+    createRoot((dispose) => {
+      const room = connectRoom("abcdefghij");
+      (StuckSocket.opened[0]?.onclose as unknown as (e: object) => void)?.({
+        code: 4404,
+        reason: "Room closed: no activity.",
+      });
+
+      room.send({ type: "active" });
+
+      expect(room.notice()).toBe("Room closed: no activity.");
+      dispose();
+    });
+  });
+
+  // The server forgets a closed room, so only this tab can show it again after a reload.
+  test("shows a closed room again after a reload in the same tab", () => {
+    useStuckSocket();
+    sessionStorage.clear();
+    const race = { phase: "terminated", goal: "any%", entrants: [] };
+
+    createRoot((dispose) => {
+      connectRoom("abcdefghij");
+      const socket = StuckSocket.opened[0];
+      socket?.onmessage?.({
+        data: JSON.stringify({ type: "welcome", entrantId: "e1", isHost: true }),
+      });
+      socket?.onmessage?.({ data: JSON.stringify({ type: "state", serverNow: 5_000, race }) });
+      (socket?.onclose as unknown as (e: object) => void)?.({
+        code: 4404,
+        reason: "Room closed: the race ended.",
+      });
+      dispose();
+    });
+
+    createRoot((dispose) => {
+      const room = connectRoom("abcdefghij");
+      (StuckSocket.opened[1]?.onclose as unknown as (e: object) => void)?.({
+        code: 4404,
+        reason: "room gone",
+      });
+
+      expect(room.race()).toEqual(race as never);
+      expect(room.me()).toEqual({ entrantId: "e1", isHost: true });
+      expect(room.notice()).toBe("Room closed: the race ended.");
+      expect(room.closedAt()).not.toBeNull();
+
+      dispose();
+    });
+    sessionStorage.clear();
+  });
 });

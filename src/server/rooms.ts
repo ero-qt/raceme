@@ -141,6 +141,13 @@ export interface RoomRegistryOptions {
   roomLifetimeMs?: number;
 }
 
+export type CloseReason = "ended" | "expired" | "idle" | "empty";
+
+export interface DroppedRoom {
+  slug: string;
+  reason: CloseReason;
+}
+
 export type CreateRoomResult =
   | { ok: true; room: Room; hostToken: string }
   | { ok: false; refusal: "full" };
@@ -215,24 +222,43 @@ export class RoomRegistry {
   }
 
   sweep(now: number): string[] {
-    const dropped: string[] = [];
-    for (const [slug, room] of this.#rooms) {
-      const quietFor = now - room.lastActivityAt;
-      const empty = room.connected === 0;
-      const idle = empty && quietFor > this.options.idleMs;
-      const unused = empty && room.race.entrants.length === 0 && quietFor > unusedRoomMs;
-      const cleared = room.clearAt !== null && now >= room.clearAt;
-      const expired = now >= room.openedAt + this.#roomLifetimeMs;
-      const abandoned =
-        !isRacing(room) && now - room.lastInputAt >= this.#idleInputMs + this.#idleWarningMs;
+    return this.sweepWithReasons(now).map((dropped) => dropped.slug);
+  }
 
-      if (idle || unused || cleared || expired || abandoned) {
+  /** Drops the rooms that are over, each with the reason it closed. */
+  sweepWithReasons(now: number): DroppedRoom[] {
+    const dropped: DroppedRoom[] = [];
+    for (const [slug, room] of this.#rooms) {
+      const reason = this.#closeReason(room, now);
+      if (reason !== null) {
         this.#rooms.delete(slug);
-        dropped.push(slug);
+        dropped.push({ slug, reason });
       }
     }
 
     return dropped;
+  }
+
+  #closeReason(room: Room, now: number): CloseReason | null {
+    const quietFor = now - room.lastActivityAt;
+    const empty = room.connected === 0;
+
+    if (room.clearAt !== null && now >= room.clearAt) {
+      return "ended";
+    }
+    if (now >= room.openedAt + this.#roomLifetimeMs) {
+      return "expired";
+    }
+    if (!isRacing(room) && now - room.lastInputAt >= this.#idleInputMs + this.#idleWarningMs) {
+      return "idle";
+    }
+    if (empty && room.race.entrants.length === 0 && quietFor > unusedRoomMs) {
+      return "idle";
+    }
+    if (empty && quietFor > this.options.idleMs) {
+      return "empty";
+    }
+    return null;
   }
 }
 

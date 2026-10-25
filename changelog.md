@@ -13,4 +13,5 @@ it follows [keep a changelog](https://keepachangelog.com) principles and raceme 
 - browser tests and `bun run audit`, which check that a race stays on raceme's server and passes axe's WCAG AAA rules
 - rooms close 48 hours after they open, with a RaceBot warning 1 hour before
 - a short proof of work in the browser for new rooms while lots of rooms open at once, plus a limit on new rooms per network
+- a closed room keeps its results and downloads on screen with the reason it closed, also after a reload in the same tab
 - rooms where nobody has used the mouse, touch or keyboard for 2 hours close after a 10 minute warning, even with tabs still open, except while a race is running

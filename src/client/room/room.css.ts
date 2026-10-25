@@ -46,6 +46,46 @@ export const notice = style({
   color: tokens.color.statusForfeit,
 });
 
+export const closedNotice = style({
+  display: "grid",
+  gap: tokens.space.s,
+});
+
+export const closedBox = style({
+  display: "flex",
+  alignItems: "flex-start",
+  gap: tokens.space.s,
+  margin: 0,
+  color: tokens.color.text0,
+  paddingBlock: tokens.space.s,
+  paddingInline: tokens.space.m,
+  background: tokens.color.bg2,
+  border: `1px solid ${tokens.color.border}`,
+  borderInlineStart: `3px solid ${tokens.color.danger}`,
+  borderRadius: tokens.radius.s,
+});
+
+export const closedReason = style({
+  margin: 0,
+  color: tokens.color.danger,
+  fontWeight: 700,
+});
+
+export const closedRule = style({
+  margin: 0,
+  border: "none",
+  borderBlockStart: `1px solid ${tokens.color.border}`,
+});
+
+export const closedIcon = style({
+  flex: "none",
+  inlineSize: "1.1em",
+  blockSize: "1.1em",
+  color: tokens.color.danger,
+  // Centers the icon on the first line of text, since the body line height is 1.5.
+  marginBlockStart: "0.2em",
+});
+
 export const visuallyHidden = style({
   position: "absolute",
   inlineSize: "1px",

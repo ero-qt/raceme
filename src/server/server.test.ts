@@ -65,6 +65,7 @@ class Client {
   readonly socket: WebSocket;
   readonly opened: Promise<void>;
   readonly closed: Promise<number>;
+  readonly closeReason: Promise<string>;
 
   constructor(url: string, cookie: string) {
     this.socket = new WebSocket(url, { headers: { origin, cookie } } as never);
@@ -72,8 +73,15 @@ class Client {
     this.opened = new Promise((resolve) => {
       this.socket.onopen = () => resolve();
     });
+    let reason: (text: string) => void = () => {};
+    this.closeReason = new Promise((resolve) => {
+      reason = resolve;
+    });
     this.closed = new Promise((resolve) => {
-      this.socket.onclose = (event) => resolve(event.code);
+      this.socket.onclose = (event) => {
+        reason(event.reason);
+        resolve(event.code);
+      };
     });
   }
 
@@ -548,6 +556,7 @@ describe("server", () => {
 
     expect(await client.closed).toBe(4404);
     expect(running?.rooms.get(slug)).toBeUndefined();
+    expect(await client.closeReason).toBe("Room closed: the race ended.");
   });
 
   test("announces actions as RaceBot lines and relays chat", async () => {

@@ -34,7 +34,7 @@ const catalog = {
 
 afterEach(cleanup);
 
-function renderRoom(entrantId: string, isHost = false, state: RaceState = race) {
+function renderRoom(entrantId: string, isHost = false, state: RaceState = race, closed = false) {
   const sent: ClientAction[] = [];
   const view = render(() => (
     <RoomView
@@ -49,6 +49,7 @@ function renderRoom(entrantId: string, isHost = false, state: RaceState = race) 
       ]}
       send={(action) => sent.push(action)}
       catalog={catalog}
+      closed={closed}
     />
   ));
   return { ...view, sent };
@@ -492,6 +493,25 @@ describe("RoomView invite link", () => {
     fireEvent.click(view.getByRole("button", { name: "Show invite link" }));
 
     expect(view.getByRole("button", { name: /about to reveal the invite link/ })).toBeTruthy();
+  });
+});
+
+describe("RoomView after the room closed", () => {
+  test("keeps the results and downloads on screen without the chat or the invite link", () => {
+    const done = raceAfter([
+      ...joinedBoth,
+      { type: "ready", entrantId: "a" },
+      { type: "ready", entrantId: "b" },
+    ]);
+    const view = renderRoom("a", true, { ...done, phase: "terminated", endedAt: 1 }, true);
+
+    expect(view.queryByLabelText("Message")).toBeNull();
+    expect(view.queryByRole("button", { name: "Show invite link" })).toBeNull();
+    expect(view.queryByRole("button", { name: ".end" })).toBeNull();
+    expect(view.queryByLabelText("Goal")).toBeNull();
+    expect(view.getByRole("table", { name: "Entrants" })).toBeTruthy();
+    expect(view.getByRole("link", { name: /csv/ })).toBeTruthy();
+    expect(view.getByRole("status").textContent).toContain("gone once you close it");
   });
 });
 

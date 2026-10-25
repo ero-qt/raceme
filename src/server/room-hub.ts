@@ -87,10 +87,10 @@ export class RoomHub<Data> {
   }
 
   /** Stops a dropped room's countdown and closes its sockets with the room-gone code. */
-  closeRoom(slug: string): void {
+  closeRoom(slug: string, reason = "room gone"): void {
     this.clearCountdown(slug);
     for (const socket of this.#sockets.get(slug) ?? []) {
-      socket.close(roomGoneCode, "room gone");
+      socket.close(roomGoneCode, reason);
     }
     this.#sockets.delete(slug);
   }

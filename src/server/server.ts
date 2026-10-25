@@ -1,7 +1,7 @@
 import type { Server } from "bun";
 import { ClientLimits } from "./client-limits.ts";
 import { withSecurityHeaders } from "./http.ts";
-import { RoomHub } from "./room-hub.ts";
+import { RoomHub, botLines } from "./room-hub.ts";
 import { type SocketData, roomSocketHandlers } from "./room-socket.ts";
 import { RoomRegistry } from "./rooms.ts";
 import { createRouter } from "./routes.ts";
@@ -42,6 +42,8 @@ export interface RunningServer {
 }
 
 const maxRequestBytes = 4096;
+const closingWarning =
+  "This room closes in 1 hour. Rooms last at most 72 hours, so start a new one to keep racing.";
 
 // Counts from the process start without following wall clock steps, so a time sync during a
 // race can't stall the countdown or skew finish times.
@@ -71,6 +73,12 @@ export function startServer(config: ServerConfig, clock = steadyClock): RunningS
 
   const sweeper = setInterval(() => {
     const now = clock();
+    for (const slug of rooms.closingSoon(now)) {
+      const room = rooms.get(slug);
+      if (room) {
+        hub.publishLines(room, botLines([closingWarning], now));
+      }
+    }
     for (const slug of rooms.sweep(now)) {
       hub.closeRoom(slug);
     }

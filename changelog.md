@@ -11,3 +11,4 @@ it follows [keep a changelog](https://keepachangelog.com) principles and raceme 
 - result download as CSV or JSON once a race is over
 - goal suggestions on the start page and for the host in a room, from your past goals and from speedrun.com's games and categories, with the past goals kept only in your browser
 - browser tests and `bun run audit`, which check that a race stays on raceme's server and passes axe's WCAG AAA rules
+- rooms close 72 hours after they open, with a RaceBot warning 1 hour before

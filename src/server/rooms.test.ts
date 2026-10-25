@@ -102,6 +102,28 @@ describe("RoomRegistry.sweep", () => {
   });
 });
 
+describe("RoomRegistry lifetime", () => {
+  test("drops every room 72 hours after it opened, even with people in it", () => {
+    const rooms = registry({ idleMs: 100 * 60 * 60_000 });
+    const room = created(rooms.create(settings, 0)).room;
+    withEntrant(room, "a");
+    room.connect(0);
+    room.touch(72 * 60 * 60_000 - 1);
+
+    expect(rooms.sweep(72 * 60 * 60_000 - 1)).toEqual([]);
+    expect(rooms.sweep(72 * 60 * 60_000)).toEqual([room.slug]);
+  });
+
+  test("names each room once when it has 1 hour left", () => {
+    const rooms = registry({ idleMs: 100 * 60 * 60_000 });
+    const room = created(rooms.create(settings, 0)).room;
+
+    expect(rooms.closingSoon(71 * 60 * 60_000 - 1)).toEqual([]);
+    expect(rooms.closingSoon(71 * 60 * 60_000)).toEqual([room.slug]);
+    expect(rooms.closingSoon(71 * 60 * 60_000 + 1)).toEqual([]);
+  });
+});
+
 describe("Room sessions", () => {
   test("frees the id of a session that leaves without entering", () => {
     const room = created(registry().create(settings, 0)).room;

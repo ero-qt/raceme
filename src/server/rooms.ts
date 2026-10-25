@@ -9,6 +9,9 @@ const maxSessionsPerRoom = 200;
 const feedCapacity = 200;
 // Keeps one visitor from filling the room cap with lobbies nobody ever joins.
 const unusedRoomMs = 10 * 60_000;
+// Ends rooms kept open forever by a tab left running, however active they look.
+export const roomLifetimeMs = 72 * 60 * 60_000;
+const closingWarningMs = 60 * 60_000;
 
 export class Room {
   readonly #hostToken: string;
@@ -22,6 +25,8 @@ export class Room {
   clearAt: number | null = null;
   #lastActivityAt: number;
   #connected = 0;
+  readonly openedAt: number;
+  warnedOfClosing = false;
 
   constructor(
     readonly slug: string,
@@ -32,6 +37,7 @@ export class Room {
     this.#hostToken = hostToken;
     this.race = createRace(settings);
     this.#lastActivityAt = now;
+    this.openedAt = now;
   }
 
   get lastActivityAt(): number {
@@ -148,6 +154,19 @@ export class RoomRegistry {
   }
 
   /** Drops idle rooms and rooms past their clear time, returning their slugs. */
+  /** Lists the rooms that just reached their last hour, each room once. */
+  closingSoon(now: number): string[] {
+    const closing: string[] = [];
+    for (const [slug, room] of this.#rooms) {
+      if (!room.warnedOfClosing && now >= room.openedAt + roomLifetimeMs - closingWarningMs) {
+        room.warnedOfClosing = true;
+        closing.push(slug);
+      }
+    }
+
+    return closing;
+  }
+
   sweep(now: number): string[] {
     const dropped: string[] = [];
     for (const [slug, room] of this.#rooms) {
@@ -156,8 +175,9 @@ export class RoomRegistry {
       const idle = empty && quietFor > this.options.idleMs;
       const unused = empty && room.race.entrants.length === 0 && quietFor > unusedRoomMs;
       const cleared = room.clearAt !== null && now >= room.clearAt;
+      const expired = now >= room.openedAt + roomLifetimeMs;
 
-      if (idle || unused || cleared) {
+      if (idle || unused || cleared || expired) {
         this.#rooms.delete(slug);
         dropped.push(slug);
       }

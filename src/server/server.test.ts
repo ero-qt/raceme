@@ -423,6 +423,23 @@ describe("server", () => {
     });
   });
 
+  test("RaceBot warns 1 hour before a room reaches its 72 hours", async () => {
+    const base = start({ idleMs: 100 * 60 * 60_000 });
+    const { slug } = await createRoom(base);
+    const client = new Client(
+      socketUrl(base, slug),
+      "raceme_session=old-secret-old-secret-old-secret-old",
+    );
+    await client.opened;
+
+    clockOffsetMs += 71 * 60 * 60_000;
+
+    const warning = await client.waitFor(
+      (m) => m.type === "feed" && m.entries.some((e) => e.text.includes("closes in 1 hour")),
+    );
+    expect(warning).toBeTruthy();
+  });
+
   test("a link to a room that is gone closes with code 4404", async () => {
     const base = start();
 

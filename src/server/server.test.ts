@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import type { ServerMessage } from "../shared/protocol.ts";
-import { type RunningServer, type ServerConfig, startServer } from "./server.ts";
+import { type RunningServer, type ServerConfig, startServer, steadyClock } from "./server.ts";
 
 const origin = "http://localhost";
 let running: RunningServer | undefined;
@@ -99,6 +99,13 @@ function upgrade(base: string, slug: string, headers: Record<string, string> = {
     headers: { origin, upgrade: "websocket", connection: "upgrade", ...headers },
   });
 }
+
+describe("steadyClock", () => {
+  // Fractions of a millisecond would end up in finish times and exported `time_ms` values.
+  test("counts whole milliseconds", () => {
+    expect(Number.isInteger(steadyClock())).toBe(true);
+  });
+});
 
 describe("server", () => {
   test("creating a room sets a host cookie scoped to the base path", async () => {

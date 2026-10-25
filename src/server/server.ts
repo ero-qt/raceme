@@ -46,9 +46,10 @@ const closingWarning =
   "This room closes in 1 hour. Rooms last at most 72 hours, so start a new one to keep racing.";
 
 // Counts from the process start without following wall clock steps, so a time sync during a
-// race can't stall the countdown or skew finish times.
-function steadyClock(): number {
-  return performance.timeOrigin + performance.now();
+// race can't stall the countdown or skew finish times. Whole milliseconds keep fractions out of
+// finish times.
+export function steadyClock(): number {
+  return Math.floor(performance.timeOrigin + performance.now());
 }
 
 /** Starts raceme's HTTP and websocket server with every room kept in memory. */

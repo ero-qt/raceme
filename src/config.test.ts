@@ -66,4 +66,15 @@ describe("loadConfig", () => {
       expect(() => loadConfig(env)).toThrow(Object.keys(env)[0]);
     }
   });
+
+  test("asks speedrun.com for the game picker unless it's turned off", () => {
+    expect(loadConfig({}).speedrunApi).toBe("https://www.speedrun.com/api");
+    expect(loadConfig({ RACEME_SPEEDRUN_API: "http://127.0.0.1:9000/api/" }).speedrunApi).toBe(
+      "http://127.0.0.1:9000/api",
+    );
+    expect(loadConfig({ RACEME_SPEEDRUN_API: "off" }).speedrunApi).toBeNull();
+    expect(loadConfig({ RACEME_SPEEDRUN_API: "" }).speedrunApi).toBe(
+      "https://www.speedrun.com/api",
+    );
+  });
 });

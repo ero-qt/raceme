@@ -20,6 +20,7 @@ export async function startHarness(): Promise<Harness> {
     origin: null,
     staticDir: join(import.meta.dir, "..", "dist", "client"),
     trustProxy: false,
+    speedrunApi: null,
     maxRooms: 100,
     idleMs: 60_000,
     countdownMs: 1_000,

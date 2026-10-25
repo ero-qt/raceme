@@ -5,6 +5,7 @@ import { RoomHub } from "./room-hub.ts";
 import { type SocketData, roomSocketHandlers } from "./room-socket.ts";
 import { RoomRegistry } from "./rooms.ts";
 import { createRouter } from "./routes.ts";
+import { SpeedrunCatalog } from "./speedrun.ts";
 
 export interface ServerConfig {
   port: number;
@@ -23,6 +24,8 @@ export interface ServerConfig {
   staticDir: string | null;
   /** Reads the client IP from `X-Forwarded-For`, for running behind Caddy. */
   trustProxy: boolean;
+  /** Base URL of the speedrun.com API for the game picker, `null` to turn the picker off. */
+  speedrunApi: string | null;
   maxRooms: number;
   idleMs: number;
   countdownMs: number;
@@ -51,7 +54,9 @@ export function startServer(config: ServerConfig, clock = steadyClock): RunningS
   const rooms = new RoomRegistry({ maxRooms: config.maxRooms, idleMs: config.idleMs });
   const limits = new ClientLimits(config, clock);
   const hub = new RoomHub<SocketData>((slug, message) => server.publish(slug, message), clock);
-  const route = createRouter({ config, rooms, limits, clock });
+  const catalog =
+    config.speedrunApi === null ? null : new SpeedrunCatalog({ apiUrl: config.speedrunApi, clock });
+  const route = createRouter({ config, rooms, limits, catalog, clock });
 
   const server = Bun.serve<SocketData>({
     port: config.port,

@@ -1,4 +1,5 @@
-import { globalStyle, style } from "@vanilla-extract/css";
+import { style } from "@vanilla-extract/css";
+import { disclosureSummary, panel } from "../styles/controls.css.ts";
 import { tokens } from "../styles/tokens.css.ts";
 
 // Sits in the bottom left corner, clear of the suggestions that open under the start form.
@@ -7,31 +8,24 @@ export const corner = style({
   insetBlockEnd: tokens.space.s,
   insetInlineStart: tokens.space.s,
   display: "flex",
-  alignItems: "flex-end",
   gap: tokens.space.s,
-  maxInlineSize: `calc(100vw - 2 * ${tokens.space.s})`,
 });
 
-export const note = style({
-  maxInlineSize: "60ch",
-  color: tokens.color.text0,
-  background: tokens.color.bg0,
-});
+export const summary = disclosureSummary;
 
-export const summary = style({
-  display: "inline-flex",
-  alignItems: "center",
-  minBlockSize: tokens.target.min,
-  paddingInline: tokens.space.s,
-  cursor: "pointer",
-});
-
-// Ends the last line where a closed summary's text sits, centered in a target-sized row.
-export const text = style({
-  maxBlockSize: "50vh",
-  overflowY: "auto",
-  paddingInline: tokens.space.s,
-  paddingBlockEnd: `calc((${tokens.target.min} - 1lh) / 2)`,
-});
-
-globalStyle(`${text} > :last-child`, { marginBlockEnd: 0 });
+// Opens above the summaries, anchored to the corner, so no summary moves when a note opens.
+export const text = style([
+  panel,
+  {
+    position: "absolute",
+    insetBlockEnd: `calc(100% + ${tokens.space.s})`,
+    insetInlineStart: 0,
+    inlineSize: `min(60ch, calc(100vw - 2 * ${tokens.space.s}))`,
+    // Fits the note between the top of the screen and the summaries below it.
+    maxBlockSize: `calc(100dvh - ${tokens.target.min} - 3 * ${tokens.space.s})`,
+    overflowY: "auto",
+    paddingInline: tokens.space.m,
+    color: tokens.color.text0,
+    background: tokens.color.bg0,
+  },
+]);

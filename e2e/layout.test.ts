@@ -105,15 +105,76 @@ describe("room layout on phones", () => {
 });
 
 describe("home layout", () => {
-  test("the start form stays put when the privacy notice opens", async () => {
+  test("the start form stays put when the corner notes open", async () => {
     const { context, page } = await newPage(harness);
     await page.goto(`${harness.origin}/`);
     const form = page.getByLabel("Goal or room code");
     const before = await form.boundingBox();
 
     await page.getByText("privacy", { exact: true }).click();
-    await page.getByText("raceme doesn't store anything.").waitFor();
+    await page.getByText("The server keeps nothing on disk.").waitFor();
     expect(await form.boundingBox()).toEqual(before);
+
+    await page.getByText("made with ai", { exact: true }).click();
+    await page.getByText("i'm not proud, but i think it's useful.").waitFor();
+    expect(await form.boundingBox()).toEqual(before);
+
+    await context.close();
+  });
+
+  test("the corner note summaries stay put when a note opens above them", async () => {
+    const { context, page } = await newPage(harness);
+    await page.goto(`${harness.origin}/`);
+    const summaries = page.locator("summary");
+    const boxes = async () =>
+      Promise.all((await summaries.all()).map(async (summary) => await summary.boundingBox()));
+    const before = await boxes();
+
+    await page.getByText("privacy", { exact: true }).click();
+    const notice = page.getByText("The server keeps nothing on disk.");
+    await notice.waitFor();
+    expect(await boxes()).toEqual(before);
+    expect(((await notice.boundingBox())?.y ?? 0) < (before[0]?.y ?? 0)).toBe(true);
+
+    // Opening the other note closes this one, so 2 notes never cover each other.
+    await page.getByText("made with ai", { exact: true }).click();
+    await page.getByText("i'm not proud, but i think it's useful.").waitFor();
+    expect(await notice.isVisible()).toBe(false);
+    expect(await boxes()).toEqual(before);
+
+    await context.close();
+  });
+
+  test("an open note uses the height above the summaries before it scrolls", async () => {
+    const { context, page } = await newPage(harness);
+    await page.setViewportSize({ width: 1280, height: 700 });
+    await page.goto(`${harness.origin}/`);
+    await page.getByText("privacy", { exact: true }).click();
+    await page.getByText("The server keeps nothing on disk.").waitFor();
+
+    const hiddenPixels = await page.evaluate(() => {
+      const body = document.querySelector("details[open] > div") as HTMLElement;
+      return body.scrollHeight - body.clientHeight;
+    });
+    expect(hiddenPixels).toBe(0);
+
+    await context.close();
+  });
+
+  test("a click outside the note or Escape closes it", async () => {
+    const { context, page } = await newPage(harness);
+    await page.goto(`${harness.origin}/`);
+    const notice = page.getByText("The server keeps nothing on disk.");
+
+    await page.getByText("privacy", { exact: true }).click();
+    await notice.waitFor();
+    await page.mouse.click(640, 100);
+    expect(await notice.isVisible()).toBe(false);
+
+    await page.getByText("privacy", { exact: true }).click();
+    await notice.waitFor();
+    await page.keyboard.press("Escape");
+    expect(await notice.isVisible()).toBe(false);
 
     await context.close();
   });

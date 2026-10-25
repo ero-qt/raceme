@@ -36,6 +36,20 @@ export const inlineEdit = style([
   },
 ]);
 
+/** Makes a `<summary>` look like the outlined control it is, for every disclosure on the page. */
+export const disclosureSummary = style([
+  outlined,
+  {
+    display: "flex",
+    alignItems: "center",
+    minBlockSize: tokens.target.min,
+    paddingInline: tokens.space.m,
+    cursor: "pointer",
+    color: tokens.color.text0,
+    background: tokens.color.bg1,
+  },
+]);
+
 /** Frames a box of content like the chat log, the suggestion list or a warning card. */
 export const panel = style({
   border: `1px solid ${tokens.color.border}`,

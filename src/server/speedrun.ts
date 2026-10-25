@@ -1,4 +1,5 @@
 import { cleanText } from "../shared/clean-text.ts";
+import { catalogCacheHours } from "../shared/retention.ts";
 import { TokenBucket } from "./rate-limit.ts";
 
 export interface CatalogEntry {
@@ -10,7 +11,7 @@ export type CatalogResult = CatalogEntry[] | "unavailable";
 
 const searchTtlMs = 60 * 60_000;
 const siteSearchRetryMs = 10 * 60_000;
-const categoriesTtlMs = 24 * 60 * 60_000;
+const categoriesTtlMs = catalogCacheHours * 60 * 60_000;
 const maxCacheEntries = 2000;
 const maxResults = 10;
 // speedrun.com sorts name matches by length, so raceme asks for more and ranks them itself.

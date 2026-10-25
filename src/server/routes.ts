@@ -1,5 +1,6 @@
 import type { Server } from "bun";
 import { createRace } from "../shared/race/race.ts";
+import { sessionCookieDays } from "../shared/retention.ts";
 import type { ClientLimits } from "./client-limits.ts";
 import { cookie, isAllowedOrigin, json, rateLimitKey, readCookie, status } from "./http.ts";
 import { TokenBucket } from "./rate-limit.ts";
@@ -30,7 +31,7 @@ interface RouteDeps {
 type Router = (request: Request, server: Server<SocketData>) => Promise<Response | undefined>;
 
 const sessionCookie = "raceme_session";
-const sessionMaxAgeSeconds = 30 * 24 * 60 * 60;
+const sessionMaxAgeSeconds = sessionCookieDays * 24 * 60 * 60;
 const roomSocketPath = /^\/api\/rooms\/([a-z2-7]{10})\/ws$/;
 const roomCheckPath = /^\/api\/rooms\/([a-z2-7]{10})$/;
 const categoriesPath = /^\/api\/games\/([^/]+)\/categories$/;

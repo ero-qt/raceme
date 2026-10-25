@@ -21,3 +21,4 @@ it follows [keep a changelog](https://keepachangelog.com) principles and raceme 
 - a lock for the host that closes entry before the start, plus a limit on how many can enter
 - a count in each room of how many people have it open without entering
 - a privacy notice in the corner of the start page that explains what the server keeps
+- a note in the same corner about raceme being made with a lot of help from AI

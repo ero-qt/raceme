@@ -1,9 +1,9 @@
 import { globalStyle, keyframes, style } from "@vanilla-extract/css";
 import {
   controlBorder,
+  disclosureSummary,
   divider,
   inlineEdit,
-  outlined,
   panel,
   warningPanel,
 } from "../styles/controls.css.ts";
@@ -284,19 +284,7 @@ export const exportDetails = style({
   },
 });
 
-export const exportSummary = style([
-  outlined,
-  {
-    display: "flex",
-    alignItems: "center",
-    minBlockSize: tokens.target.min,
-    minInlineSize: "6ch",
-    paddingInline: tokens.space.m,
-    cursor: "pointer",
-    color: tokens.color.text0,
-    background: tokens.color.bg1,
-  },
-]);
+export const exportSummary = style([disclosureSummary, { minInlineSize: "6ch" }]);
 
 export const exportText = style([
   panel,

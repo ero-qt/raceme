@@ -76,7 +76,6 @@ export function RoomPage(props: { slug: string; openRoom?: (slug: string) => voi
                 <IdleWarning
                   closesAt={room.gone() ? null : room.idleClosesAt()}
                   now={serverNow()}
-                  quietFor={room.idleQuietFor()}
                 />
               </>
             )}

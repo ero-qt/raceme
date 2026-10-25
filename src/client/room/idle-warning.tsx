@@ -17,12 +17,7 @@ export function timeLeft(closesAt: number, now: number): string {
  * Warns that an idle room closes soon. Any input from anyone in the room clears it, so the
  * card has no button of its own.
  */
-export function IdleWarning(props: {
-  closesAt: number | null;
-  now: number;
-  /** Gives how long the room has gone without input, like `2 hours`. */
-  quietFor: string;
-}): JSX.Element {
+export function IdleWarning(props: { closesAt: number | null; now: number }): JSX.Element {
   return (
     <Show when={props.closesAt}>
       {(closesAt) => (
@@ -30,11 +25,11 @@ export function IdleWarning(props: {
           <div class={styles.card} role="alert">
             <h2 class={styles.title}>
               <span class={styles.heading}>
-                <TriangleAlert class={styles.icon} aria-hidden="true" /> Room closes soon!
+                <TriangleAlert class={styles.icon} aria-hidden="true" /> Room closes soon due to
+                inactivity!
               </span>
               <span>{timeLeft(closesAt(), props.now)}</span>
             </h2>
-            <p class={styles.text}>No activity for {props.quietFor}.</p>
             <p class={styles.text}>Move the mouse, tap or type to keep the room open.</p>
           </div>
         </div>

@@ -16,8 +16,12 @@ describe("idle warning", () => {
     const guest = await newPage(harness);
     await guest.page.goto(host.page.url());
 
-    const hostCard = host.page.getByRole("alert").filter({ hasText: "Room closes soon!" });
-    const guestCard = guest.page.getByRole("alert").filter({ hasText: "Room closes soon!" });
+    const hostCard = host.page
+      .getByRole("alert")
+      .filter({ hasText: "Room closes soon due to inactivity!" });
+    const guestCard = guest.page
+      .getByRole("alert")
+      .filter({ hasText: "Room closes soon due to inactivity!" });
     await hostCard.waitFor({ timeout: 10_000 });
     await guestCard.waitFor({ timeout: 10_000 });
 

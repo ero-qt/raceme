@@ -7,18 +7,16 @@ afterEach(cleanup);
 
 describe("IdleWarning", () => {
   test("shows the time left until an idle room closes", () => {
-    const view = render(() => (
-      <IdleWarning closesAt={14 * 60_000 + 32_000} now={0} quietFor="2 hours" />
-    ));
+    const view = render(() => <IdleWarning closesAt={14 * 60_000 + 32_000} now={0} />);
 
-    expect(view.getByRole("alert").textContent).toContain("Room closes soon!");
+    expect(view.getByRole("alert").textContent).toContain("Room closes soon due to inactivity!");
     expect(view.getByRole("alert").textContent).toContain("14:32");
-    expect(view.getByRole("alert").textContent).toContain("No activity for 2 hours.");
+    expect(view.getByRole("alert").textContent).not.toContain("No activity");
     expect(view.getByRole("alert").textContent).toContain("Move the mouse, tap or type");
   });
 
   test("shows nothing while the room isn't idle", () => {
-    const view = render(() => <IdleWarning closesAt={null} now={0} quietFor="" />);
+    const view = render(() => <IdleWarning closesAt={null} now={0} />);
 
     expect(view.queryByRole("alert")).toBeNull();
   });

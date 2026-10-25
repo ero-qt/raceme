@@ -13,8 +13,6 @@ export interface RoomConnection {
   feed: Accessor<FeedEntry[]>;
   /** Gives when the room closes as idle, while the server warns about it. */
   idleClosesAt: Accessor<number | null>;
-  /** Gives how long the room has gone without input, like `2 hours`, while it's warned as idle. */
-  idleQuietFor: Accessor<string>;
   /** Gives how long the server makes each entrant wait between chat lines. */
   chatEveryMs: Accessor<number>;
   /** Turns true once the server closes the socket with the room-gone code. */
@@ -68,7 +66,6 @@ export function connectRoom(slug: string): RoomConnection {
   const [gone, setGone] = createSignal(false);
   const [closedAt, setClosedAt] = createSignal<number | null>(null);
   const [idleClosesAt, setIdleClosesAt] = createSignal<number | null>(null);
-  const [idleQuietFor, setIdleQuietFor] = createSignal("");
   const { promise: ready, resolve: markReady } = Promise.withResolvers<void>();
 
   let socket: WebSocket | null = null;
@@ -162,7 +159,6 @@ export function connectRoom(slug: string): RoomConnection {
         break;
       case "idleWarning":
         setIdleClosesAt(message.closesAt);
-        setIdleQuietFor(message.quietFor);
         break;
       case "idleCleared":
         setIdleClosesAt(null);
@@ -187,7 +183,6 @@ export function connectRoom(slug: string): RoomConnection {
     gone,
     closedAt,
     idleClosesAt,
-    idleQuietFor,
     ready,
     send: (action) => {
       // Sends nothing once the room is closed so the close reason stays on screen.

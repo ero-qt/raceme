@@ -26,6 +26,7 @@ function start(overrides: Partial<ServerConfig> = {}) {
       maxRooms: 10,
       idleMs: 60_000,
       idleInputMs: 2 * 60 * 60_000,
+      roomLifetimeMs: 48 * 60 * 60_000,
       countdownMs: 50,
       maxSocketsPerIp: 10,
       maxSockets: 2000,
@@ -431,8 +432,8 @@ describe("server", () => {
     });
   });
 
-  test("RaceBot warns 1 hour before a room reaches its 72 hours", async () => {
-    const base = start({ idleMs: 100 * 60 * 60_000 });
+  test("RaceBot warns 1 hour before a room reaches its lifetime", async () => {
+    const base = start({ idleMs: 100 * 60 * 60_000, roomLifetimeMs: 3 * 60 * 60_000 });
     const { slug } = await createRoom(base);
     const client = new Client(
       socketUrl(base, slug),
@@ -440,10 +441,12 @@ describe("server", () => {
     );
     await client.opened;
 
-    clockOffsetMs += 71 * 60 * 60_000;
+    clockOffsetMs += 2 * 60 * 60_000;
 
     const warning = await client.waitFor(
-      (m) => m.type === "feed" && m.entries.some((e) => e.text.includes("closes in 1 hour")),
+      (m) =>
+        m.type === "feed" &&
+        m.entries.some((e) => e.text.includes("closes in 1 hour. Rooms last at most 3 hours")),
     );
     expect(warning).toBeTruthy();
   });

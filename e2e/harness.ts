@@ -48,6 +48,7 @@ export async function startHarness(): Promise<Harness> {
     maxRooms: 100,
     idleMs: 60_000,
     idleInputMs: 2 * 60 * 60_000,
+    roomLifetimeMs: 48 * 60 * 60_000,
     countdownMs: 1_000,
     maxSocketsPerIp: 50,
     maxSockets: 200,

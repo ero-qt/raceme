@@ -4,7 +4,9 @@ import { type CreateRoomResult, type Room, RoomRegistry } from "./rooms.ts";
 
 const settings = { countdownMs: 10_000 };
 
-function registry(options: Partial<{ maxRooms: number; idleMs: number }> = {}) {
+function registry(
+  options: Partial<{ maxRooms: number; idleMs: number; roomLifetimeMs: number }> = {},
+) {
   return new RoomRegistry({ maxRooms: 3, idleMs: 60_000, ...options });
 }
 
@@ -103,8 +105,8 @@ describe("RoomRegistry.sweep", () => {
 });
 
 describe("RoomRegistry lifetime", () => {
-  test("drops every room 72 hours after it opened, even with people in it", () => {
-    const rooms = registry({ idleMs: 100 * 60 * 60_000 });
+  test("drops every room once its lifetime is over, even with people in it", () => {
+    const rooms = registry({ idleMs: 100 * 60 * 60_000, roomLifetimeMs: 72 * 60 * 60_000 });
     const room = created(rooms.create(settings, 0)).room;
     withEntrant(room, "a");
     room.connect(0);
@@ -116,7 +118,7 @@ describe("RoomRegistry lifetime", () => {
   });
 
   test("names each room once when it has 1 hour left", () => {
-    const rooms = registry({ idleMs: 100 * 60 * 60_000 });
+    const rooms = registry({ idleMs: 100 * 60 * 60_000, roomLifetimeMs: 72 * 60 * 60_000 });
     const room = created(rooms.create(settings, 0)).room;
 
     expect(rooms.closingSoon(71 * 60 * 60_000 - 1)).toEqual([]);

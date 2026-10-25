@@ -29,6 +29,7 @@ const server = startServer({
   maxRooms: 10,
   idleMs: 60_000,
   idleInputMs: 2 * 60 * 60_000,
+  roomLifetimeMs: 48 * 60 * 60_000,
   countdownMs: 10_000,
   maxSocketsPerIp: 50,
   maxSockets: 100,

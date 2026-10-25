@@ -82,4 +82,9 @@ describe("loadConfig", () => {
     expect(loadConfig({}).idleInputMs).toBe(2 * 60 * 60_000);
     expect(loadConfig({ RACEME_IDLE_INPUT_MINUTES: "2" }).idleInputMs).toBe(2 * 60_000);
   });
+
+  test("reads how long a room may live", () => {
+    expect(loadConfig({}).roomLifetimeMs).toBe(48 * 60 * 60_000);
+    expect(loadConfig({ RACEME_ROOM_HOURS: "72" }).roomLifetimeMs).toBe(72 * 60 * 60_000);
+  });
 });

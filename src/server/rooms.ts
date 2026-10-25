@@ -9,8 +9,6 @@ const maxSessionsPerRoom = 200;
 const feedCapacity = 200;
 // Keeps one visitor from filling the room cap with lobbies nobody ever joins.
 const unusedRoomMs = 10 * 60_000;
-// Ends rooms kept open forever by a tab left running, however active they look.
-export const roomLifetimeMs = 72 * 60 * 60_000;
 const closingWarningMs = 60 * 60_000;
 export const idleGraceMs = 5 * 60_000;
 
@@ -138,6 +136,8 @@ export interface RoomRegistryOptions {
    * tab nobody touches would keep it alive. Defaults to 2 hours.
    */
   idleInputMs?: number;
+  /** Ends every room this long after it opened, however active it is. Defaults to 48 hours. */
+  roomLifetimeMs?: number;
 }
 
 export type CreateRoomResult =
@@ -149,6 +149,10 @@ export class RoomRegistry {
   readonly #rooms = new Map<string, Room>();
 
   constructor(readonly options: RoomRegistryOptions) {}
+
+  get #roomLifetimeMs(): number {
+    return this.options.roomLifetimeMs ?? 48 * 60 * 60_000;
+  }
 
   get #idleInputMs(): number {
     return this.options.idleInputMs ?? 2 * 60 * 60_000;
@@ -196,7 +200,7 @@ export class RoomRegistry {
   closingSoon(now: number): string[] {
     const closing: string[] = [];
     for (const [slug, room] of this.#rooms) {
-      if (!room.warnedOfClosing && now >= room.openedAt + roomLifetimeMs - closingWarningMs) {
+      if (!room.warnedOfClosing && now >= room.openedAt + this.#roomLifetimeMs - closingWarningMs) {
         room.warnedOfClosing = true;
         closing.push(slug);
       }
@@ -213,7 +217,7 @@ export class RoomRegistry {
       const idle = empty && quietFor > this.options.idleMs;
       const unused = empty && room.race.entrants.length === 0 && quietFor > unusedRoomMs;
       const cleared = room.clearAt !== null && now >= room.clearAt;
-      const expired = now >= room.openedAt + roomLifetimeMs;
+      const expired = now >= room.openedAt + this.#roomLifetimeMs;
       const abandoned = now - room.lastInputAt >= this.#idleInputMs + idleGraceMs;
 
       if (idle || unused || cleared || expired || abandoned) {

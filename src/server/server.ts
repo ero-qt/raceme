@@ -30,6 +30,8 @@ export interface ServerConfig {
   idleMs: number;
   /** Ends a room after this long without input from anyone, even with tabs open. */
   idleInputMs: number;
+  /** Ends every room this long after it opened. */
+  roomLifetimeMs: number;
   countdownMs: number;
   maxSocketsPerIp: number;
   maxSockets: number;
@@ -54,8 +56,6 @@ function spokenDuration(ms: number): string {
   }
   return `${minutes} ${minutes === 1 ? "minute" : "minutes"}`;
 }
-const closingWarning =
-  "This room closes in 1 hour. Rooms last at most 72 hours, so start a new one to keep racing.";
 
 // Counts from the process start without following wall clock steps, so a time sync during a
 // race can't stall the countdown or skew finish times. Whole milliseconds keep fractions out of
@@ -70,6 +70,7 @@ export function startServer(config: ServerConfig, clock = steadyClock): RunningS
     maxRooms: config.maxRooms,
     idleMs: config.idleMs,
     idleInputMs: config.idleInputMs,
+    roomLifetimeMs: config.roomLifetimeMs,
   });
   const limits = new ClientLimits(config, clock);
   const hub = new RoomHub<SocketData>((slug, message) => server.publish(slug, message), clock);
@@ -99,7 +100,8 @@ export function startServer(config: ServerConfig, clock = steadyClock): RunningS
     for (const slug of rooms.closingSoon(now)) {
       const room = rooms.get(slug);
       if (room) {
-        hub.publishLines(room, botLines([closingWarning], now));
+        const line = `This room closes in 1 hour. Rooms last at most ${spokenDuration(config.roomLifetimeMs)}, so start a new one to keep racing.`;
+        hub.publishLines(room, botLines([line], now));
       }
     }
     for (const slug of rooms.sweep(now)) {

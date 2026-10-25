@@ -1,7 +1,7 @@
 import type { ClientAction } from "../../shared/protocol.ts";
 import type { RaceState } from "../../shared/race/race.ts";
 
-export type ActionType = Exclude<ClientAction["type"], "say" | "setFractionDigits">;
+export type ActionType = Exclude<ClientAction["type"], "say" | "setFractionDigits" | "active">;
 
 /** Lists the actions the viewer can take right now, in the order their buttons show. */
 export function availableActions(

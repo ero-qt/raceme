@@ -3,7 +3,7 @@ import { ClientLimits } from "./client-limits.ts";
 import { withSecurityHeaders } from "./http.ts";
 import { RoomHub, botLines } from "./room-hub.ts";
 import { type SocketData, roomSocketHandlers } from "./room-socket.ts";
-import { RoomRegistry } from "./rooms.ts";
+import { RoomRegistry, idleGraceMs } from "./rooms.ts";
 import { createRouter } from "./routes.ts";
 import { SpeedrunCatalog } from "./speedrun.ts";
 
@@ -74,6 +74,12 @@ export function startServer(config: ServerConfig, clock = steadyClock): RunningS
 
   const sweeper = setInterval(() => {
     const now = clock();
+    for (const slug of rooms.idleWarnings(now)) {
+      const room = rooms.get(slug);
+      if (room) {
+        hub.warnIdle(room, now + idleGraceMs);
+      }
+    }
     for (const slug of rooms.closingSoon(now)) {
       const room = rooms.get(slug);
       if (room) {

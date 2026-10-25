@@ -26,7 +26,7 @@ const hostActions = new Set<ClientAction["type"]>([
 export function handleAction(
   room: Room,
   session: Session,
-  action: Exclude<ClientAction, { type: "say" }>,
+  action: Exclude<ClientAction, { type: "say" | "active" }>,
   now: number,
 ): RoomActionResult {
   if (hostActions.has(action.type) && !session.isHost) {
@@ -45,7 +45,7 @@ function isEntrant(race: RaceState, session: Session): boolean {
 }
 
 function toRaceAction(
-  action: Exclude<ClientAction, { type: "say" }>,
+  action: Exclude<ClientAction, { type: "say" | "active" }>,
   session: Session,
 ): RaceAction {
   switch (action.type) {

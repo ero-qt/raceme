@@ -447,6 +447,26 @@ describe("server", () => {
     expect(warning).toBeTruthy();
   });
 
+  test("an idle room warns after 2 hours and closes 15 minutes later unless someone acts", async () => {
+    const base = start({ idleMs: 100 * 60 * 60_000 });
+    const { slug } = await createRoom(base);
+    const client = new Client(
+      socketUrl(base, slug),
+      "raceme_session=idle-secret-idle-secret-idle-secret",
+    );
+    await client.opened;
+
+    clockOffsetMs += 2 * 60 * 60_000;
+    const warning = await client.waitFor((m) => m.type === "idleWarning");
+    expect(warning.type === "idleWarning" && warning.closesAt).toBeGreaterThan(Date.now());
+
+    client.send({ type: "active" });
+    await client.waitFor((m) => m.type === "idleCleared");
+
+    clockOffsetMs += 2 * 60 * 60_000 + 15 * 60_000;
+    expect(await client.closed).toBe(4404);
+  });
+
   test("a link to a room that is gone closes with code 4404", async () => {
     const base = start();
 

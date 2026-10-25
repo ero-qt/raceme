@@ -77,6 +77,12 @@ export function roomSocketHandlers(deps: {
       return;
     }
     room.touch(now);
+    if (room.noteInput(now)) {
+      hub.publish(room.slug, JSON.stringify({ type: "idleCleared" } satisfies ServerMessage));
+    }
+    if (action.type === "active") {
+      return;
+    }
 
     if (action.type === "say") {
       const line = chatLine(room, socket.data, action.text, now);

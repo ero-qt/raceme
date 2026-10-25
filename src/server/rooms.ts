@@ -12,6 +12,9 @@ const unusedRoomMs = 10 * 60_000;
 // Ends rooms kept open forever by a tab left running, however active they look.
 export const roomLifetimeMs = 72 * 60 * 60_000;
 const closingWarningMs = 60 * 60_000;
+// An open tab nobody touches would keep a room alive, so rooms without input end on their own.
+export const idleInputMs = 2 * 60 * 60_000;
+export const idleGraceMs = 15 * 60_000;
 
 export class Room {
   readonly #hostToken: string;
@@ -27,6 +30,8 @@ export class Room {
   #connected = 0;
   readonly openedAt: number;
   warnedOfClosing = false;
+  #lastInputAt: number;
+  warnedOfIdle = false;
 
   constructor(
     readonly slug: string,
@@ -38,6 +43,19 @@ export class Room {
     this.race = createRace(settings);
     this.#lastActivityAt = now;
     this.openedAt = now;
+    this.#lastInputAt = now;
+  }
+
+  get lastInputAt(): number {
+    return this.#lastInputAt;
+  }
+
+  /** Counts a message from a visitor as input. Returns whether that cleared an idle warning. */
+  noteInput(now: number): boolean {
+    this.#lastInputAt = now;
+    const wasWarned = this.warnedOfIdle;
+    this.warnedOfIdle = false;
+    return wasWarned;
   }
 
   get lastActivityAt(): number {
@@ -154,6 +172,19 @@ export class RoomRegistry {
   }
 
   /** Drops idle rooms and rooms past their clear time, returning their slugs. */
+  /** Lists the rooms that just went 2 hours without input, each room once until input comes. */
+  idleWarnings(now: number): string[] {
+    const idle: string[] = [];
+    for (const [slug, room] of this.#rooms) {
+      if (!room.warnedOfIdle && now - room.lastInputAt >= idleInputMs) {
+        room.warnedOfIdle = true;
+        idle.push(slug);
+      }
+    }
+
+    return idle;
+  }
+
   /** Lists the rooms that just reached their last hour, each room once. */
   closingSoon(now: number): string[] {
     const closing: string[] = [];
@@ -176,8 +207,9 @@ export class RoomRegistry {
       const unused = empty && room.race.entrants.length === 0 && quietFor > unusedRoomMs;
       const cleared = room.clearAt !== null && now >= room.clearAt;
       const expired = now >= room.openedAt + roomLifetimeMs;
+      const abandoned = now - room.lastInputAt >= idleInputMs + idleGraceMs;
 
-      if (idle || unused || cleared || expired) {
+      if (idle || unused || cleared || expired || abandoned) {
         this.#rooms.delete(slug);
         dropped.push(slug);
       }

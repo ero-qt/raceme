@@ -84,10 +84,10 @@ describe("RoomRegistry.sweep", () => {
     withEntrant(room, "a");
 
     room.connect(0);
-    expect(rooms.sweep(10 * 60 * 60_000)).toEqual([]);
+    expect(rooms.sweep(2 * 60 * 60_000)).toEqual([]);
 
-    room.disconnect(10 * 60 * 60_000);
-    expect(rooms.sweep(10 * 60 * 60_000 + 60_001)).toEqual([room.slug]);
+    room.disconnect(2 * 60 * 60_000);
+    expect(rooms.sweep(2 * 60 * 60_000 + 60_001)).toEqual([room.slug]);
   });
 
   // Keeps one visitor from filling the room cap with lobbies nobody ever joins.
@@ -109,6 +109,7 @@ describe("RoomRegistry lifetime", () => {
     withEntrant(room, "a");
     room.connect(0);
     room.touch(72 * 60 * 60_000 - 1);
+    room.noteInput(72 * 60 * 60_000 - 1);
 
     expect(rooms.sweep(72 * 60 * 60_000 - 1)).toEqual([]);
     expect(rooms.sweep(72 * 60 * 60_000)).toEqual([room.slug]);
@@ -121,6 +122,41 @@ describe("RoomRegistry lifetime", () => {
     expect(rooms.closingSoon(71 * 60 * 60_000 - 1)).toEqual([]);
     expect(rooms.closingSoon(71 * 60 * 60_000)).toEqual([room.slug]);
     expect(rooms.closingSoon(71 * 60 * 60_000 + 1)).toEqual([]);
+  });
+});
+
+describe("RoomRegistry idle rooms", () => {
+  const hours = (n: number) => n * 60 * 60_000;
+
+  test("warns once after 2 hours without input, even with tabs open", () => {
+    const rooms = registry({ idleMs: hours(100) });
+    const room = created(rooms.create(settings, 0)).room;
+    room.connect(0);
+
+    expect(rooms.idleWarnings(hours(2) - 1)).toEqual([]);
+    expect(rooms.idleWarnings(hours(2))).toEqual([room.slug]);
+    expect(rooms.idleWarnings(hours(2) + 1)).toEqual([]);
+  });
+
+  test("drops a room 15 minutes after the warning when nobody acts", () => {
+    const rooms = registry({ idleMs: hours(100) });
+    const room = created(rooms.create(settings, 0)).room;
+    withEntrant(room, "a");
+    room.connect(0);
+
+    expect(rooms.sweep(hours(2) + 15 * 60_000 - 1)).toEqual([]);
+    expect(rooms.sweep(hours(2) + 15 * 60_000)).toEqual([room.slug]);
+  });
+
+  test("input clears the warning and starts the 2 hours over", () => {
+    const rooms = registry({ idleMs: hours(100) });
+    const room = created(rooms.create(settings, 0)).room;
+    withEntrant(room, "a");
+    rooms.idleWarnings(hours(2));
+
+    expect(room.noteInput(hours(2) + 60_000)).toBe(true);
+    expect(room.noteInput(hours(2) + 120_000)).toBe(false);
+    expect(rooms.sweep(hours(3))).toEqual([]);
   });
 });
 

@@ -10,6 +10,8 @@ export type ClientAction =
   | { type: "setFractionDigits"; digits: FractionDigits }
   | { type: "end" }
   | { type: "rematch" }
+  /** Tells the server someone is still at the screen, so the room doesn't end as idle. */
+  | { type: "active" }
   | { type: EntrantActionType };
 
 type EntrantActionType =
@@ -33,7 +35,9 @@ export type ServerMessage =
   | { type: "welcome"; entrantId: string; isHost: boolean }
   | { type: "state"; race: RaceState; serverNow: number }
   | { type: "feed"; entries: FeedEntry[] }
-  | { type: "refused"; refusal: RoomRefusal };
+  | { type: "refused"; refusal: RoomRefusal }
+  | { type: "idleWarning"; closesAt: number }
+  | { type: "idleCleared" };
 
 const maxMessageLength = 1024;
 const plainActions = new Set([
@@ -44,6 +48,7 @@ const plainActions = new Set([
   "undone",
   "forfeit",
   "unforfeit",
+  "active",
   "end",
   "rematch",
 ]);

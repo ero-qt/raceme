@@ -3,7 +3,16 @@ import { parseClientAction } from "./protocol.ts";
 
 describe("parseClientAction", () => {
   test("accepts every plain action", () => {
-    for (const type of ["leave", "ready", "unready", "done", "undone", "forfeit", "unforfeit"]) {
+    for (const type of [
+      "leave",
+      "ready",
+      "unready",
+      "done",
+      "undone",
+      "forfeit",
+      "unforfeit",
+      "active",
+    ]) {
       expect(parseClientAction(JSON.stringify({ type }))).toEqual({ type } as never);
     }
   });

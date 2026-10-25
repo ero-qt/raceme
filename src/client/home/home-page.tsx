@@ -38,9 +38,27 @@ export function HomePage(props: {
     ...(props.roomExists ? { roomExists: props.roomExists } : {}),
     ...(props.checkDelayMs !== undefined ? { delayMs: props.checkDelayMs } : {}),
   });
+  // A pasted code is hidden at once instead of after the check, so it doesn't sit on screen.
+  // It shows again if the check finds no such room.
+  const [pastedCode, setPastedCode] = createSignal<string | null>(null);
+  let pasting = false;
   const code = () => {
     const slug = parseRoomCode(value());
-    return slug !== null && slug === roomCheck.confirmed() ? slug : null;
+    const pasted = slug === pastedCode() && slug !== roomCheck.absent();
+    return slug !== null && (slug === roomCheck.confirmed() || pasted) ? slug : null;
+  };
+  const changeValue = (text: string) => {
+    setValue(text);
+    if (!pasting) {
+      return;
+    }
+
+    pasting = false;
+    const slug = parseRoomCode(text);
+    setPastedCode(slug);
+    if (slug) {
+      void roomCheck.checkNow(slug);
+    }
   };
   const picker = useGamePicker(value, {
     noRoomHasCode: roomCheck.absent,
@@ -103,6 +121,9 @@ export function HomePage(props: {
       <h1 class={homeStyles.visuallyHidden}>raceme</h1>
       <form
         class={titleStyles.form}
+        onPaste={() => {
+          pasting = true;
+        }}
         onSubmit={(event) => {
           event.preventDefault();
           void submit();
@@ -115,7 +136,7 @@ export function HomePage(props: {
           inputClass={`${titleStyles.input} ${homeStyles.field}`}
           kind={code() ? "code" : "goal"}
           value={value()}
-          onInput={setValue}
+          onInput={changeValue}
         />
         <Show
           when={code()}

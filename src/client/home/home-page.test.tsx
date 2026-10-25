@@ -121,6 +121,18 @@ describe("HomePage", () => {
   });
 
   // "glitchless" has the shape of a room code, but no such room exists, so it stays a goal.
+  test("hides a pasted code or link right away, before the room check answers", () => {
+    const home = renderHome(["duxanagxds"], { checkDelayMs: 60_000 });
+
+    fireEvent.paste(home.field);
+    home.type("duxanagxds");
+    expect(home.field.dataset.kind).toBe("code");
+
+    fireEvent.paste(home.field);
+    home.type("https://example.com/r/duxanagxds");
+    expect(home.field.dataset.kind).toBe("code");
+  });
+
   test("a code-shaped goal stays a goal when no such room exists", async () => {
     const home = renderHome([]);
     home.type("glitchless");
@@ -336,7 +348,7 @@ describe("HomePage suggestions", () => {
     await waitFor(() => expect(home.searched).toContain("bloodborne"));
   });
 
-  test("drops the old games while new text is still being looked up", async () => {
+  test("keeps the old games up while new text is still being looked up", async () => {
     const home = renderHome(["duxanagxds"], { slowQuery: "zelda" });
     home.type("mario");
     home.unfoldSpeedrun();
@@ -344,19 +356,7 @@ describe("HomePage suggestions", () => {
 
     home.type("zelda");
 
-    expect(home.queryByRole("option", { name: "Super Mario 64" })).toBeNull();
-  });
-
-  test("keeps the games that still match while longer text is looked up, so the list doesn't blink", async () => {
-    const home = renderHome(["duxanagxds"], { slowQuery: "mario 64 ds" });
-    home.type("mario");
-    home.unfoldSpeedrun();
-    await waitFor(() => home.getByRole("option", { name: "Super Mario 64 DS" }));
-
-    home.type("mario 64 ds");
-
-    expect(home.getByRole("option", { name: "Super Mario 64 DS" })).toBeTruthy();
-    expect(home.queryByRole("option", { name: "Super Mario 64" })).toBeNull();
+    expect(home.getByRole("option", { name: "Super Mario 64" })).toBeTruthy();
   });
 
   test("keeps the joined goal within the 200 characters a room allows", async () => {

@@ -45,11 +45,10 @@ export function useGameSearch(
         return;
       }
 
+      // Until the answer arrives, the shown games stay, so the list doesn't blink.
       const known = found.get(trimmed.toLowerCase());
-      // Until the answer arrives, only the shown games that still match stay, so the list doesn't
-      // blink and nothing picked by mistake belongs to older text.
-      setGames(known ?? games().filter((game) => containsEveryWord(game.name, trimmed)));
       if (known) {
+        setGames(known);
         return;
       }
 
@@ -70,12 +69,4 @@ export function useGameSearch(
   );
 
   return games;
-}
-
-function containsEveryWord(name: string, text: string): boolean {
-  const lowerName = name.toLowerCase();
-  return text
-    .toLowerCase()
-    .split(/\s+/)
-    .every((word) => lowerName.includes(word));
 }

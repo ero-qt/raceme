@@ -44,12 +44,19 @@ export const copy = style([
   },
 ]);
 
+export const revealArea = style({
+  position: "relative",
+  display: "flex",
+  flex: "1 1 auto",
+  minInlineSize: 0,
+  marginInlineStart: tokens.space.s,
+});
+
 export const reveal = style([
   bare,
   {
     flex: "1 1 auto",
     minInlineSize: 0,
-    marginInlineStart: tokens.space.s,
     paddingInlineStart: 0,
     textAlign: "start",
   },
@@ -57,17 +64,17 @@ export const reveal = style([
 
 export const icon = style({ flex: "none", inlineSize: "1.25em", blockSize: "1.25em" });
 
-const bar = tokens.color.text1;
-const bars = `${bar} 0 5ch, transparent 5ch 6ch, ${bar} 6ch 9ch, transparent 9ch 10ch`;
-
-// Draws blurred bars that look like a hidden link, so the real link never sits in the page.
 export const decoy = style({
-  flex: "1 1 auto",
-  blockSize: "0.6em",
-  backgroundImage: `repeating-linear-gradient(90deg, ${bars})`,
-  borderRadius: tokens.radius.s,
+  position: "absolute",
+  inset: 0,
+  display: "flex",
+  alignItems: "center",
+  pointerEvents: "none",
+  overflow: "hidden",
+  whiteSpace: "nowrap",
+  color: tokens.color.text1,
   filter: "blur(4px)",
-  opacity: 0.6,
+  userSelect: "none",
   // Fades the blurred ends out so the blur neither bleeds into the link icon nor stops hard.
   maskImage:
     "linear-gradient(to right, transparent, black 1rem, black calc(100% - 1rem), transparent)",

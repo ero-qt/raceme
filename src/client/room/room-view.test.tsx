@@ -380,6 +380,17 @@ describe("RoomView actions", () => {
 });
 
 describe("RoomView invite link", () => {
+  test("a hidden link shows blurred text shaped like a link, with none of the real one", () => {
+    const field = renderRoom("x").getByRole("button", { name: "Show invite link" });
+
+    const decoy = field.parentElement?.textContent ?? "";
+
+    expect(field.textContent).toBe("");
+
+    expect(decoy).toMatch(/^x+:\/\/[x/]+$/);
+    expect(decoy).not.toContain("abcdefghij");
+  });
+
   test("is never in the page until the field itself is clicked twice", () => {
     const view = renderRoom("x");
     const field = view.getByRole("button", { name: "Show invite link" });

@@ -15,7 +15,8 @@ export type * from "./types.ts";
 
 const maxNameLength = 24;
 const maxGoalLength = 200;
-const maxEntrants = 50;
+export const maxEntrants = 50;
+export const minEntrantCap = 2;
 // Entrants named like the bot could post chat that passes for its announcements.
 const reservedNames = new Set(["racebot"]);
 // Same guard racetime.gg uses against a finish or forfeit clicked by accident right after GO.
@@ -29,9 +30,11 @@ export function createRace(settings: NewRaceSettings): RaceState {
     phase: "open",
     goal: null,
     entrants: [],
-    settings: { fractionDigits: 0, ...settings },
+    settings: { fractionDigits: 0, entrantCap: null, ...settings },
     startsAt: null,
     endedAt: null,
+    muted: [],
+    entryLocked: false,
   };
 }
 
@@ -50,19 +53,38 @@ export function apply(state: RaceState, action: RaceAction, now: number): RaceRe
       return join(state, action.entrantId, action.name);
     case "remove":
       return remove(state, action.targetId, now);
+    case "lock":
+    case "unlock":
+      return beforeStart(state)
+        ? ok({ ...state, entryLocked: action.type === "lock" })
+        : refuse("wrongPhase");
+    case "mute":
+      return state.entrants.some((e) => e.id === action.targetId)
+        ? ok({ ...state, muted: [...new Set([...state.muted, action.targetId])] })
+        : refuse("notEntrant");
+    case "unmute":
+      return ok({ ...state, muted: state.muted.filter((id) => id !== action.targetId) });
     case "end":
       return isOver(state)
         ? refuse("wrongPhase")
         : ok({ ...stopCountdown(state), phase: "terminated", endedAt: now });
     case "setFractionDigits":
       return ok({ ...state, settings: { ...state.settings, fractionDigits: action.digits } });
+    case "setEntrantCap":
+      return isEntrantCap(action.cap)
+        ? ok({ ...state, settings: { ...state.settings, entrantCap: action.cap } })
+        : refuse("badCap");
     case "rematch":
       return isOver(state)
-        ? ok({ ...createRace(state.settings), goal: state.goal })
+        ? ok({ ...createRace(state.settings), goal: state.goal, muted: state.muted })
         : refuse("wrongPhase");
     default:
       return applyEntrantAction(state, action, now);
   }
+}
+
+function isEntrantCap(cap: number | null): boolean {
+  return cap === null || (Number.isInteger(cap) && cap >= minEntrantCap && cap <= maxEntrants);
 }
 
 function setGoal(state: RaceState, rawGoal: string): RaceResult {
@@ -82,6 +104,9 @@ function join(state: RaceState, entrantId: string, rawName: string): RaceResult 
   if (!beforeStart(state)) {
     return refuse("wrongPhase");
   }
+  if (state.entryLocked) {
+    return refuse("entryClosed");
+  }
 
   const name = cleanText(rawName);
   if (name.length === 0 || name.length > maxNameLength) {
@@ -90,7 +115,7 @@ function join(state: RaceState, entrantId: string, rawName: string): RaceResult 
   if (state.entrants.some((e) => e.id === entrantId)) {
     return refuse("alreadyJoined");
   }
-  if (state.entrants.length >= maxEntrants) {
+  if (state.entrants.length >= (state.settings.entrantCap ?? maxEntrants)) {
     return refuse("raceFull");
   }
   if (
@@ -118,7 +143,21 @@ function remove(state: RaceState, targetId: string, now: number): RaceResult {
 
 type EntrantAction = Exclude<
   RaceAction,
-  { type: "tick" | "setGoal" | "join" | "remove" | "end" | "rematch" | "setFractionDigits" }
+  {
+    type:
+      | "tick"
+      | "setGoal"
+      | "join"
+      | "remove"
+      | "lock"
+      | "unlock"
+      | "mute"
+      | "unmute"
+      | "end"
+      | "rematch"
+      | "setFractionDigits"
+      | "setEntrantCap";
+  }
 >;
 
 function applyEntrantAction(state: RaceState, action: EntrantAction, now: number): RaceResult {

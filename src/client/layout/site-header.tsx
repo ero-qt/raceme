@@ -3,6 +3,8 @@ import { type JSX, createSignal } from "solid-js";
 import * as styles from "./site-header.css.ts";
 import { type ThemeChoice, applyTheme, loadTheme } from "./theme-preference.ts";
 
+export const headerStatusId = "header-status";
+
 const nextTheme: Record<ThemeChoice, ThemeChoice> = {
   system: "dark",
   dark: "light",
@@ -32,6 +34,8 @@ export function SiteHeader(props: { onHome: () => void }): JSX.Element {
       >
         raceme
       </a>
+      {/* Pages put their own status next to the name here, like the room timer. */}
+      <span id={headerStatusId} class={styles.status} />
       <button
         type="button"
         class={styles.theme}

@@ -1,6 +1,6 @@
 import { join } from "node:path";
 import { type Browser, type BrowserContext, type Page, chromium } from "playwright";
-import { type RunningServer, startServer } from "../src/server/server.ts";
+import { type RunningServer, type ServerConfig, startServer } from "../src/server/server.ts";
 
 export interface Harness {
   origin: string;
@@ -33,7 +33,7 @@ function startFakeSpeedrun() {
 }
 
 /** Starts the real server on a free port with the built page, plus a headless Chromium. */
-export async function startHarness(): Promise<Harness> {
+export async function startHarness(overrides: Partial<ServerConfig> = {}): Promise<Harness> {
   const speedrun = startFakeSpeedrun();
   const server = startServer({
     port: 0,
@@ -47,10 +47,19 @@ export async function startHarness(): Promise<Harness> {
     speedrunApi: `http://127.0.0.1:${speedrun.port}/api`,
     maxRooms: 100,
     idleMs: 60_000,
+    idleInputMs: 2 * 60 * 60_000,
+    idleWarningMs: 10 * 60_000,
+    roomLifetimeMs: 48 * 60 * 60_000,
+    closingWarningMs: 60 * 60_000,
+    unusedRoomMs: 10 * 60_000,
+    surgeRoomsPerMinute: 1000,
+    surgeBits: 8,
     countdownMs: 1_000,
+    chatEveryMs: 3_000,
     maxSocketsPerIp: 50,
     maxSockets: 200,
     sweepIntervalMs: 60_000,
+    ...overrides,
   });
   const origin = `http://localhost:${server.server.port}`;
   const browser = await chromium.launch();

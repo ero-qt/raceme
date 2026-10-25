@@ -1,30 +1,29 @@
 import { globalStyle, style } from "@vanilla-extract/css";
+import { dimmed, inlineEdit } from "../styles/controls.css.ts";
 import { tokens } from "../styles/tokens.css.ts";
 
 // Pulls the control left by its padding and border so the digits line up with the page edge.
 const inset = `calc(${tokens.space.xs} + 2px)`;
 
-export const clock = style({
-  display: "inline-flex",
-  alignItems: "baseline",
-  marginInlineStart: `calc(-1 * ${inset})`,
-  paddingInline: tokens.space.xs,
-  fontFamily: tokens.font.mono,
-  fontSize: "2.5rem",
-  fontVariantNumeric: "tabular-nums",
-  fontWeight: 700,
-  border: "2px solid transparent",
-  borderRadius: tokens.radius.s,
-  cursor: "pointer",
-  transition: "border-color 150ms ease, background-color 150ms ease",
-  selectors: {
-    // Marks keyboard focus on the whole clock instead of a ring around the select alone.
-    "&:hover, &:has(:focus-visible)": {
-      borderColor: tokens.color.borderStrong,
-      background: tokens.color.bg1,
-    },
+// Marks keyboard focus on the whole clock instead of a ring around the select alone, through
+// the `:has(:focus-visible)` part of `inlineEdit`.
+export const clock = style([
+  inlineEdit,
+  {
+    display: "inline-flex",
+    alignItems: "baseline",
+    marginInlineStart: `calc(-1 * ${inset})`,
+    paddingInline: tokens.space.xs,
+    fontFamily: tokens.font.mono,
+    fontSize: "2.5rem",
+    fontVariantNumeric: "tabular-nums",
+    fontWeight: 700,
+    cursor: "pointer",
   },
-});
+]);
+
+// Dims the digits before GO instead of a minus sign, so the clock keeps its width.
+export const countdown = dimmed;
 
 export const fraction = style({
   appearance: "none",
@@ -46,3 +45,7 @@ globalStyle(`${fraction} option`, {
   background: tokens.color.bg2,
   color: tokens.color.text0,
 });
+
+// Fades the fraction from the main text color like the digits, since fading its dimmer color
+// as well would drop below 4.5:1.
+globalStyle(`${countdown} ${fraction}`, { color: "inherit" });

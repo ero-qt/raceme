@@ -6,6 +6,7 @@ import { applyAndAnnounce, nextTickDelay } from "./room-actions.ts";
 import type { Room } from "./rooms.ts";
 
 // Tells the client the room is gone for good, so it stops reconnecting.
+
 export const roomGoneCode = 4404;
 
 /** Turns RaceBot's texts into feed lines stamped with the server time. */
@@ -36,7 +37,12 @@ export class RoomHub<Data> {
   }
 
   publishState(room: Room): void {
-    this.#send(room, { type: "state", race: room.race, serverNow: this.clock() });
+    this.#send(room, {
+      type: "state",
+      race: room.race,
+      serverNow: this.clock(),
+      closesAt: room.closesAt,
+    });
   }
 
   publishLines(room: Room, lines: NewFeedEntry[]): void {
@@ -74,11 +80,22 @@ export class RoomHub<Data> {
     this.#countdowns.delete(slug);
   }
 
+  /** Tells a room it ends at `closesAt` unless someone acts before then. */
+  warnIdle(room: Room, closesAt: number, quietFor: string): void {
+    this.#send(room, { type: "idleWarning", closesAt, quietFor });
+    this.publishLines(room, botLines(["Room closes soon due to inactivity!"], this.clock()));
+  }
+
+  /** Tells a warned room that someone acted, so it stays open. */
+  clearIdle(room: Room): void {
+    this.#send(room, { type: "idleCleared" });
+  }
+
   /** Stops a dropped room's countdown and closes its sockets with the room-gone code. */
-  closeRoom(slug: string): void {
+  closeRoom(slug: string, reason = "room gone"): void {
     this.clearCountdown(slug);
     for (const socket of this.#sockets.get(slug) ?? []) {
-      socket.close(roomGoneCode, "room gone");
+      socket.close(roomGoneCode, reason);
     }
     this.#sockets.delete(slug);
   }

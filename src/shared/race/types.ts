@@ -15,6 +15,8 @@ export interface RaceSettings {
   readonly countdownMs: number;
   /** Sets the room's default time precision, which viewers may override for themselves. */
   readonly fractionDigits: FractionDigits;
+  /** Caps how many may enter, set by the host, `null` for only the hard limit. */
+  readonly entrantCap: number | null;
 }
 
 export interface RaceState {
@@ -26,6 +28,10 @@ export interface RaceState {
   readonly startsAt: number | null;
   /** Server time in ms of the last finish or forfeit that ended the race. */
   readonly endedAt: number | null;
+  /** Lists the entrant ids the host muted, kept through a rematch. */
+  readonly muted: readonly string[];
+  /** Refuses new entrants while true, set by the host before the start. */
+  readonly entryLocked: boolean;
 }
 
 export type RaceAction =
@@ -39,9 +45,14 @@ export type RaceAction =
   | { type: "forfeit"; entrantId: string }
   | { type: "unforfeit"; entrantId: string }
   | { type: "remove"; targetId: string }
+  | { type: "lock" }
+  | { type: "unlock" }
+  | { type: "mute"; targetId: string }
+  | { type: "unmute"; targetId: string }
   | { type: "end" }
   | { type: "rematch" }
   | { type: "setFractionDigits"; digits: FractionDigits }
+  | { type: "setEntrantCap"; cap: number | null }
   | { type: "tick" };
 
 export type RaceRefusal =
@@ -49,6 +60,8 @@ export type RaceRefusal =
   | "alreadyJoined"
   | "badGoal"
   | "badName"
+  | "entryClosed"
+  | "badCap"
   | "nameTaken"
   | "noGoal"
   | "notDone"

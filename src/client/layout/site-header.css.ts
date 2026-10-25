@@ -1,4 +1,4 @@
-import { style } from "@vanilla-extract/css";
+import { globalStyle, style } from "@vanilla-extract/css";
 import { tokens } from "../styles/tokens.css.ts";
 
 const columnWidth = "52rem";
@@ -59,3 +59,13 @@ export const theme = style({
 });
 
 export const themeIcon = style({ inlineSize: "1.125rem", blockSize: "1.125rem" });
+
+export const status = style({
+  display: "flex",
+  alignItems: "center",
+  marginInlineEnd: "auto",
+  color: tokens.color.text1,
+});
+
+// Lets the wrapper Solid's portal adds join the row, so its children line up with the name.
+globalStyle(`${status} > div`, { display: "contents" });

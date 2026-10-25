@@ -1,6 +1,6 @@
 import { cleanText } from "../shared/clean-text.ts";
 import type { NewFeedEntry } from "../shared/feed-entry.ts";
-import type { ClientAction, RoomRefusal } from "../shared/protocol.ts";
+import { type ClientAction, type RoomRefusal, maxChatLength } from "../shared/protocol.ts";
 import { type RaceAction, type RaceState, apply } from "../shared/race/race.ts";
 import { announce } from "../shared/race/racebot.ts";
 import type { Room } from "./rooms.ts";
@@ -14,19 +14,23 @@ export type RoomActionResult =
   | { ok: true; state: RaceState; lines: string[] }
   | { ok: false; refusal: RoomRefusal };
 
-const maxChatLength = 300;
 const hostActions = new Set<ClientAction["type"]>([
   "setGoal",
   "end",
   "remove",
+  "mute",
+  "unmute",
+  "lock",
+  "unlock",
   "setFractionDigits",
+  "setEntrantCap",
 ]);
 
 /** Runs a race action as the session's entrant, with the session's rights checked first. */
 export function handleAction(
   room: Room,
   session: Session,
-  action: Exclude<ClientAction, { type: "say" }>,
+  action: Exclude<ClientAction, { type: "say" | "active" }>,
   now: number,
 ): RoomActionResult {
   if (hostActions.has(action.type) && !session.isHost) {
@@ -45,17 +49,22 @@ function isEntrant(race: RaceState, session: Session): boolean {
 }
 
 function toRaceAction(
-  action: Exclude<ClientAction, { type: "say" }>,
+  action: Exclude<ClientAction, { type: "say" | "active" }>,
   session: Session,
 ): RaceAction {
   switch (action.type) {
     case "setGoal":
     case "end":
     case "rematch":
+    case "lock":
+    case "unlock":
     case "setFractionDigits":
+    case "setEntrantCap":
       return action;
     case "remove":
-      return { type: "remove", targetId: action.entrantId };
+    case "mute":
+    case "unmute":
+      return { type: action.type, targetId: action.entrantId };
     default:
       return { ...action, entrantId: session.entrantId };
   }
@@ -77,15 +86,23 @@ export function chatLine(
   session: Session,
   rawText: string,
   now: number,
+  chatEveryMs: number,
 ): NewFeedEntry | RoomRefusal {
   const entrant = room.race.entrants.find((e) => e.id === session.entrantId);
   if (!entrant) {
     return "notEntrant";
   }
 
+  if (room.race.muted.includes(entrant.id)) {
+    return "muted";
+  }
+
   const text = cleanText(rawText);
   if (text.length === 0 || text.length > maxChatLength) {
     return "badChat";
+  }
+  if (!room.takeChatTurn(entrant.id, now, chatEveryMs)) {
+    return "slowMode";
   }
 
   return { kind: "chat", name: entrant.name, text, at: now };

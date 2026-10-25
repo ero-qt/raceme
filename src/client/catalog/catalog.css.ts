@@ -1,4 +1,5 @@
 import { style } from "@vanilla-extract/css";
+import { divider } from "../styles/controls.css.ts";
 import { tokens } from "../styles/tokens.css.ts";
 
 export const page = style({
@@ -7,10 +8,7 @@ export const page = style({
   padding: tokens.space.l,
 });
 
-export const section = style({
-  borderBlockStart: `1px solid ${tokens.color.border}`,
-  paddingBlock: tokens.space.l,
-});
+export const section = style([divider, { paddingBlock: tokens.space.l }]);
 
 export const row = style({
   display: "flex",

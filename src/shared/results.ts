@@ -40,8 +40,47 @@ export function resultsCsv(race: RaceState): string {
   return `${[header, ...lines].join("\r\n")}\r\n`;
 }
 
+/**
+ * Builds the results as plain text to paste into a chat: a `heading` line, the goal, one line per
+ * place, then the entrants without a place grouped by status.
+ */
+export function resultsText(race: RaceState, heading: string): string {
+  const placed = resultsImageRows(race).filter((row) => row.place !== "");
+  const unplaced = resultsImageRows(race).filter((row) => row.place === "");
+  const byStatus = Map.groupBy(unplaced, (row) => row.time);
+  const lines = [
+    heading,
+    race.goal ?? "Race",
+    ...placed.map((row) => `${row.place}. ${row.name} ${row.time}`),
+    ...[...byStatus].map(
+      ([status, rows]) => `${status}: ${rows.map((row) => row.name).join(", ")}`,
+    ),
+  ];
+  return `${lines.join("\n")}\n`;
+}
+
+export interface ImageRow {
+  place: string;
+  name: string;
+  /** Gives the finish time, else `Forfeit` or `Racing`. */
+  time: string;
+}
+
+/** Gives the text of each row the results image draws, in standings order. */
+export function resultsImageRows(race: RaceState): ImageRow[] {
+  const statusText = { forfeit: "Forfeit", racing: "Racing" } as const;
+  return rows(race).map((row) => ({
+    place: row.place === null ? "" : String(row.place),
+    name: row.name,
+    time:
+      row.result === "done" && row.timeMs !== null
+        ? formatClock(row.timeMs, race.settings.fractionDigits)
+        : statusText[row.result === "done" ? "racing" : row.result],
+  }));
+}
+
 /** Builds the file name from the goal and the race date, like `raceme-any-2026-10-24.csv`. A race ended before GO takes its end date. */
-export function exportFileName(race: RaceState, extension: "csv" | "json"): string {
+export function exportFileName(race: RaceState, extension: "csv" | "json" | "png"): string {
   const goal = (race.goal ?? "race")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")

@@ -1,3 +1,4 @@
+import { networkKey } from "./http.ts";
 import { TokenBucket } from "./rate-limit.ts";
 
 interface BucketShape {
@@ -6,6 +7,8 @@ interface BucketShape {
 }
 
 const roomCreation: BucketShape = { capacity: 5, perSecond: 0.1 };
+// Several people on one network may open rooms, but not a botnet's worth from one provider.
+const networkRoomCreation: BucketShape = { capacity: 20, perSecond: 0.3 };
 // Room checks and room sockets share this one, since both reveal whether a code is live.
 const roomLookup: BucketShape = { capacity: 30, perSecond: 0.5 };
 const messages: BucketShape = { capacity: 30, perSecond: 10 };
@@ -15,6 +18,7 @@ const gameLookup: BucketShape = { capacity: 20, perSecond: 0.2 };
 /** Keeps the per-IP rate limits and open-socket counts that protect the server from abuse. */
 export class ClientLimits {
   readonly #creations = new Map<string, TokenBucket>();
+  readonly #networkCreations = new Map<string, TokenBucket>();
   readonly #lookups = new Map<string, TokenBucket>();
   readonly #messages = new Map<string, TokenBucket>();
   readonly #gameLookups = new Map<string, TokenBucket>();
@@ -27,7 +31,15 @@ export class ClientLimits {
   ) {}
 
   createRoom(ip: string): boolean {
-    return this.#take(this.#creations, ip, roomCreation);
+    const network = networkKey(ip);
+    if (!this.#has(this.#networkCreations, network)) {
+      return false;
+    }
+    if (!this.#take(this.#creations, ip, roomCreation)) {
+      return false;
+    }
+
+    return this.#take(this.#networkCreations, network, networkRoomCreation);
   }
 
   lookUpRoom(ip: string): boolean {
@@ -64,13 +76,25 @@ export class ClientLimits {
 
   /** Forgets IPs whose buckets refilled, so the maps only keep recently active clients. */
   sweep(now: number): void {
-    for (const buckets of [this.#creations, this.#lookups, this.#messages, this.#gameLookups]) {
+    for (const buckets of [
+      this.#creations,
+      this.#networkCreations,
+      this.#lookups,
+      this.#messages,
+      this.#gameLookups,
+    ]) {
       for (const [ip, bucket] of buckets) {
         if (bucket.isFull(now)) {
           buckets.delete(ip);
         }
       }
     }
+  }
+
+  #has(buckets: Map<string, TokenBucket>, key: string): boolean {
+    const now = this.clock();
+    const bucket = buckets.get(key);
+    return bucket === undefined || bucket.hasToken(now);
   }
 
   #take(buckets: Map<string, TokenBucket>, ip: string, shape: BucketShape): boolean {

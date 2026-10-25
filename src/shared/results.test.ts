@@ -1,13 +1,21 @@
 import { describe, expect, test } from "bun:test";
 import type { RaceState } from "./race/race.ts";
-import { exportFileName, resultsCsv, resultsJson } from "./results.ts";
+import {
+  exportFileName,
+  resultsCsv,
+  resultsImageRows,
+  resultsJson,
+  resultsText,
+} from "./results.ts";
 
 const race: RaceState = {
   phase: "finished",
   goal: "sm64 16 star",
-  settings: { countdownMs: 10_000, fractionDigits: 2 },
+  settings: { countdownMs: 10_000, fractionDigits: 2, entrantCap: null },
   startsAt: Date.UTC(2026, 9, 24, 18, 0, 0),
   endedAt: Date.UTC(2026, 9, 24, 18, 20, 0),
+  muted: [],
+  entryLocked: false,
   entrants: [
     { id: "b", name: "bob", ready: true, result: { kind: "forfeit" } },
     { id: "a", name: "alice", ready: true, result: { kind: "done", timeMs: 1_065_439 } },
@@ -52,9 +60,38 @@ describe("resultsJson", () => {
   });
 });
 
+describe("resultsText", () => {
+  test("gives the goal, one line per place and the rest by status, to paste into a chat", () => {
+    expect(resultsText(race, "-# [raceme](https://example.com/) · 10/24/2026 6:00 PM")).toBe(
+      [
+        "-# [raceme](https://example.com/) · 10/24/2026 6:00 PM",
+        "sm64 16 star",
+        "1. alice 00:17:45.43",
+        '2. =HYPERLINK("x"), "hi" 00:18:20.00',
+        "Forfeit: bob",
+        "",
+      ].join("\n"),
+    );
+  });
+});
+
+describe("resultsImageRows", () => {
+  test("gives the text of each row the image draws, in standings order", () => {
+    expect(resultsImageRows(race)).toEqual([
+      { place: "1", name: "alice", time: "00:17:45.43" },
+      { place: "2", name: '=HYPERLINK("x"), "hi"', time: "00:18:20.00" },
+      { place: "", name: "bob", time: "Forfeit" },
+    ]);
+  });
+});
+
 describe("exportFileName", () => {
   test("uses the goal and the date, file-name safe", () => {
     expect(exportFileName(race, "csv")).toBe("raceme-sm64-16-star-2026-10-24.csv");
+  });
+
+  test("names the image like the other files", () => {
+    expect(exportFileName(race, "png").endsWith(".png")).toBe(true);
   });
 
   test("a race ended before GO takes its end date", () => {

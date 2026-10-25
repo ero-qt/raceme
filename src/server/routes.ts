@@ -15,6 +15,7 @@ import {
   isGameId,
 } from "./speedrun.ts";
 import { serveStatic } from "./static.ts";
+import type { SurgeGuard } from "./surge.ts";
 import { randomSecret } from "./tokens.ts";
 
 interface RouteDeps {
@@ -22,6 +23,7 @@ interface RouteDeps {
   rooms: RoomRegistry;
   limits: ClientLimits;
   catalog: SpeedrunCatalog | null;
+  surge: SurgeGuard;
   clock: () => number;
 }
 
@@ -82,17 +84,27 @@ function clientIp(config: ServerConfig, request: Request, server: Server<SocketD
 
 /** Opens a room with the goal from the request body, since the goal is what makes a lobby. */
 async function createRoom(deps: RouteDeps, request: Request, ip: string): Promise<Response> {
-  const { config, rooms, limits, clock } = deps;
+  const { config, rooms, limits, surge, clock } = deps;
   if (!isAllowedOrigin(request, config.origin)) {
     return status(403);
   }
+  const body = readRoomRequest(await request.text());
+  if (surge.needsProof()) {
+    const proven =
+      body.proof !== null && (await surge.acceptProof(body.proof.token, body.proof.nonce));
+    if (!proven) {
+      return json({ challenge: surge.issueChallenge() }, 428);
+    }
+  }
+  // Charges the limits only for a request that can open a room, so the challenge round trip of a
+  // proof of work doesn't cost a second room.
   if (!limits.createRoom(ip)) {
     return status(429);
   }
 
   const now = clock();
   const settings = { countdownMs: config.countdownMs };
-  const goal = readGoal(await request.text());
+  const goal = body.goal;
   const withGoal = applyAndAnnounce(createRace(settings), { type: "setGoal", goal }, now);
   if (!withGoal.ok) {
     return status(400);
@@ -104,6 +116,7 @@ async function createRoom(deps: RouteDeps, request: Request, ip: string): Promis
   }
   created.room.race = withGoal.state;
   created.room.feed.add(botLines(withGoal.lines, now));
+  surge.recordRoom();
 
   const response = json({ slug: created.room.slug }, 201);
   const hostCookie = cookie(
@@ -115,13 +128,27 @@ async function createRoom(deps: RouteDeps, request: Request, ip: string): Promis
   return response;
 }
 
-/** Reads `goal` from a JSON body, giving `""` for anything unusable so the race rules refuse it. */
-function readGoal(body: string): string {
+/**
+ * Reads the goal and an optional proof of work from a JSON body. An unusable goal becomes `""`,
+ * so the race rules refuse it.
+ */
+function readRoomRequest(body: string): {
+  goal: string;
+  proof: { token: string; nonce: number } | null;
+} {
   try {
-    const { goal } = JSON.parse(body) as { goal?: unknown };
-    return typeof goal === "string" ? goal : "";
+    const { goal, proof } = JSON.parse(body) as {
+      goal?: unknown;
+      proof?: { token?: unknown; nonce?: unknown };
+    };
+    const token = proof?.token;
+    const nonce = proof?.nonce;
+    return {
+      goal: typeof goal === "string" ? goal : "",
+      proof: typeof token === "string" && typeof nonce === "number" ? { token, nonce } : null,
+    };
   } catch {
-    return "";
+    return { goal: "", proof: null };
   }
 }
 

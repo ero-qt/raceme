@@ -50,8 +50,8 @@ describe("RaceClock", () => {
 
   test("keeps the whole seconds right during the countdown", () => {
     const { getByRole, select } = renderClock(3, -5_017);
-    expect(getByRole("timer").textContent).toBe("-00:00:05");
+    expect(getByRole("timer").textContent).toBe("00:00:05");
     expect(select.selectedOptions[0]?.textContent).toBe(".017");
-    expect(renderClock(0, -5_017).getAllByRole("timer").at(-1)?.textContent).toBe("-00:00:06");
+    expect(renderClock(0, -5_017).getAllByRole("timer").at(-1)?.textContent).toBe("00:00:06");
   });
 });

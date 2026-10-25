@@ -1,4 +1,5 @@
 import { style } from "@vanilla-extract/css";
+import { inlineEdit } from "../styles/controls.css.ts";
 import { tokens } from "../styles/tokens.css.ts";
 
 export const goal = style({
@@ -9,28 +10,29 @@ export const goal = style({
   overflowWrap: "anywhere",
 });
 
+// Matches the editable goal's height, so the page doesn't move when editing ends at the start.
+export const plainGoal = style([
+  goal,
+  { display: "flex", alignItems: "center", minBlockSize: `calc(${tokens.target.min})` },
+]);
+
 // Pulls the input left by its padding and border so the editable goal lines up with plain text.
 const inset = `calc(${tokens.space.xs} + 2px)`;
 
-export const input = style({
-  inlineSize: `calc(100% + ${inset})`,
-  marginInlineStart: `calc(-1 * ${inset})`,
-  paddingInline: tokens.space.xs,
-  minBlockSize: tokens.target.min,
-  font: "inherit",
-  color: "inherit",
-  background: "transparent",
-  border: "2px solid transparent",
-  borderRadius: tokens.radius.s,
-  transition: "border-color 150ms ease, background-color 150ms ease",
-  cursor: "text",
-  selectors: {
-    "&:hover, &:focus": {
-      borderColor: tokens.color.borderStrong,
-      background: tokens.color.bg1,
+export const input = style([
+  inlineEdit,
+  {
+    inlineSize: `calc(100% + ${inset})`,
+    marginInlineStart: `calc(-1 * ${inset})`,
+    paddingInline: tokens.space.xs,
+    minBlockSize: tokens.target.min,
+    cursor: "text",
+    selectors: {
+      // Keeps the border while typing after a mouse click too, which `:focus-visible` skips.
+      "&:focus": { borderColor: tokens.color.borderStrong, background: tokens.color.bg1 },
     },
   },
-});
+]);
 
 export const form = style({
   display: "flex",

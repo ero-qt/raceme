@@ -17,6 +17,17 @@ function raceAfter(actions: RaceAction[]): RaceState {
   return state;
 }
 
+// Applies each action at its own server time, for races that need GO and the 5 s finish guard.
+function playAt(state: RaceState, steps: [RaceAction, number][]): RaceState {
+  return steps.reduce((current, [action, now]) => {
+    const result = apply(current, action, now);
+    if (!result.ok) {
+      throw new Error(result.refusal);
+    }
+    return result.state;
+  }, state);
+}
+
 const joinedBoth: RaceAction[] = [
   { type: "setGoal", goal: "any%" },
   { type: "join", entrantId: "a", name: "alice" },
@@ -34,7 +45,7 @@ const catalog = {
 
 afterEach(cleanup);
 
-function renderRoom(entrantId: string, isHost = false, state: RaceState = race) {
+function renderRoom(entrantId: string, isHost = false, state: RaceState = race, closed = false) {
   const sent: ClientAction[] = [];
   const view = render(() => (
     <RoomView
@@ -49,13 +60,17 @@ function renderRoom(entrantId: string, isHost = false, state: RaceState = race) 
       ]}
       send={(action) => sent.push(action)}
       catalog={catalog}
+      closed={closed}
+      closesAt={10 * 60_000 + 5_000}
     />
   ));
   return { ...view, sent };
 }
 
 function rowOf(view: ReturnType<typeof renderRoom>, name: string): HTMLElement {
-  const cell = view.getAllByRole("cell").find((c) => c.textContent === name);
+  const cell = view
+    .getAllByRole("cell")
+    .find((c) => (c.querySelector("bdi")?.textContent ?? c.textContent) === name);
   const row = cell?.closest("tr");
   if (!row) {
     throw new Error(`no row for ${name}`);
@@ -167,12 +182,14 @@ describe("RoomView layout", () => {
     expect(heading.parentElement?.textContent).toContain("Entry Open");
   });
 
-  test("an empty room says nobody has entered instead of showing an empty table", () => {
+  test("an empty room shows the empty table and 0 in the count", () => {
     const empty = raceAfter([{ type: "setGoal", goal: "any%" }]);
     const view = renderRoom("x", false, empty);
 
-    expect(view.queryByRole("table", { name: "Entrants" })).toBeNull();
-    expect(view.getByText("Nobody has entered yet.")).toBeTruthy();
+    expect(view.getByRole("table", { name: "Entrants" })).toBeTruthy();
+    expect(view.getByRole("heading", { name: "Entrants" }).nextElementSibling?.textContent).toBe(
+      "0/50",
+    );
   });
 
   test("lists entrants with their status", () => {
@@ -197,12 +214,151 @@ describe("RoomView layout", () => {
     expect(rowOf(view, "alice").contains(view.getByRole("button", { name: ".quit" }))).toBe(true);
   });
 
+  test(".unenter is neutral like send, .remove is red because it acts on someone else", () => {
+    const host = renderRoom("a", true);
+    const send = host.getByRole("button", { name: "send" }).classList[0];
+
+    expect(host.getByRole("button", { name: ".unenter" }).classList[0]).toBe(send);
+    expect(host.getByRole("button", { name: ".remove bob" }).classList[0]).not.toBe(send);
+  });
+
+  test(".unready and .unenter turn red once the countdown runs, since they stop it", () => {
+    const counting = { ...race, phase: "countdown" as const, startsAt: 10_000 };
+    const view = renderRoom(
+      "a",
+      false,
+      raceAfter([...joinedBoth, { type: "ready", entrantId: "a" }]),
+    );
+    const neutral = view.getByRole("button", { name: ".unready" }).classList[0];
+    cleanup();
+
+    const ready = raceAfter([
+      ...joinedBoth,
+      { type: "ready", entrantId: "a" },
+      { type: "ready", entrantId: "b" },
+    ]);
+    const live = renderRoom("a", false, { ...ready, ...counting, entrants: ready.entrants });
+
+    expect(live.getByRole("button", { name: ".unready" }).classList[0]).not.toBe(neutral);
+    expect(live.getByRole("button", { name: ".unenter" }).classList[0]).toBe(
+      live.getByRole("button", { name: ".unready" }).classList[0],
+    );
+  });
+
   test("the host can .remove others but not themselves", () => {
     const host = renderRoom("a", true);
     expect(host.queryByRole("button", { name: ".remove alice" })).toBeNull();
 
     fireEvent.click(host.getByRole("button", { name: ".remove bob" }));
     expect(host.sent).toEqual([{ type: "remove", entrantId: "b" }]);
+  });
+
+  test("the host can mute and unmute others in any phase", () => {
+    const running = { ...race, phase: "running" as const, startsAt: 0 };
+    const host = renderRoom("a", true, running);
+    expect(host.queryByRole("button", { name: "mute alice" })).toBeNull();
+
+    fireEvent.click(host.getByRole("button", { name: "mute bob" }));
+    expect(host.sent).toEqual([{ type: "mute", entrantId: "b" }]);
+    cleanup();
+
+    const muted = renderRoom("a", true, { ...running, muted: ["b"] });
+    fireEvent.click(muted.getByRole("button", { name: "unmute bob" }));
+    expect(muted.sent).toEqual([{ type: "unmute", entrantId: "b" }]);
+  });
+
+  test("a muted entrant's chat box and send are off", () => {
+    const view = renderRoom("b", false, { ...race, muted: ["b"] });
+    const message = view.getByLabelText("Message") as HTMLInputElement;
+
+    expect(message.disabled).toBe(true);
+    expect(message.placeholder).toBe("you are muted");
+    expect((view.getByRole("button", { name: "send" }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  test("a race ended before it started keeps showing who was ready, not Racing", () => {
+    const ended = raceAfter([...joinedBoth, { type: "ready", entrantId: "a" }, { type: "end" }]);
+    const view = renderRoom("a", true, ended);
+
+    expect(rowOf(view, "alice").textContent).toContain("Ready");
+    expect(rowOf(view, "bob").textContent).toContain("Not ready");
+    expect(view.queryByText("Racing")).toBeNull();
+  });
+
+  test("the host locks entry from the status and caps the entrants in the header", () => {
+    const host = renderRoom("a", true);
+    const limit = host.getByLabelText("Entrant limit") as HTMLInputElement;
+
+    fireEvent.click(host.getByRole("button", { name: "close entry" }));
+    fireEvent.change(limit, { target: { value: "1" } });
+    expect(limit.value).toBe("50");
+    fireEvent.change(limit, { target: { value: "8" } });
+
+    expect(host.sent).toEqual([{ type: "lock" }, { type: "setEntrantCap", cap: 8 }]);
+  });
+
+  test("visitors see the same lock button, turned off", () => {
+    const view = renderRoom("v", false);
+
+    expect((view.getByRole("button", { name: "close entry" }) as HTMLButtonElement).disabled).toBe(
+      true,
+    );
+  });
+
+  test("the lock shows closed and turns off once the race starts", () => {
+    const view = renderRoom("a", true, { ...race, phase: "running", startsAt: 0 });
+
+    expect((view.getByRole("button", { name: "open entry" }) as HTMLButtonElement).disabled).toBe(
+      true,
+    );
+  });
+
+  test("visitors see the count against the cap and that entry is closed", () => {
+    const capped = { ...race, settings: { ...race.settings, entrantCap: 8 } };
+    const heading = renderRoom("v", false, capped).getByRole("heading", { name: "Entrants" });
+    expect(heading.nextElementSibling?.textContent).toBe("2/8");
+    cleanup();
+
+    const locked = renderRoom("v", false, { ...race, entryLocked: true });
+    expect(locked.getByText("Entry Closed")).toBeTruthy();
+    const name = locked.getByLabelText("Your name") as HTMLInputElement;
+    expect(name.disabled).toBe(true);
+    expect(name.placeholder).toBe("entry is closed");
+    expect((locked.getByRole("button", { name: ".enter" }) as HTMLButtonElement).disabled).toBe(
+      true,
+    );
+  });
+
+  test("a command typed in the chat box runs it instead of posting it", () => {
+    const view = renderRoom("a");
+    const message = view.getByLabelText("Message");
+
+    fireEvent.input(message, { target: { value: ".ready" } });
+    fireEvent.submit(message.closest("form") as HTMLFormElement);
+    fireEvent.input(message, { target: { value: "gl" } });
+    fireEvent.submit(message.closest("form") as HTMLFormElement);
+
+    expect(view.sent).toEqual([{ type: "ready" }, { type: "say", text: "gl" }]);
+  });
+
+  test("Enter anywhere on the page jumps into the chat box", () => {
+    const view = renderRoom("a");
+
+    fireEvent.keyDown(document.body, { key: "Enter" });
+
+    expect(document.activeElement).toBe(view.getByLabelText("Message"));
+  });
+
+  test("shows when the room closes, and a click hides it until the room opens again", () => {
+    localStorage.clear();
+    const view = renderRoom("a");
+
+    fireEvent.click(view.getByRole("button", { name: "room closes in 00:10:05" }));
+    expect(view.getByRole("button", { name: "show room timer" })).toBeTruthy();
+    cleanup();
+
+    expect(renderRoom("a").getByRole("button", { name: "room closes in 00:10:05" })).toBeTruthy();
+    localStorage.clear();
   });
 
   test("entrants come after the chat box", () => {
@@ -306,9 +462,16 @@ describe("RoomView precision", () => {
     });
 
     expect(localStorage.getItem("raceme.fractionDigits")).toBeNull();
-    expect(host.getByRole("timer").getAttribute("aria-label")).toBe("00:00:00");
+    expect(host.getByRole("timer").getAttribute("aria-label")).toBe("-00:00:10");
 
     localStorage.clear();
+  });
+
+  test("before GO the clock shows the countdown dimmed, without a minus sign", () => {
+    const timer = renderRoom("a").getByRole("timer");
+
+    expect(timer.textContent).toBe("00:00:10");
+    expect(timer.closest("label")?.dataset.countdown).toBe("true");
   });
 
   test("a guest's pick only changes their own view", () => {
@@ -319,7 +482,7 @@ describe("RoomView precision", () => {
     });
 
     expect(guest.sent).toEqual([]);
-    expect(guest.getByRole("timer").getAttribute("aria-label")).toBe("00:00:00.000");
+    expect(guest.getByRole("timer").getAttribute("aria-label")).toBe("-00:00:10.000");
 
     localStorage.clear();
   });
@@ -335,15 +498,11 @@ describe("RoomView actions", () => {
   });
 
   test(".unready is neutral like send, not green", () => {
-    const state = raceAfter([
-      { type: "setGoal", goal: "any%" },
-      { type: "join", entrantId: "a", name: "alice" },
-      { type: "ready", entrantId: "a" },
-    ]);
+    const state = raceAfter([...joinedBoth, { type: "ready", entrantId: "a" }]);
     const view = renderRoom("a", false, state);
 
-    expect(view.getByRole("button", { name: ".unready" }).className).toBe(
-      view.getByRole("button", { name: "send" }).className,
+    expect(view.getByRole("button", { name: ".unready" }).classList[0]).toBe(
+      view.getByRole("button", { name: "send" }).classList[0],
     );
   });
 
@@ -380,10 +539,12 @@ describe("RoomView actions", () => {
   });
 
   test("results can be downloaded once the race is over, not before", () => {
-    expect(renderRoom("x").queryByRole("link", { name: "download .csv" })).toBeNull();
+    expect(renderRoom("x").queryByRole("button", { name: "download csv" })).toBeNull();
 
     const state: RaceState = { ...race, phase: "finished", startsAt: 0, endedAt: 1 };
-    expect(renderRoom("x", false, state).getByRole("link", { name: "download .csv" })).toBeTruthy();
+    expect(
+      renderRoom("x", false, state).getByRole("button", { name: "download csv" }),
+    ).toBeTruthy();
   });
 
   // SRL called a finished race "Complete".
@@ -492,5 +653,47 @@ describe("RoomView invite link", () => {
     fireEvent.click(view.getByRole("button", { name: "Show invite link" }));
 
     expect(view.getByRole("button", { name: /about to reveal the invite link/ })).toBeTruthy();
+  });
+});
+
+describe("RoomView after the room closed", () => {
+  test("keeps the results and downloads on screen without the chat or the invite link", () => {
+    const done = raceAfter([
+      ...joinedBoth,
+      { type: "ready", entrantId: "a" },
+      { type: "ready", entrantId: "b" },
+    ]);
+    const view = renderRoom("a", true, { ...done, phase: "terminated", endedAt: 1 }, true);
+
+    expect(view.queryByLabelText("Message")).toBeNull();
+    expect(view.queryByRole("button", { name: "Show invite link" })).toBeNull();
+    expect(view.queryByRole("button", { name: ".end" })).toBeNull();
+    expect(view.queryByLabelText("Goal")).toBeNull();
+    expect(view.getByRole("table", { name: "Entrants" })).toBeTruthy();
+    expect(view.getByRole("button", { name: "download csv" })).toBeTruthy();
+    expect(view.getByRole("status").textContent).toContain("gone once you close it");
+  });
+});
+
+describe("RoomView button colors", () => {
+  test(".undone is neutral like send and .rematch is orange like .setgoal, neither green", () => {
+    const finished = raceAfter([
+      ...joinedBoth,
+      { type: "ready", entrantId: "a" },
+      { type: "ready", entrantId: "b" },
+    ]);
+    const afterBoth = playAt(finished, [
+      [{ type: "tick" }, 10_000],
+      [{ type: "done", entrantId: "a" }, 20_000],
+      [{ type: "forfeit", entrantId: "b" }, 20_000],
+    ]);
+    const view = renderRoom("a", false, afterBoth);
+    const send = view.getByRole("button", { name: "send" }).classList[0];
+
+    expect(view.getByRole("button", { name: ".undone" }).classList[0]).toBe(send);
+    expect(view.getByRole("button", { name: ".rematch" }).classList[0]).not.toBe(send);
+    expect(view.getByRole("button", { name: ".rematch" }).classList[0]).not.toBe(
+      view.getByRole("button", { name: ".undone" }).classList[0],
+    );
   });
 });

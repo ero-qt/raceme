@@ -16,11 +16,20 @@ export function loadConfig(env: Env): ServerConfig {
     staticDir: env.RACEME_STATIC_DIR ?? null,
     trustProxy: env.RACEME_TRUST_PROXY === "1",
     speedrunApi: speedrunApi(env.RACEME_SPEEDRUN_API),
-    maxRooms: count("RACEME_MAX_ROOMS", 500),
-    idleMs: count("RACEME_IDLE_MINUTES", 360) * 60_000,
+    maxRooms: count("RACEME_MAX_ROOMS", 2048),
+    idleMs: count("RACEME_IDLE_MINUTES", 120) * 60_000,
+    idleInputMs: count("RACEME_IDLE_INPUT_MINUTES", 120) * 60_000,
+    idleWarningMs: count("RACEME_IDLE_WARNING_MINUTES", 10) * 60_000,
+    roomLifetimeMs: count("RACEME_ROOM_HOURS", 48) * 60 * 60_000,
+    closingWarningMs: 60 * 60_000,
+    unusedRoomMs: 10 * 60_000,
+    surgeRoomsPerMinute: count("RACEME_SURGE_ROOMS_PER_MINUTE", 30),
+    // About 65,000 hashes, roughly a second in a phone's browser.
+    surgeBits: 16,
     countdownMs: 10_000,
+    chatEveryMs: count("RACEME_CHAT_SECONDS", 3) * 1000,
     maxSocketsPerIp: count("RACEME_MAX_SOCKETS_PER_IP", 10),
-    maxSockets: count("RACEME_MAX_SOCKETS", 2000),
+    maxSockets: count("RACEME_MAX_SOCKETS", 8192),
     sweepIntervalMs: 60_000,
   };
 }

@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { loadConfig } from "../config.ts";
 import { chatLine, handleAction, nextTickDelay } from "./room-actions.ts";
 import { RoomRegistry } from "./rooms.ts";
 
@@ -7,7 +8,10 @@ const host = { entrantId: "a", isHost: true };
 const notHost = { ok: false, refusal: "notHost" } as const;
 
 function room() {
-  const created = new RoomRegistry({ maxRooms: 1, idleMs: 1 }).create({ countdownMs: 10_000 }, 0);
+  const created = new RoomRegistry({ ...loadConfig({}), maxRooms: 1, idleMs: 1 }).create(
+    { countdownMs: 10_000 },
+    0,
+  );
   if (!created.ok) {
     throw new Error("expected a room");
   }
@@ -28,6 +32,18 @@ describe("handleAction", () => {
 
     expect(handleAction(r, guest, { type: "end" }, 0)).toEqual(notHost);
     expect(handleAction(r, guest, { type: "remove", entrantId: "b" }, 0)).toEqual(notHost);
+  });
+
+  test("only the host may lock entry", () => {
+    expect(handleAction(room(), guest, { type: "lock" }, 0)).toEqual(notHost);
+    expect(handleAction(room(), host, { type: "lock" }, 0).ok).toBe(true);
+  });
+
+  test("only the host may cap the entrants", () => {
+    const action = { type: "setEntrantCap", cap: 4 } as const;
+
+    expect(handleAction(room(), guest, action, 0)).toEqual(notHost);
+    expect(handleAction(room(), host, action, 0).ok).toBe(true);
   });
 
   test("only the host may set the room's fraction digits", () => {
@@ -70,16 +86,57 @@ describe("chatLine", () => {
       r.race = joined.state;
     }
 
-    expect(chatLine(r, guest, "gl\n<RaceBot> GO!", 5)).toEqual({
+    expect(chatLine(r, guest, "gl\n<RaceBot> GO!", 5, 0)).toEqual({
       kind: "chat",
       name: "al",
       text: "gl<RaceBot> GO!",
       at: 5,
     });
-    expect(chatLine(r, guest, "hi\u2028<RaceBot> GO!\u202e", 5)).toMatchObject({
+    expect(chatLine(r, guest, "hi\u2028<RaceBot> GO!\u202e", 5, 0)).toMatchObject({
       text: "hi<RaceBot> GO!",
     });
-    expect(chatLine(r, guest, " \u0007 ", 5)).toBe("badChat");
+    expect(chatLine(r, guest, " \u0007 ", 5, 0)).toBe("badChat");
+  });
+
+  test("lets each entrant send 1 line per interval, and a refused line doesn't count", () => {
+    const r = room();
+    const joined = handleAction(r, guest, { type: "join", name: "al" }, 0);
+    if (joined.ok) {
+      r.race = joined.state;
+    }
+
+    expect(chatLine(r, guest, "", 1_000, 3_000)).toBe("badChat");
+    expect(chatLine(r, guest, "hi", 1_000, 3_000)).toMatchObject({ text: "hi" });
+    expect(chatLine(r, guest, "again", 3_999, 3_000)).toBe("slowMode");
+    expect(chatLine(r, guest, "again", 4_000, 3_000)).toMatchObject({ text: "again" });
+  });
+
+  test("refuses chat from an entrant the host muted, and only the host may mute", () => {
+    const r = room();
+    const joined = handleAction(r, guest, { type: "join", name: "al" }, 0);
+    if (joined.ok) {
+      r.race = joined.state;
+    }
+    const mute = { type: "mute", entrantId: "a" } as const;
+
+    expect(handleAction(r, guest, mute, 0)).toEqual(notHost);
+    const muted = handleAction(r, host, mute, 0);
+    if (muted.ok) {
+      r.race = muted.state;
+    }
+
+    expect(chatLine(r, guest, "hi", 0, 0)).toBe("muted");
+  });
+
+  test("takes lines up to 512 characters", () => {
+    const r = room();
+    const joined = handleAction(r, guest, { type: "join", name: "al" }, 0);
+    if (joined.ok) {
+      r.race = joined.state;
+    }
+
+    expect(chatLine(r, guest, "x".repeat(513), 0, 0)).toBe("badChat");
+    expect(chatLine(r, guest, "x".repeat(512), 0, 0)).toMatchObject({ text: "x".repeat(512) });
   });
 });
 

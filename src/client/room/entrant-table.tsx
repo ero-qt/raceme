@@ -10,11 +10,29 @@ export function EntrantTable(props: {
   digits: FractionDigits;
   /** Renders the buttons for one row, like your own `.unenter` or the host's `.remove`. */
   rowActions: (row: Standing) => JSX.Element;
+  /** Renders a first column for the host's mute buttons, left out when not given. */
+  muteButton?: ((row: Standing) => JSX.Element) | undefined;
 }): JSX.Element {
   return (
     <table class={styles.table} aria-label="Entrants">
+      {/* Fixed widths keep the columns still when statuses change length. */}
+      <colgroup>
+        <Show when={props.muteButton}>
+          <col class={styles.muteColumn} />
+        </Show>
+        <col class={styles.placeColumn} />
+        <col />
+        <col class={styles.statusColumn} />
+        <col class={styles.timeColumn} />
+        <col class={styles.actionColumn} />
+      </colgroup>
       <thead>
         <tr>
+          <Show when={props.muteButton}>
+            <th class={styles.headCell} scope="col">
+              <span class={styles.visuallyHidden}>Chat</span>
+            </th>
+          </Show>
           <th class={styles.headCell} scope="col">
             #
           </th>
@@ -36,7 +54,10 @@ export function EntrantTable(props: {
         <For each={props.rows}>
           {(row) => (
             <tr>
-              <td class={styles.cell}>{row.place ?? ""}</td>
+              <Show when={props.muteButton}>
+                {(muteButton) => <td class={styles.muteCell}>{muteButton()(row)}</td>}
+              </Show>
+              <td class={styles.placeCell}>{row.place ?? ""}</td>
               <td class={styles.cell}>
                 <bdi>{row.name}</bdi>
               </td>

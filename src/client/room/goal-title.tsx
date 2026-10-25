@@ -22,7 +22,7 @@ export function GoalTitle(props: {
   catalog?: GoalCatalog | undefined;
 }): JSX.Element {
   return (
-    <Show when={props.editable} fallback={<h1 class={styles.goal}>{props.goal}</h1>}>
+    <Show when={props.editable} fallback={<h1 class={styles.plainGoal}>{props.goal}</h1>}>
       <EditableGoal goal={props.goal} onSubmit={props.onSubmit} catalog={props.catalog} />
     </Show>
   );

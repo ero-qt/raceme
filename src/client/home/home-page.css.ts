@@ -1,13 +1,15 @@
 import { keyframes, style } from "@vanilla-extract/css";
-import { tokens } from "../styles/tokens.css.ts";
+import { outlined } from "../styles/controls.css.ts";
 
-export const field = style({
-  borderColor: tokens.color.borderStrong,
-  selectors: {
-    // Hides a pasted room code on screen the way a password field would.
-    '&[data-kind="code"]': { WebkitTextSecurity: "disc" } as Record<string, string>,
+export const field = style([
+  outlined,
+  {
+    selectors: {
+      // Hides a pasted room code on screen the way a password field would.
+      '&[data-kind="code"]': { WebkitTextSecurity: "disc" } as Record<string, string>,
+    },
   },
-});
+]);
 
 export const visuallyHidden = style({
   position: "absolute",

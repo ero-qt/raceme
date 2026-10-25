@@ -77,4 +77,37 @@ describe("loadConfig", () => {
       "https://www.speedrun.com/api",
     );
   });
+
+  test("reads how long a room may go without input", () => {
+    expect(loadConfig({}).idleInputMs).toBe(2 * 60 * 60_000);
+    expect(loadConfig({ RACEME_IDLE_INPUT_MINUTES: "2" }).idleInputMs).toBe(2 * 60_000);
+  });
+
+  test("reads how long a room may live", () => {
+    expect(loadConfig({}).roomLifetimeMs).toBe(48 * 60 * 60_000);
+    expect(loadConfig({ RACEME_ROOM_HOURS: "72" }).roomLifetimeMs).toBe(72 * 60 * 60_000);
+  });
+
+  test("reads when a rush of new rooms starts asking for proof of work", () => {
+    expect(loadConfig({}).surgeRoomsPerMinute).toBe(30);
+    expect(loadConfig({ RACEME_SURGE_ROOMS_PER_MINUTE: "60" }).surgeRoomsPerMinute).toBe(60);
+  });
+
+  test("allows 2048 rooms and 8192 sockets unless told otherwise", () => {
+    expect(loadConfig({})).toMatchObject({ maxRooms: 2048, maxSockets: 8192 });
+  });
+
+  test("drops a room nobody is connected to after 2 hours unless told otherwise", () => {
+    expect(loadConfig({}).idleMs).toBe(2 * 60 * 60_000);
+  });
+
+  test("reads how long the idle warning lasts", () => {
+    expect(loadConfig({}).idleWarningMs).toBe(10 * 60_000);
+    expect(loadConfig({ RACEME_IDLE_WARNING_MINUTES: "15" }).idleWarningMs).toBe(15 * 60_000);
+  });
+
+  test("reads how long each entrant waits between chat lines", () => {
+    expect(loadConfig({}).chatEveryMs).toBe(3_000);
+    expect(loadConfig({ RACEME_CHAT_SECONDS: "5" }).chatEveryMs).toBe(5_000);
+  });
 });

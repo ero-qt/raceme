@@ -32,9 +32,14 @@ export function RaceClock(props: {
 
   return (
     // biome-ignore lint/a11y/useKeyWithClickEvents: keyboard users reach the select inside directly
-    <label class={styles.clock} onClick={openPicker}>
+    <label
+      class={styles.clock}
+      classList={{ [styles.countdown]: props.elapsed < 0 }}
+      data-countdown={props.elapsed < 0}
+      onClick={openPicker}
+    >
       <span role="timer" aria-label={full()}>
-        {full().split(".")[0]}
+        {full().replace("-", "").split(".")[0]}
       </span>
       <select
         ref={select}

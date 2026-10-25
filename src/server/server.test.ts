@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, test } from "bun:test";
+import { solveChallenge } from "../shared/proof-of-work.ts";
 import type { ServerMessage } from "../shared/protocol.ts";
-import { type RunningServer, type ServerConfig, startServer } from "./server.ts";
+import { type RunningServer, type ServerConfig, startServer, steadyClock } from "./server.ts";
 
 const origin = "http://localhost";
 let running: RunningServer | undefined;
@@ -25,7 +26,15 @@ function start(overrides: Partial<ServerConfig> = {}) {
       speedrunApi: null,
       maxRooms: 10,
       idleMs: 60_000,
+      idleInputMs: 2 * 60 * 60_000,
+      idleWarningMs: 10 * 60_000,
+      roomLifetimeMs: 48 * 60 * 60_000,
+      closingWarningMs: 60 * 60_000,
+      unusedRoomMs: 10 * 60_000,
+      surgeRoomsPerMinute: 1000,
+      surgeBits: 8,
       countdownMs: 50,
+      chatEveryMs: 3_000,
       maxSocketsPerIp: 10,
       maxSockets: 2000,
       sweepIntervalMs: 20,
@@ -59,6 +68,7 @@ class Client {
   readonly socket: WebSocket;
   readonly opened: Promise<void>;
   readonly closed: Promise<number>;
+  readonly closeReason: Promise<string>;
 
   constructor(url: string, cookie: string) {
     this.socket = new WebSocket(url, { headers: { origin, cookie } } as never);
@@ -66,8 +76,15 @@ class Client {
     this.opened = new Promise((resolve) => {
       this.socket.onopen = () => resolve();
     });
+    let reason: (text: string) => void = () => {};
+    this.closeReason = new Promise((resolve) => {
+      reason = resolve;
+    });
     this.closed = new Promise((resolve) => {
-      this.socket.onclose = (event) => resolve(event.code);
+      this.socket.onclose = (event) => {
+        reason(event.reason);
+        resolve(event.code);
+      };
     });
   }
 
@@ -99,6 +116,13 @@ function upgrade(base: string, slug: string, headers: Record<string, string> = {
     headers: { origin, upgrade: "websocket", connection: "upgrade", ...headers },
   });
 }
+
+describe("steadyClock", () => {
+  // Fractions of a millisecond would end up in finish times and exported `time_ms` values.
+  test("counts whole milliseconds", () => {
+    expect(Number.isInteger(steadyClock())).toBe(true);
+  });
+});
 
 describe("server", () => {
   test("creating a room sets a host cookie scoped to the base path", async () => {
@@ -148,6 +172,55 @@ describe("server", () => {
     expect(feed.type === "feed" && feed.entries.map((e) => e.text)).toEqual([
       "Goal Set: sm64 16 star",
     ]);
+  });
+
+  test("asks new rooms for a proof of work once too many open in a minute", async () => {
+    const base = start({ surgeRoomsPerMinute: 2 });
+    for (let i = 0; i < 3; i++) {
+      expect((await createRoom(base)).response.status).toBe(201);
+    }
+
+    const refused = await fetch(`${base}/api/rooms`, {
+      method: "POST",
+      headers: { origin },
+      body: JSON.stringify({ goal: "any%" }),
+    });
+    expect(refused.status).toBe(428);
+
+    const { challenge } = (await refused.json()) as { challenge: { token: string; bits: number } };
+    const nonce = await solveChallenge(challenge.token, challenge.bits);
+    const proven = await fetch(`${base}/api/rooms`, {
+      method: "POST",
+      headers: { origin },
+      body: JSON.stringify({ goal: "any%", proof: { token: challenge.token, nonce } }),
+    });
+    expect(proven.status).toBe(201);
+  });
+
+  test("charges a room against the limits once, not for the proof of work challenge too", async () => {
+    const base = start({ surgeRoomsPerMinute: 1 });
+    const post = (body: object) =>
+      fetch(`${base}/api/rooms`, {
+        method: "POST",
+        headers: { origin },
+        body: JSON.stringify(body),
+      });
+    for (let i = 0; i < 2; i++) {
+      expect((await post({ goal: "any%" })).status).toBe(201);
+    }
+
+    // 5 rooms per address fit in the limit: 2 above and 3 more behind a proof of work each.
+    for (let i = 0; i < 3; i++) {
+      const refused = await post({ goal: "any%" });
+      expect(refused.status).toBe(428);
+      const { challenge } = (await refused.json()) as {
+        challenge: { token: string; bits: number };
+      };
+      const nonce = await solveChallenge(challenge.token, challenge.bits);
+      expect((await post({ goal: "any%", proof: { token: challenge.token, nonce } })).status).toBe(
+        201,
+      );
+    }
   });
 
   test("refuses a room without a usable goal", async () => {
@@ -423,6 +496,68 @@ describe("server", () => {
     });
   });
 
+  test("RaceBot warns 1 hour before a room reaches its lifetime", async () => {
+    const base = start({ idleMs: 100 * 60 * 60_000, roomLifetimeMs: 3 * 60 * 60_000 });
+    const { slug } = await createRoom(base);
+    const client = new Client(
+      socketUrl(base, slug),
+      "raceme_session=old-secret-old-secret-old-secret-old",
+    );
+    await client.opened;
+
+    clockOffsetMs += 2 * 60 * 60_000;
+
+    const warning = await client.waitFor(
+      (m) =>
+        m.type === "feed" &&
+        m.entries.some((e) => e.text.includes("closes in 1 hour. Rooms last at most 3 hours")),
+    );
+    expect(warning).toBeTruthy();
+  });
+
+  test("an idle room warns after 2 hours and closes 10 minutes later unless someone acts", async () => {
+    const base = start({ idleMs: 100 * 60 * 60_000 });
+    const { slug } = await createRoom(base);
+    const client = new Client(
+      socketUrl(base, slug),
+      "raceme_session=idle-secret-idle-secret-idle-secret",
+    );
+    await client.opened;
+
+    clockOffsetMs += 2 * 60 * 60_000;
+    const warning = await client.waitFor((m) => m.type === "idleWarning");
+    expect(warning.type === "idleWarning" && warning.closesAt).toBeGreaterThan(Date.now());
+    const line = (text: string) => (m: ServerMessage) =>
+      m.type === "feed" && m.entries.some((e) => e.text === text);
+    expect(await client.waitFor(line("Room closes soon due to inactivity!"))).toBeTruthy();
+
+    client.send({ type: "active" });
+    await client.waitFor((m) => m.type === "idleCleared");
+
+    clockOffsetMs += 2 * 60 * 60_000 + 10 * 60_000;
+    expect(await client.closed).toBe(4404);
+  });
+
+  test("someone opening an idle room counts as activity and clears the warning", async () => {
+    const base = start({ idleMs: 100 * 60 * 60_000 });
+    const { slug } = await createRoom(base);
+    const first = new Client(
+      socketUrl(base, slug),
+      "raceme_session=one-secret-one-secret-one-secret-o",
+    );
+    await first.opened;
+    clockOffsetMs += 2 * 60 * 60_000;
+    await first.waitFor((m) => m.type === "idleWarning");
+
+    const late = new Client(
+      socketUrl(base, slug),
+      "raceme_session=two-secret-two-secret-two-secret-t",
+    );
+    await late.opened;
+
+    expect(await first.waitFor((m) => m.type === "idleCleared")).toBeTruthy();
+  });
+
   test("a link to a room that is gone closes with code 4404", async () => {
     const base = start();
 
@@ -450,6 +585,31 @@ describe("server", () => {
 
     expect(await client.closed).toBe(4404);
     expect(running?.rooms.get(slug)).toBeUndefined();
+    expect(await client.closeReason).toBe("Room closed: the race ended.");
+  });
+
+  test("tells the room when it closes: 48 hours after opening, or 10 minutes after .end", async () => {
+    const base = start();
+    const { slug, host } = await createRoom(base);
+    const client = new Client(
+      socketUrl(base, slug),
+      `${host}; raceme_session=due-secret-due-secret-due-secret-d`,
+    );
+    const opened = await client.waitFor((m) => m.type === "state");
+    const lifetime = opened.type === "state" ? opened.closesAt - opened.serverNow : 0;
+    expect(lifetime).toBeGreaterThan(48 * 60 * 60_000 - 5_000);
+    expect(lifetime).toBeLessThanOrEqual(48 * 60 * 60_000);
+
+    client.send({ type: "end" });
+    const ended = await client.waitFor(isPhase("terminated"));
+    expect(ended.type === "state" && ended.closesAt - (ended.race.endedAt ?? 0)).toBe(10 * 60_000);
+
+    client.send({ type: "rematch" });
+    await client.waitFor((m) => m.type === "feed" && m.entries.some((e) => e.text === "Rematch!"));
+    const rematched = client.messages.filter((m) => m.type === "state").at(-1);
+    expect(rematched?.type === "state" && rematched.closesAt).toBe(
+      opened.type === "state" ? opened.closesAt : 0,
+    );
   });
 
   test("announces actions as RaceBot lines and relays chat", async () => {

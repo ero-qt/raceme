@@ -7,9 +7,16 @@ export type ClientAction =
   | { type: "setGoal"; goal: string }
   | { type: "say"; text: string }
   | { type: "remove"; entrantId: string }
+  | { type: "mute"; entrantId: string }
+  | { type: "unmute"; entrantId: string }
   | { type: "setFractionDigits"; digits: FractionDigits }
+  | { type: "setEntrantCap"; cap: number | null }
   | { type: "end" }
   | { type: "rematch" }
+  | { type: "lock" }
+  | { type: "unlock" }
+  /** Tells the server someone is still at the screen, so the room doesn't end as idle. */
+  | { type: "active" }
   | { type: EntrantActionType };
 
 type EntrantActionType =
@@ -21,21 +28,33 @@ type EntrantActionType =
   | "forfeit"
   | "unforfeit";
 
+export const maxChatLength = 512;
+
 export type RoomRefusal =
   | RaceRefusal
   | "notHost"
   | "roomGone"
   | "badMessage"
   | "badChat"
+  | "slowMode"
+  | "muted"
   | "rateLimited";
 
 export type ServerMessage =
-  | { type: "welcome"; entrantId: string; isHost: boolean }
-  | { type: "state"; race: RaceState; serverNow: number }
+  | { type: "welcome"; entrantId: string; isHost: boolean; chatEveryMs: number }
+  /** Gives the room's state, with `closesAt` as the server time the room will close. */
+  | { type: "state"; race: RaceState; serverNow: number; closesAt: number }
   | { type: "feed"; entries: FeedEntry[] }
-  | { type: "refused"; refusal: RoomRefusal };
+  | { type: "refused"; refusal: RoomRefusal }
+  | { type: "idleWarning"; closesAt: number; quietFor: string }
+  | { type: "idleCleared" };
 
-const maxMessageLength = 1024;
+/**
+ * Caps one client message, in UTF-16 units and in bytes alike. JSON can grow each character of a
+ * chat line to the 6 characters of `\uXXXX`. No character takes more than 6 bytes either way, so a
+ * full line plus the rest of the message always fits.
+ */
+export const maxMessageLength = maxChatLength * 6 + 256;
 const plainActions = new Set([
   "leave",
   "ready",
@@ -44,8 +63,11 @@ const plainActions = new Set([
   "undone",
   "forfeit",
   "unforfeit",
+  "active",
   "end",
   "rematch",
+  "lock",
+  "unlock",
 ]);
 
 /** Reads one client message, keeping only the fields its action type allows. */
@@ -64,7 +86,7 @@ export function parseClientAction(raw: string): ClientAction | null {
     return null;
   }
 
-  const { type, name, goal, text, entrantId, digits } = message as Record<string, unknown>;
+  const { type, name, goal, text, entrantId, digits, cap } = message as Record<string, unknown>;
   if (type === "join") {
     return typeof name === "string" ? { type, name } : null;
   }
@@ -77,7 +99,10 @@ export function parseClientAction(raw: string): ClientAction | null {
   if (type === "setFractionDigits") {
     return digits === 0 || digits === 1 || digits === 2 || digits === 3 ? { type, digits } : null;
   }
-  if (type === "remove") {
+  if (type === "setEntrantCap") {
+    return cap === null || typeof cap === "number" ? { type, cap } : null;
+  }
+  if (type === "remove" || type === "mute" || type === "unmute") {
     return typeof entrantId === "string" ? { type, entrantId } : null;
   }
 

@@ -10,6 +10,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 
 - A line in the privacy notice about the owner getting a Discord message with just the number when open rooms or people online pass 10, 25, 50 and so on.
 
+### Changed
+
+- A queued restart doesn't wait for abandoned rooms, meaning rooms nobody has had open for 10 minutes.
+- Abandoned rooms get freed early, longest-abandoned first, when the server is close to its room limit.
+
 ## [1.0.1] - 2026-10-25
 
 ### Fixed

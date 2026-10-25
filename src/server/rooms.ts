@@ -192,6 +192,10 @@ export interface RoomRegistryOptions {
   closingWarningMs: number;
   /** Drops an empty room nobody ever entered after this long, so lobbies can't fill the cap. */
   unusedRoomMs: number;
+  /** Counts a room as abandoned after this long with nobody connected, so it may be freed early. */
+  abandonedAfterMs: number;
+  /** Frees abandoned rooms, longest-abandoned first, once fewer than this many rooms are free. */
+  abandonedRoomHeadroom: number;
 }
 
 export type CloseReason = "ended" | "expired" | "restart" | "idle" | "empty";
@@ -299,15 +303,40 @@ export class RoomRegistry {
   /** Drops the rooms that are over, each with the reason it closed. */
   sweepWithReasons(now: number): DroppedRoom[] {
     const dropped: DroppedRoom[] = [];
-    for (const [slug, room] of this.#rooms) {
+    const drop = (room: Room, reason: CloseReason) => {
+      this.#rooms.delete(room.slug);
+      dropped.push({ slug: room.slug, reason });
+    };
+
+    for (const room of this.#rooms.values()) {
       const reason = this.#closeReason(room, now);
       if (reason !== null) {
-        this.#rooms.delete(slug);
-        dropped.push({ slug, reason });
+        drop(room, reason);
       }
     }
 
+    const abandoned = [...this.#rooms.values()]
+      .filter((room) => this.#isAbandoned(room, now))
+      .sort((a, b) => a.lastActivityAt - b.lastActivityAt);
+    // A queued restart only waits for rooms someone is in, so it doesn't wait on abandoned ones.
+    if (this.#restartAt !== null && abandoned.length === this.#rooms.size) {
+      for (const room of abandoned) {
+        drop(room, "restart");
+      }
+      return dropped;
+    }
+    for (const room of abandoned) {
+      if (this.#rooms.size <= this.options.maxRooms - this.options.abandonedRoomHeadroom) {
+        break;
+      }
+      drop(room, "empty");
+    }
+
     return dropped;
+  }
+
+  #isAbandoned(room: Room, now: number): boolean {
+    return room.connected === 0 && now - room.lastActivityAt >= this.options.abandonedAfterMs;
   }
 
   #closeReason(room: Room, now: number): CloseReason | null {

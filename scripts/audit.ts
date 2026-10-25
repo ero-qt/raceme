@@ -33,6 +33,8 @@ const server = startServer({
   roomLifetimeMs: 48 * 60 * 60_000,
   closingWarningMs: 60 * 60_000,
   unusedRoomMs: 10 * 60_000,
+  abandonedAfterMs: 10 * 60_000,
+  abandonedRoomHeadroom: 0,
   surgeRoomsPerMinute: 1000,
   surgeBits: 8,
   countdownMs: 10_000,

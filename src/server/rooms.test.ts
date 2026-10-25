@@ -13,7 +13,13 @@ const settings = { countdownMs: 10_000 };
 const timings = loadConfig({});
 
 function registry(options: Partial<RoomRegistryOptions> = {}) {
-  return new RoomRegistry({ ...timings, maxRooms: 3, idleMs: 60_000, ...options });
+  return new RoomRegistry({
+    ...timings,
+    maxRooms: 3,
+    idleMs: 60_000,
+    abandonedRoomHeadroom: 0,
+    ...options,
+  });
 }
 
 function created(result: CreateRoomResult): Extract<CreateRoomResult, { ok: true }> {
@@ -303,5 +309,63 @@ describe("RoomRegistry queued restart", () => {
     expect(rooms.closingSoon(hours(4) - 1)).toEqual([]);
     expect(rooms.closingSoon(hours(4))).toEqual([room.slug]);
     expect(rooms.sweepWithReasons(hours(5))).toEqual([{ slug: room.slug, reason: "restart" }]);
+  });
+});
+
+describe("RoomRegistry abandoned rooms", () => {
+  const minutes = (n: number) => n * 60_000;
+  const options = {
+    maxRooms: 4,
+    idleMs: minutes(120),
+    idleInputMs: minutes(600),
+    unusedRoomMs: minutes(600),
+    abandonedAfterMs: minutes(10),
+    abandonedRoomHeadroom: 1,
+  };
+
+  function openAndLeave(rooms: RoomRegistry, at: number): Room {
+    const room = created(rooms.create(settings, at)).room;
+    withEntrant(room, `e${at}`);
+    room.connect(at);
+    room.disconnect(at);
+    return room;
+  }
+
+  test("frees the longest-abandoned rooms once fewer than the headroom are left free", () => {
+    const rooms = registry(options);
+    const oldest = openAndLeave(rooms, 0);
+    const older = openAndLeave(rooms, minutes(1));
+    const live = created(rooms.create(settings, minutes(2))).room;
+    live.connect(minutes(2));
+
+    const dropped = rooms.sweepWithReasons(minutes(12));
+
+    expect(dropped).toEqual([]);
+    openAndLeave(rooms, minutes(3));
+    expect(rooms.sweepWithReasons(minutes(14)).map((d) => d.slug)).toEqual([oldest.slug]);
+    expect(rooms.get(older.slug)).toBeDefined();
+    expect(rooms.get(live.slug)).toBe(live);
+  });
+
+  test("closes every room for a queued restart once only abandoned rooms are left", () => {
+    const rooms = registry(options);
+    const abandoned = openAndLeave(rooms, 0);
+    const recent = openAndLeave(rooms, minutes(5));
+    rooms.queueRestart(minutes(600));
+
+    expect(rooms.sweepWithReasons(minutes(12))).toEqual([]);
+    expect(rooms.sweepWithReasons(minutes(15))).toEqual([
+      { slug: abandoned.slug, reason: "restart" },
+      { slug: recent.slug, reason: "restart" },
+    ]);
+  });
+
+  test("keeps abandoned rooms for a queued restart while someone is still in another room", () => {
+    const rooms = registry(options);
+    openAndLeave(rooms, 0);
+    created(rooms.create(settings, 0)).room.connect(0);
+    rooms.queueRestart(minutes(600));
+
+    expect(rooms.sweepWithReasons(minutes(30))).toEqual([]);
   });
 });

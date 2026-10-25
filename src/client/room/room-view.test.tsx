@@ -494,3 +494,30 @@ describe("RoomView invite link", () => {
     expect(view.getByRole("button", { name: /about to reveal the invite link/ })).toBeTruthy();
   });
 });
+
+describe("RoomView button colors", () => {
+  test(".undone is neutral like send and .rematch is orange like .setgoal, neither green", () => {
+    const finished = raceAfter([
+      ...joinedBoth,
+      { type: "ready", entrantId: "a" },
+      { type: "ready", entrantId: "b" },
+    ]);
+    const done = apply(finished, { type: "tick" }, 10_000);
+    const afterDone = done.ok && apply(done.state, { type: "done", entrantId: "a" }, 20_000);
+    const afterBoth =
+      afterDone &&
+      afterDone.ok &&
+      apply(afterDone.state, { type: "forfeit", entrantId: "b" }, 20_000);
+    if (!afterBoth || !afterBoth.ok) {
+      throw new Error("race setup failed");
+    }
+    const view = renderRoom("a", false, afterBoth.state);
+    const send = view.getByRole("button", { name: "send" }).className;
+
+    expect(view.getByRole("button", { name: ".undone" }).className).toBe(send);
+    expect(view.getByRole("button", { name: ".rematch" }).className).not.toBe(send);
+    expect(view.getByRole("button", { name: ".rematch" }).className).not.toBe(
+      view.getByRole("button", { name: ".undone" }).className,
+    );
+  });
+});

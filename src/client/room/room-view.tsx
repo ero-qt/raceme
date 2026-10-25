@@ -18,7 +18,8 @@ import * as styles from "./room.css.ts";
 import { ChatForm, JoinForm } from "./room-forms.tsx";
 
 const dangerActions = new Set<ActionType>(["forfeit", "leave"]);
-const neutralActions = new Set<ActionType>(["unready"]);
+const neutralActions = new Set<ActionType>(["unready", "undone", "unforfeit"]);
+const accentActions = new Set<ActionType>(["rematch"]);
 
 export interface RoomViewProps {
   race: RaceState;
@@ -70,7 +71,13 @@ export function RoomView(props: RoomViewProps): JSX.Element {
   const actionButton = (action: Accessor<ActionType>) => (
     <Button
       variant={
-        dangerActions.has(action()) ? "danger" : neutralActions.has(action()) ? "ghost" : "go"
+        dangerActions.has(action())
+          ? "danger"
+          : neutralActions.has(action())
+            ? "ghost"
+            : accentActions.has(action())
+              ? "accent"
+              : "go"
       }
       onClick={() => press({ type: action() } as ClientAction)}
     >

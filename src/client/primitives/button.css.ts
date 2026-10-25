@@ -29,7 +29,9 @@ export const buttonVariant = styleVariants({
       color: tokens.color.accentFg,
       selectors: {
         "&:hover:not(:disabled)": {
-          background: `color-mix(in srgb, ${tokens.color.accent} 85%, ${tokens.color.accentFg})`,
+          // Lightens instead of darkening because orange mixed toward its dark text drops below
+          // 7:1 contrast.
+          background: `color-mix(in srgb, ${tokens.color.accent} 75%, white)`,
         },
       },
     },

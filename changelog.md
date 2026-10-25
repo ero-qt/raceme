@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- RaceBot's countdown line uses "1 second" instead of "1 seconds" when a countdown is 1 second long.
+
 ## [1.0.0] - 2026-10-25
 
 ### Added

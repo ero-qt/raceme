@@ -1,0 +1,26 @@
+import type { Theme } from "../theme.ts";
+
+export const lightTheme: Theme = {
+  bg0: "#f7f7f5",
+  bg1: "#ffffff",
+  bg2: "#eeece8",
+  bgHover: "#e6e3de",
+  border: "#d3cfc8",
+  borderStrong: "#6b665c",
+  text0: "#15171a",
+  text1: "#3a3e45",
+  placeholder: "#55595f",
+  link: "#854100",
+  accent: "#ff9500",
+  accentFg: "#1a1205",
+  focus: "#854100",
+  go: "#7ee08a",
+  goFg: "#06200b",
+  danger: "#ff7466",
+  dangerFg: "#2a0503",
+  statusOpen: "#174f22",
+  statusCountdown: "#5c3f00",
+  statusRunning: "#14457a",
+  statusDone: "#462b84",
+  statusForfeit: "#8a1b14",
+};

@@ -1,0 +1,26 @@
+import type { Theme } from "../theme.ts";
+
+export const darkTheme: Theme = {
+  bg0: "#101216",
+  bg1: "#171a20",
+  bg2: "#20242c",
+  bgHover: "#2a2f39",
+  border: "#3a404c",
+  borderStrong: "#8a93a3",
+  text0: "#eef0f3",
+  text1: "#bcc3ce",
+  placeholder: "#a3abb8",
+  link: "#ff9500",
+  accent: "#ff9500",
+  accentFg: "#1a1205",
+  focus: "#ffd27a",
+  go: "#7ee08a",
+  goFg: "#06200b",
+  danger: "#ff7466",
+  dangerFg: "#2a0503",
+  statusOpen: "#7ee08a",
+  statusCountdown: "#ffd166",
+  statusRunning: "#8ecbff",
+  statusDone: "#cdbcff",
+  statusForfeit: "#ffa49d",
+};

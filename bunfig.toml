@@ -1,0 +1,6 @@
+[test]
+preload = ["./test/setup.ts"]
+
+[install.scopes]
+# The EDPS publishes its Website Evidence Collector on the EU's own package registry, not npm.
+EDPS = "https://code.europa.eu/api/v4/projects/812/packages/npm/"

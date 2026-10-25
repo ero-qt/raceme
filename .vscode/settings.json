@@ -1,0 +1,14 @@
+{
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.expand": true,
+  "explorer.fileNesting.patterns": {
+    "*.ts": "${capture}.test.ts",
+    "*.tsx": "${capture}.css.ts, ${capture}.test.tsx",
+    "package.json": ".editorconfig, biome.json, bun.lock, bunfig.toml, tsconfig.json",
+    "readme.md": "changelog.md, license.md",
+  },
+  "files.exclude": {
+    "dist": true,
+    "node_modules": true,
+  },
+}

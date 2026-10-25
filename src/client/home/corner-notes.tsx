@@ -12,7 +12,7 @@ interface Note {
 
 const notes: Note[] = [
   {
-    summary: "privacy",
+    summary: "Privacy",
     body: () => (
       <>
         <p>
@@ -45,7 +45,7 @@ const notes: Note[] = [
     ),
   },
   {
-    summary: "made with ai",
+    summary: "Made with AI",
     body: () => (
       <p>
         raceme was made with a lot of help from AI.
@@ -56,7 +56,7 @@ const notes: Note[] = [
       </p>
     ),
   },
-  { summary: "build", body: () => <BuildInfoText />, loadsOnOpen: true },
+  { summary: "Build", body: () => <BuildInfoText />, loadsOnOpen: true },
 ];
 
 /** Shows short notes about raceme folded away in a corner of the start page. */

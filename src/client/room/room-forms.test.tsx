@@ -9,7 +9,7 @@ describe("ChatForm", () => {
     const said: string[] = [];
     const view = render(() => <ChatForm onSay={(text) => said.push(text)} waitMs={50} />);
     const input = view.getByLabelText("Message") as HTMLInputElement;
-    const send = view.getByRole("button", { name: "send" }) as HTMLButtonElement;
+    const send = view.getByRole("button", { name: "Send" }) as HTMLButtonElement;
 
     fireEvent.input(input, { target: { value: "gl" } });
     fireEvent.submit(input.form as HTMLFormElement);

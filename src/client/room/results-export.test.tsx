@@ -22,20 +22,20 @@ describe("ResultsExport", () => {
     const view = render(() => <ResultsExport race={race} />);
     const buttons = view.getAllByRole("button").map((button) => button.getAttribute("aria-label"));
 
-    expect(buttons).toEqual(["download csv", "download json", "copy image", "download image"]);
-    for (const name of ["text", "csv", "json", "image"]) {
+    expect(buttons).toEqual(["Download CSV", "Download JSON", "Copy image", "Download image"]);
+    for (const name of ["Text", "CSV", "JSON", "Image"]) {
       expect(view.getByText(name, { selector: "summary" })).toBeTruthy();
     }
   });
 
   test("opening CSV shows the read-only text, all selected", async () => {
     const view = render(() => <ResultsExport race={race} />);
-    const details = view.getByText("csv", { selector: "summary" })
+    const details = view.getByText("CSV", { selector: "summary" })
       .parentElement as HTMLDetailsElement;
 
     details.open = true;
     fireEvent(details, new Event("toggle"));
-    const csv = (await view.findByLabelText("results as csv")) as HTMLTextAreaElement;
+    const csv = (await view.findByLabelText("Results as CSV")) as HTMLTextAreaElement;
     fireEvent.focus(csv);
 
     expect(csv.readOnly).toBe(true);
@@ -45,7 +45,7 @@ describe("ResultsExport", () => {
 
   test("lists up to 10 places in the image, never more than the race has", () => {
     const view = render(() => <ResultsExport race={race} />);
-    const field = view.getByLabelText("places to show") as HTMLInputElement;
+    const field = view.getByLabelText("Places to show") as HTMLInputElement;
 
     expect(field.value).toBe(String(Math.min(10, race.entrants.length)));
     expect(field.min).toBe("1");

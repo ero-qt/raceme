@@ -50,27 +50,27 @@ export function ResultsExport(props: { race: RaceState }): JSX.Element {
 
   return (
     <section class={styles.exportSection} aria-label="Results">
-      <ExportRow name="text">
-        <TextPreview name="text" text={resultsText(props.race, chatHeading(props.race))} />
+      <ExportRow name="Text">
+        <TextPreview name="Text" text={resultsText(props.race, chatHeading(props.race))} />
       </ExportRow>
-      <ExportRow name="csv" download={async () => saveText(resultsCsv, "text/csv", "csv")}>
-        <TextPreview name="csv" text={resultsCsv(props.race)} />
+      <ExportRow name="CSV" download={async () => saveText(resultsCsv, "text/csv", "csv")}>
+        <TextPreview name="CSV" text={resultsCsv(props.race)} />
       </ExportRow>
       <ExportRow
-        name="json"
+        name="JSON"
         download={async () => saveText(resultsJson, "application/json", "json")}
       >
-        <TextPreview name="json" text={resultsJson(props.race)} />
+        <TextPreview name="JSON" text={resultsJson(props.race)} />
       </ExportRow>
       <ExportRow
-        name="image"
+        name="Image"
         copy={() => navigator.clipboard.write([new ClipboardItem({ "image/png": image() })])}
         download={async () => save(await image(), exportFileName(props.race, "png"))}
         setting={
           <input
             class={numberField}
             type="number"
-            aria-label="places to show"
+            aria-label="Places to show"
             title="Places to show"
             min={1}
             max={total()}
@@ -101,7 +101,7 @@ function ExportRow(props: {
   name: string;
   copy?: () => Promise<void>;
   download?: () => Promise<void>;
-  /** Fills the space before the buttons, like the image's highlight count. */
+  /** Fills the space before the buttons, like the image's place count. */
   setting?: JSX.Element;
   children: JSX.Element;
 }): JSX.Element {
@@ -115,7 +115,7 @@ function ExportRow(props: {
     setCopied(ok ? "copied" : "failed");
     setTimeout(() => setCopied(null), copiedForMs);
   };
-  const copyLabel = () => (copied() ? `${props.name} ${copied()}` : `copy ${props.name}`);
+  const copyLabel = () => (copied() ? `${props.name} ${copied()}` : `Copy ${inPhrase(props.name)}`);
 
   return (
     <>
@@ -147,8 +147,8 @@ function ExportRow(props: {
         {(download) => (
           <Button
             variant="icon"
-            aria-label={`download ${props.name}`}
-            title={`download ${props.name}`}
+            aria-label={`Download ${inPhrase(props.name)}`}
+            title={`Download ${inPhrase(props.name)}`}
             onClick={download()}
           >
             <Download class={styles.rowIcon} aria-hidden="true" />
@@ -159,12 +159,17 @@ function ExportRow(props: {
   );
 }
 
+/** Writes a format's name for the middle of a label, keeping acronyms like CSV in capitals. */
+function inPhrase(name: string): string {
+  return name === name.toUpperCase() ? name : name.toLowerCase();
+}
+
 function TextPreview(props: { name: string; text: string }): JSX.Element {
   return (
     <textarea
       ref={(area) => queueMicrotask(() => area.focus())}
       class={styles.exportText}
-      aria-label={`results as ${props.name}`}
+      aria-label={`Results as ${inPhrase(props.name)}`}
       readOnly
       rows={Math.min(12, props.text.split("\n").length)}
       value={props.text}

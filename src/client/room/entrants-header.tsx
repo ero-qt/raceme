@@ -82,14 +82,14 @@ export function EntrantsHeader(props: {
       <span class={styles.headerSpacer} />
       <span class={styles.headerStatus}>
         <Show when={props.race.entryLocked && beforeStart()} fallback={statusBadge(props.race)}>
-          <StatusBadge status="forfeit" label="Entry Closed" />
+          <StatusBadge status="forfeit" label="Entry closed" />
         </Show>
       </span>
       {/* One button for everyone, so the same state always looks the same. */}
       <Button
         variant="plain"
         disabled={!editable()}
-        aria-label={locked() ? "open entry" : "close entry"}
+        aria-label={locked() ? "Open entry" : "Close entry"}
         onClick={() => props.send({ type: locked() ? "unlock" : "lock" })}
       >
         {lockIcon()}

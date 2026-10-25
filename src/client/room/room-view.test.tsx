@@ -186,7 +186,7 @@ describe("RoomView layout", () => {
   test("the room status sits with the entrants heading", () => {
     const heading = renderRoom("x").getByRole("heading", { name: /Entrants/ });
 
-    expect(heading.parentElement?.textContent).toContain("Entry Open");
+    expect(heading.parentElement?.textContent).toContain("Entry open");
   });
 
   test("an empty room shows the empty table and 0 in the count", () => {
@@ -223,7 +223,7 @@ describe("RoomView layout", () => {
 
   test(".unenter is neutral like send, .remove is red because it acts on someone else", () => {
     const host = renderRoom("a", true);
-    const send = host.getByRole("button", { name: "send" }).classList[0];
+    const send = host.getByRole("button", { name: "Send" }).classList[0];
 
     expect(host.getByRole("button", { name: ".unenter" }).classList[0]).toBe(send);
     expect(host.getByRole("button", { name: ".remove bob" }).classList[0]).not.toBe(send);
@@ -263,14 +263,14 @@ describe("RoomView layout", () => {
   test("the host can mute and unmute others in any phase", () => {
     const running = { ...race, phase: "running" as const, startsAt: 0 };
     const host = renderRoom("a", true, running);
-    expect(host.queryByRole("button", { name: "mute alice" })).toBeNull();
+    expect(host.queryByRole("button", { name: "Mute alice" })).toBeNull();
 
-    fireEvent.click(host.getByRole("button", { name: "mute bob" }));
+    fireEvent.click(host.getByRole("button", { name: "Mute bob" }));
     expect(host.sent).toEqual([{ type: "mute", entrantId: "b" }]);
     cleanup();
 
     const muted = renderRoom("a", true, { ...running, muted: ["b"] });
-    fireEvent.click(muted.getByRole("button", { name: "unmute bob" }));
+    fireEvent.click(muted.getByRole("button", { name: "Unmute bob" }));
     expect(muted.sent).toEqual([{ type: "unmute", entrantId: "b" }]);
   });
 
@@ -280,7 +280,7 @@ describe("RoomView layout", () => {
 
     expect(message.disabled).toBe(true);
     expect(message.placeholder).toBe("you are muted");
-    expect((view.getByRole("button", { name: "send" }) as HTMLButtonElement).disabled).toBe(true);
+    expect((view.getByRole("button", { name: "Send" }) as HTMLButtonElement).disabled).toBe(true);
   });
 
   test("a race ended before it started keeps showing who was ready, not Racing", () => {
@@ -296,7 +296,7 @@ describe("RoomView layout", () => {
     const host = renderRoom("a", true);
     const limit = host.getByLabelText("Entrant limit") as HTMLInputElement;
 
-    fireEvent.click(host.getByRole("button", { name: "close entry" }));
+    fireEvent.click(host.getByRole("button", { name: "Close entry" }));
     fireEvent.change(limit, { target: { value: "1" } });
     expect(limit.value).toBe("50");
     fireEvent.change(limit, { target: { value: "8" } });
@@ -307,7 +307,7 @@ describe("RoomView layout", () => {
   test("visitors see the same lock button, turned off", () => {
     const view = renderRoom("v", false);
 
-    expect((view.getByRole("button", { name: "close entry" }) as HTMLButtonElement).disabled).toBe(
+    expect((view.getByRole("button", { name: "Close entry" }) as HTMLButtonElement).disabled).toBe(
       true,
     );
   });
@@ -315,7 +315,7 @@ describe("RoomView layout", () => {
   test("the lock shows closed and turns off once the race starts", () => {
     const view = renderRoom("a", true, { ...race, phase: "running", startsAt: 0 });
 
-    expect((view.getByRole("button", { name: "open entry" }) as HTMLButtonElement).disabled).toBe(
+    expect((view.getByRole("button", { name: "Open entry" }) as HTMLButtonElement).disabled).toBe(
       true,
     );
   });
@@ -327,7 +327,7 @@ describe("RoomView layout", () => {
     cleanup();
 
     const locked = renderRoom("v", false, { ...race, entryLocked: true });
-    expect(locked.getByText("Entry Closed")).toBeTruthy();
+    expect(locked.getByText("Entry closed")).toBeTruthy();
     const name = locked.getByLabelText("Your name") as HTMLInputElement;
     expect(name.disabled).toBe(true);
     expect(name.placeholder).toBe("entry is closed");
@@ -360,11 +360,11 @@ describe("RoomView layout", () => {
     localStorage.clear();
     const view = renderRoom("a");
 
-    fireEvent.click(view.getByRole("button", { name: "room closes in 00:10:05" }));
-    expect(view.getByRole("button", { name: "show room timer" })).toBeTruthy();
+    fireEvent.click(view.getByRole("button", { name: "Room closes in 00:10:05" }));
+    expect(view.getByRole("button", { name: "Show room timer" })).toBeTruthy();
     cleanup();
 
-    expect(renderRoom("a").getByRole("button", { name: "room closes in 00:10:05" })).toBeTruthy();
+    expect(renderRoom("a").getByRole("button", { name: "Room closes in 00:10:05" })).toBeTruthy();
     localStorage.clear();
   });
 
@@ -412,7 +412,7 @@ describe("RoomView layout", () => {
 
   test(".ready sits right next to send", () => {
     const view = renderRoom("a");
-    const send = view.getByRole("button", { name: "send" });
+    const send = view.getByRole("button", { name: "Send" });
 
     expect(send.nextElementSibling).toBe(view.getByRole("button", { name: ".ready" }));
   });
@@ -543,7 +543,7 @@ describe("RoomView actions", () => {
     const view = renderRoom("a", false, state);
 
     expect(view.getByRole("button", { name: ".unready" }).classList[0]).toBe(
-      view.getByRole("button", { name: "send" }).classList[0],
+      view.getByRole("button", { name: "Send" }).classList[0],
     );
   });
 
@@ -580,11 +580,11 @@ describe("RoomView actions", () => {
   });
 
   test("results can be downloaded once the race is over, not before", () => {
-    expect(renderRoom("x").queryByRole("button", { name: "download csv" })).toBeNull();
+    expect(renderRoom("x").queryByRole("button", { name: "Download CSV" })).toBeNull();
 
     const state: RaceState = { ...race, phase: "finished", startsAt: 0, endedAt: 1 };
     expect(
-      renderRoom("x", false, state).getByRole("button", { name: "download csv" }),
+      renderRoom("x", false, state).getByRole("button", { name: "Download CSV" }),
     ).toBeTruthy();
   });
 
@@ -668,7 +668,7 @@ describe("RoomView invite link", () => {
     });
     const view = renderRoom("x");
     fireEvent.click(view.getByRole("button", { name: "Copy invite link" }));
-    await waitFor(() => expect(view.getByText("copied")).toBeTruthy());
+    await waitFor(() => expect(view.getByText("Copied")).toBeTruthy());
     expect(copied).toEqual([inviteUrl]);
 
     const copy = view.getByRole("button", { name: "Copy invite link" });
@@ -684,8 +684,8 @@ describe("RoomView invite link", () => {
 
     fireEvent.click(view.getByRole("button", { name: "Copy invite link" }));
 
-    await waitFor(() => expect(view.getByText("couldn't copy")).toBeTruthy());
-    expect(view.queryByText("copied")).toBeNull();
+    await waitFor(() => expect(view.getByText("Couldn't copy")).toBeTruthy());
+    expect(view.queryByText("Copied")).toBeNull();
   });
 
   test("the warning names the reveal button, as speech users will say what they see", () => {
@@ -711,7 +711,7 @@ describe("RoomView after the room closed", () => {
     expect(view.queryByRole("button", { name: ".end" })).toBeNull();
     expect(view.queryByLabelText("Goal")).toBeNull();
     expect(view.getByRole("table", { name: "Entrants" })).toBeTruthy();
-    expect(view.getByRole("button", { name: "download csv" })).toBeTruthy();
+    expect(view.getByRole("button", { name: "Download CSV" })).toBeTruthy();
     expect(view.getByRole("status").textContent).toContain("gone once you close it");
   });
 });
@@ -729,7 +729,7 @@ describe("RoomView button colors", () => {
       [{ type: "forfeit", entrantId: "b" }, 20_000],
     ]);
     const view = renderRoom("a", false, afterBoth);
-    const send = view.getByRole("button", { name: "send" }).classList[0];
+    const send = view.getByRole("button", { name: "Send" }).classList[0];
 
     expect(view.getByRole("button", { name: ".undone" }).classList[0]).toBe(send);
     expect(view.getByRole("button", { name: ".rematch" }).classList[0]).not.toBe(send);

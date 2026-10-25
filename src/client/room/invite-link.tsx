@@ -9,7 +9,7 @@ const copiedForMs = 2_000;
 const revealWarning = "You are about to reveal the invite link!";
 
 type Visibility = "hidden" | "warned" | "shown";
-type CopyResult = "copied" | "couldn't copy";
+type CopyResult = "Copied" | "Couldn't copy";
 
 /**
  * Keeps the invite link hidden until the field is clicked twice, the first click warning about it.
@@ -34,8 +34,8 @@ export function InviteLink(props: { url: string }): JSX.Element {
   const copy = async () => {
     // A browser can refuse the clipboard, for example when the page doesn't have focus.
     const result = await copyText(props.url).then(
-      (): CopyResult => "copied",
-      (): CopyResult => "couldn't copy",
+      (): CopyResult => "Copied",
+      (): CopyResult => "Couldn't copy",
     );
 
     setCopyResult(result);
@@ -52,7 +52,7 @@ export function InviteLink(props: { url: string }): JSX.Element {
         title="Copy invite link"
         onClick={copy}
       >
-        {copyResult() === "copied" ? (
+        {copyResult() === "Copied" ? (
           <ClipboardCheck class={styles.icon} aria-hidden="true" />
         ) : (
           <Link class={styles.icon} aria-hidden="true" />

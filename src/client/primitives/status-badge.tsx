@@ -4,7 +4,7 @@ import { statusColor } from "./status-badge.css.ts";
 export type Status = keyof typeof statusColor;
 
 const statusLabel: Record<Status, string> = {
-  open: "Entry Open",
+  open: "Entry open",
   countdown: "Starting",
   running: "In progress",
   done: "Done",

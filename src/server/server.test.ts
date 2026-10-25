@@ -27,6 +27,7 @@ function start(overrides: Partial<ServerConfig> = {}) {
       maxRooms: 10,
       idleMs: 60_000,
       idleInputMs: 2 * 60 * 60_000,
+      idleWarningMs: 10 * 60_000,
       roomLifetimeMs: 48 * 60 * 60_000,
       surgeRoomsPerMinute: 1000,
       surgeBits: 8,
@@ -477,7 +478,7 @@ describe("server", () => {
     expect(warning).toBeTruthy();
   });
 
-  test("an idle room warns after 2 hours and closes 5 minutes later unless someone acts", async () => {
+  test("an idle room warns after 2 hours and closes 10 minutes later unless someone acts", async () => {
     const base = start({ idleMs: 100 * 60 * 60_000 });
     const { slug } = await createRoom(base);
     const client = new Client(
@@ -489,11 +490,14 @@ describe("server", () => {
     clockOffsetMs += 2 * 60 * 60_000;
     const warning = await client.waitFor((m) => m.type === "idleWarning");
     expect(warning.type === "idleWarning" && warning.closesAt).toBeGreaterThan(Date.now());
+    const line = (text: string) => (m: ServerMessage) =>
+      m.type === "feed" && m.entries.some((e) => e.text === text);
+    expect(await client.waitFor(line("Room closes soon due to inactivity!"))).toBeTruthy();
 
     client.send({ type: "active" });
     await client.waitFor((m) => m.type === "idleCleared");
 
-    clockOffsetMs += 2 * 60 * 60_000 + 5 * 60_000;
+    clockOffsetMs += 2 * 60 * 60_000 + 10 * 60_000;
     expect(await client.closed).toBe(4404);
   });
 

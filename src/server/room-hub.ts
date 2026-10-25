@@ -78,8 +78,12 @@ export class RoomHub<Data> {
   /** Tells a room it ends at `closesAt` unless someone acts before then. */
   warnIdle(room: Room, closesAt: number, quietFor: string): void {
     this.#send(room, { type: "idleWarning", closesAt, quietFor });
-    const line = `Nobody has done anything here for ${quietFor}, so this room closes in 5 minutes unless someone does.`;
-    this.publishLines(room, botLines([line], this.clock()));
+    this.publishLines(room, botLines(["Room closes soon due to inactivity!"], this.clock()));
+  }
+
+  /** Tells a warned room that someone acted, so it stays open. */
+  clearIdle(room: Room): void {
+    this.#send(room, { type: "idleCleared" });
   }
 
   /** Stops a dropped room's countdown and closes its sockets with the room-gone code. */

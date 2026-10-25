@@ -48,6 +48,7 @@ export async function startHarness(overrides: Partial<ServerConfig> = {}): Promi
     maxRooms: 100,
     idleMs: 60_000,
     idleInputMs: 2 * 60 * 60_000,
+    idleWarningMs: 10 * 60_000,
     roomLifetimeMs: 48 * 60 * 60_000,
     surgeRoomsPerMinute: 1000,
     surgeBits: 8,

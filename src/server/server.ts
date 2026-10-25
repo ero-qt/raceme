@@ -3,7 +3,7 @@ import { ClientLimits } from "./client-limits.ts";
 import { withSecurityHeaders } from "./http.ts";
 import { RoomHub, botLines } from "./room-hub.ts";
 import { type SocketData, roomSocketHandlers } from "./room-socket.ts";
-import { RoomRegistry, idleGraceMs } from "./rooms.ts";
+import { RoomRegistry } from "./rooms.ts";
 import { createRouter } from "./routes.ts";
 import { SpeedrunCatalog } from "./speedrun.ts";
 import { SurgeGuard } from "./surge.ts";
@@ -31,6 +31,8 @@ export interface ServerConfig {
   idleMs: number;
   /** Ends a room after this long without input from anyone, even with tabs open. */
   idleInputMs: number;
+  /** Gives an idle room this long between the warning and the end. */
+  idleWarningMs: number;
   /** Ends every room this long after it opened. */
   roomLifetimeMs: number;
   /** Asks new rooms for a proof of work once more than this many open within a minute. */
@@ -75,6 +77,7 @@ export function startServer(config: ServerConfig, clock = steadyClock): RunningS
     maxRooms: config.maxRooms,
     idleMs: config.idleMs,
     idleInputMs: config.idleInputMs,
+    idleWarningMs: config.idleWarningMs,
     roomLifetimeMs: config.roomLifetimeMs,
   });
   const limits = new ClientLimits(config, clock);
@@ -104,7 +107,7 @@ export function startServer(config: ServerConfig, clock = steadyClock): RunningS
     for (const slug of rooms.idleWarnings(now)) {
       const room = rooms.get(slug);
       if (room) {
-        hub.warnIdle(room, now + idleGraceMs, spokenDuration(config.idleInputMs));
+        hub.warnIdle(room, now + config.idleWarningMs, spokenDuration(config.idleInputMs));
       }
     }
     for (const slug of rooms.closingSoon(now)) {

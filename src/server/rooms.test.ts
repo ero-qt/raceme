@@ -140,14 +140,36 @@ describe("RoomRegistry idle rooms", () => {
     expect(rooms.idleWarnings(hours(2) + 1)).toEqual([]);
   });
 
-  test("drops a room 5 minutes after the warning when nobody acts", () => {
+  test("drops a room 10 minutes after the warning when nobody acts", () => {
     const rooms = registry({ idleMs: hours(100) });
     const room = created(rooms.create(settings, 0)).room;
     withEntrant(room, "a");
     room.connect(0);
 
-    expect(rooms.sweep(hours(2) + 5 * 60_000 - 1)).toEqual([]);
-    expect(rooms.sweep(hours(2) + 5 * 60_000)).toEqual([room.slug]);
+    expect(rooms.sweep(hours(2) + 10 * 60_000 - 1)).toEqual([]);
+    expect(rooms.sweep(hours(2) + 10 * 60_000)).toEqual([room.slug]);
+  });
+
+  test("never treats a room as idle while someone is still racing", () => {
+    const rooms = registry({ idleMs: hours(100) });
+    const room = created(rooms.create(settings, 0)).room;
+    withEntrant(room, "a");
+    room.race = { ...room.race, phase: "running", startsAt: 0 };
+    room.connect(0);
+
+    expect(rooms.idleWarnings(hours(5))).toEqual([]);
+    expect(rooms.sweep(hours(5))).toEqual([]);
+  });
+
+  // Closed and hibernated tabs both drop their sockets, so the server can't tell them apart.
+  test("a race with every tab gone falls back to the empty room rule", () => {
+    const rooms = registry({ idleMs: hours(6) });
+    const room = created(rooms.create(settings, 0)).room;
+    withEntrant(room, "a");
+    room.race = { ...room.race, phase: "running", startsAt: 0 };
+
+    expect(rooms.sweep(hours(5))).toEqual([]);
+    expect(rooms.sweep(hours(6) + 1)).toEqual([room.slug]);
   });
 
   test("input clears the warning and starts the 2 hours over", () => {

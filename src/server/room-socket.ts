@@ -49,7 +49,7 @@ export function roomSocketHandlers(deps: {
 
     // Someone opening the room is someone at the screen, so it counts as input too.
     if (room.noteInput(clock())) {
-      hub.publish(room.slug, JSON.stringify({ type: "idleCleared" } satisfies ServerMessage));
+      hub.clearIdle(room);
     }
   }
 
@@ -83,7 +83,7 @@ export function roomSocketHandlers(deps: {
     }
     room.touch(now);
     if (room.noteInput(now)) {
-      hub.publish(room.slug, JSON.stringify({ type: "idleCleared" } satisfies ServerMessage));
+      hub.clearIdle(room);
     }
     if (action.type === "active") {
       return;

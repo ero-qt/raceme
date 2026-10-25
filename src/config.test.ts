@@ -96,4 +96,13 @@ describe("loadConfig", () => {
   test("allows 2048 rooms and 8192 sockets unless told otherwise", () => {
     expect(loadConfig({})).toMatchObject({ maxRooms: 2048, maxSockets: 8192 });
   });
+
+  test("drops a room nobody is connected to after 2 hours unless told otherwise", () => {
+    expect(loadConfig({}).idleMs).toBe(2 * 60 * 60_000);
+  });
+
+  test("reads how long the idle warning lasts", () => {
+    expect(loadConfig({}).idleWarningMs).toBe(10 * 60_000);
+    expect(loadConfig({ RACEME_IDLE_WARNING_MINUTES: "15" }).idleWarningMs).toBe(15 * 60_000);
+  });
 });

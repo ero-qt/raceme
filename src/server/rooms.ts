@@ -10,7 +10,6 @@ const feedCapacity = 200;
 // Keeps one visitor from filling the room cap with lobbies nobody ever joins.
 const unusedRoomMs = 10 * 60_000;
 const closingWarningMs = 60 * 60_000;
-export const idleGraceMs = 5 * 60_000;
 
 export class Room {
   readonly #hostToken: string;
@@ -132,10 +131,12 @@ export interface RoomRegistryOptions {
   /** Drops a room after this many ms with nobody connected and no action in it. */
   idleMs: number;
   /**
-   * Warns a room after this many ms without input and drops it 5 minutes later, because an open
+   * Warns a room after this many ms without input and drops it `idleWarningMs` later, because an open
    * tab nobody touches would keep it alive. Defaults to 2 hours.
    */
   idleInputMs?: number;
+  /** Gives an idle room this long between the warning and the end. Defaults to 10 minutes. */
+  idleWarningMs?: number;
   /** Ends every room this long after it opened, however active it is. Defaults to 48 hours. */
   roomLifetimeMs?: number;
 }
@@ -149,6 +150,10 @@ export class RoomRegistry {
   readonly #rooms = new Map<string, Room>();
 
   constructor(readonly options: RoomRegistryOptions) {}
+
+  get #idleWarningMs(): number {
+    return this.options.idleWarningMs ?? 10 * 60_000;
+  }
 
   get #roomLifetimeMs(): number {
     return this.options.roomLifetimeMs ?? 48 * 60 * 60_000;
@@ -187,7 +192,7 @@ export class RoomRegistry {
   idleWarnings(now: number): string[] {
     const idle: string[] = [];
     for (const [slug, room] of this.#rooms) {
-      if (!room.warnedOfIdle && now - room.lastInputAt >= this.#idleInputMs) {
+      if (!room.warnedOfIdle && !isRacing(room) && now - room.lastInputAt >= this.#idleInputMs) {
         room.warnedOfIdle = true;
         idle.push(slug);
       }
@@ -218,7 +223,8 @@ export class RoomRegistry {
       const unused = empty && room.race.entrants.length === 0 && quietFor > unusedRoomMs;
       const cleared = room.clearAt !== null && now >= room.clearAt;
       const expired = now >= room.openedAt + this.#roomLifetimeMs;
-      const abandoned = now - room.lastInputAt >= this.#idleInputMs + idleGraceMs;
+      const abandoned =
+        !isRacing(room) && now - room.lastInputAt >= this.#idleInputMs + this.#idleWarningMs;
 
       if (idle || unused || cleared || expired || abandoned) {
         this.#rooms.delete(slug);
@@ -228,4 +234,11 @@ export class RoomRegistry {
 
     return dropped;
   }
+}
+
+// Racers watch their game for hours without touching the browser, so a running race never counts
+// as idle. The room lifetime still ends a race nobody finishes.
+function isRacing(room: Room): boolean {
+  const live = room.race.phase === "countdown" || room.race.phase === "running";
+  return live && room.race.entrants.some((entrant) => entrant.result === null);
 }

@@ -1,30 +1,36 @@
-# changelog
+# Changelog
 
-all notable changes to this project will be documented in this file.  
-it follows [keep a changelog](https://keepachangelog.com) principles and raceme adheres to [semantic versioning](https://semver.org).
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-25
+
 ### Added
 
-- race rooms that work like SpeedRunsLive's: open one from a goal, share the invite link and race with SRL's commands and RaceBot's lines
-- results as text for a chat, CSV, JSON or an image with medals for the top places, each to save or copy, once a race is over
-- goal suggestions on the start page and for the host in a room, from your past goals and from speedrun.com's games and categories, with the past goals kept only in your browser
-- browser tests and `bun run audit`, which check that a race stays on raceme's server and passes axe's WCAG AAA rules
-- rooms close 48 hours after they open, with a RaceBot warning 1 hour before and a timer next to the site name that you can hide
-- a short proof of work in the browser for new rooms while lots of rooms open at once, plus a limit on new rooms per network
-- a closed room keeps its results and downloads on screen with the reason it closed, also after a reload in the same tab
-- rooms where nobody has used the mouse, touch or keyboard for 2 hours close after a 10 minute warning, even with tabs still open, except while a race is running
-- a slow mode for chat, where each entrant can send 1 line of up to 512 characters every 3 seconds
-- SRL commands like `.ready` and `.done` typed in the chat box, plus Enter anywhere on the page to jump into the chat box
-- a mute button for the host next to each entrant, which turns off that entrant's chat until the host unmutes them
-- a lock for the host that closes entry before the start, plus a limit on how many can enter
-- a count in each room of how many people have it open without entering
-- a privacy notice in the corner of the start page that explains what the server keeps
-- a note in the same corner about raceme being made with a lot of help from AI
-- a build note in the same corner with the commit the server runs and how to check its release
-- new releases restart the server at the next 10:00 UTC, or sooner once no room is open
-- a notice on the start page and in every open room when a restart is queued, with a warning 1 hour before
-- `.done` and `.quit` buttons that stay off for the first 5 seconds after GO
-- a link card for Discord and other chats that never shows a room's goal or entrants
-- a `noindex` header and tag on every page, so search engines leave raceme out
+- Race rooms that work like SpeedRunsLive's: open one from a goal, share the invite link and race with SRL's commands and RaceBot's lines.
+- Results as text for a chat, CSV, JSON or an image with medals for the top places, each to save or copy, once a race is over.
+- Goal suggestions on the start page and for the host in a room, from your past goals and from speedrun.com's games and categories, with the past goals kept only in your browser.
+- Browser tests and `bun run audit`, which check that a race stays on raceme's server and passes axe's WCAG AAA rules.
+- Rooms close 48 hours after they open, with a RaceBot warning 1 hour before and a timer next to the site name that you can hide.
+- A short proof of work in the browser for new rooms while lots of rooms open at once, plus a limit on new rooms per network.
+- A closed room keeps its results and downloads on screen with the reason it closed, also after a reload in the same tab.
+- Rooms where nobody has used the mouse, touch or keyboard for 2 hours close after a 10 minute warning, even with tabs still open, except while a race is running.
+- A slow mode for chat, where each entrant can send 1 line of up to 512 characters every 3 seconds.
+- SRL commands like `.ready` and `.done` typed in the chat box, plus Enter anywhere on the page to jump into the chat box.
+- A mute button for the host next to each entrant, which turns off that entrant's chat until the host unmutes them.
+- A lock for the host that closes entry before the start, plus a limit on how many can enter.
+- A count in each room of how many people have it open without entering.
+- A privacy notice in the corner of the start page that explains what the server keeps.
+- A note in the same corner about raceme being made with a lot of help from AI.
+- A build note in the same corner with the commit the server runs and how to check its release.
+- New releases restart the server at the next 10:00 UTC, or sooner once no room is open.
+- A notice on the start page and in every open room when a restart is queued, with a warning 1 hour before.
+- `.done` and `.quit` buttons that stay off for the first 5 seconds after GO.
+- A link card for Discord and other chats that never shows a room's goal or entrants.
+- A `noindex` header and tag on every page, so search engines leave raceme out.
+
+[Unreleased]: https://github.com/ero-qt/raceme/compare/1.0.0...HEAD
+[1.0.0]: https://github.com/ero-qt/raceme/releases/tag/1.0.0

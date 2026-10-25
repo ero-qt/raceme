@@ -44,7 +44,7 @@ jobs:
       - name: Take the release notes from the changelog
         run: |
           awk -v heading="## [$GITHUB_REF_NAME] - " \
-            'index($0, heading) == 1 { found = 1; next } found && /^## \[/ { exit } found' \
+            'index($0, heading) == 1 { found = 1; next } found && /^(## )?\[/ { exit } found' \
             changelog.md > notes.md
       - uses: actions/upload-artifact@v7
         with:

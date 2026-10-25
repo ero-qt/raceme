@@ -37,12 +37,18 @@ export class RoomHub<Data> {
   }
 
   publishState(room: Room): void {
-    this.#send(room, {
+    this.#send(room, this.state(room));
+  }
+
+  /** Builds the room's current state message, for everyone or for one new socket. */
+  state(room: Room): ServerMessage {
+    return {
       type: "state",
       race: room.race,
       serverNow: this.clock(),
       closesAt: room.closesAt,
-    });
+      watchers: room.watcherCount,
+    };
   }
 
   publishLines(room: Room, lines: NewFeedEntry[]): void {

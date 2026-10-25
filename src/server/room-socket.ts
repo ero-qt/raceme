@@ -42,6 +42,7 @@ export function roomSocketHandlers(deps: {
 
     hub.join(room, socket);
     room.connect(clock());
+    const watchersBefore = room.watcherCount;
     room.attachSession(socket.data.sessionSecret);
 
     send(socket, {
@@ -50,7 +51,12 @@ export function roomSocketHandlers(deps: {
       isHost: socket.data.isHost,
       chatEveryMs,
     });
-    send(socket, { type: "state", race: room.race, serverNow: clock(), closesAt: room.closesAt });
+    // A fresh state resets every client's clock offset, so the room only hears about a new count.
+    if (room.watcherCount === watchersBefore) {
+      send(socket, hub.state(room));
+    } else {
+      hub.publishState(room);
+    }
     send(socket, { type: "feed", entries: [...room.feed.entries] });
 
     // Someone opening the room is someone at the screen, so it counts as input too.
@@ -63,8 +69,14 @@ export function roomSocketHandlers(deps: {
     limits.socketClosed(socket.data.ip);
     if (hub.leave(socket.data.slug, socket)) {
       const room = rooms.get(socket.data.slug);
-      room?.disconnect(clock());
-      room?.detachSession(socket.data.sessionSecret);
+      if (room) {
+        room.disconnect(clock());
+        const watchersBefore = room.watcherCount;
+        room.detachSession(socket.data.sessionSecret);
+        if (room.watcherCount !== watchersBefore) {
+          hub.publishState(room);
+        }
+      }
     }
   }
 

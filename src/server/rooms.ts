@@ -95,6 +95,19 @@ export class Room {
     return id;
   }
 
+  /** Counts the sessions with a tab open that haven't entered, each once however many tabs it has. */
+  get watcherCount(): number {
+    const entered = new Set(this.race.entrants.map((e) => e.id));
+    let count = 0;
+    for (const secret of this.#sessionSockets.keys()) {
+      const id = this.#entrantIds.get(secret);
+      if (id === undefined || !entered.has(id)) {
+        count++;
+      }
+    }
+    return count;
+  }
+
   attachSession(sessionSecret: string): void {
     this.#sessionSockets.set(sessionSecret, (this.#sessionSockets.get(sessionSecret) ?? 0) + 1);
   }

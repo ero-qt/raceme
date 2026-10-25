@@ -1,13 +1,13 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { cleanup, fireEvent, render } from "@solidjs/testing-library";
 import { createSignal } from "solid-js";
-import { IdleWarning, useActivityPings } from "./idle-warning.tsx";
+import { ClosingWarning, useActivityPings } from "./closing-warning.tsx";
 
 afterEach(cleanup);
 
-describe("IdleWarning", () => {
+describe("ClosingWarning", () => {
   test("shows the time left until an idle room closes", () => {
-    const view = render(() => <IdleWarning closesAt={14 * 60_000 + 32_000} now={0} />);
+    const view = render(() => <ClosingWarning closesAt={14 * 60_000 + 32_000} now={0} />);
 
     expect(view.getByRole("alert").textContent).toContain("Room closes soon due to inactivity!");
     expect(view.getByRole("alert").textContent).toContain("14:32");
@@ -15,8 +15,22 @@ describe("IdleWarning", () => {
     expect(view.getByRole("alert").textContent).toContain("Move the mouse, tap or type");
   });
 
+  test("warns of a server restart until a click outside the card, not on movement", () => {
+    const view = render(() => <ClosingWarning closesAt={45 * 60_000} now={0} reason="restart" />);
+    const alert = view.getByRole("alert");
+    expect(alert.textContent).toContain("Room closes soon for a server restart!");
+    expect(alert.textContent).toContain("45:00");
+
+    fireEvent.pointerMove(window);
+    fireEvent.pointerDown(alert);
+    expect(view.queryByRole("alert")).not.toBeNull();
+
+    fireEvent.pointerDown(document.body);
+    expect(view.queryByRole("alert")).toBeNull();
+  });
+
   test("shows nothing while the room isn't idle", () => {
-    const view = render(() => <IdleWarning closesAt={null} now={0} />);
+    const view = render(() => <ClosingWarning closesAt={null} now={0} />);
 
     expect(view.queryByRole("alert")).toBeNull();
   });

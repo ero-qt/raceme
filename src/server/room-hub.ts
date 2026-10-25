@@ -47,6 +47,7 @@ export class RoomHub<Data> {
       race: room.race,
       serverNow: this.clock(),
       closesAt: room.closesAt,
+      closesFor: room.closesFor,
       watchers: room.watcherCount,
     };
   }
@@ -90,6 +91,11 @@ export class RoomHub<Data> {
   warnIdle(room: Room, closesAt: number, quietFor: string): void {
     this.#send(room, { type: "idleWarning", closesAt, quietFor });
     this.publishLines(room, botLines(["Room closes soon due to inactivity!"], this.clock()));
+  }
+
+  /** Tells a room it closes at `closesAt` for a server restart. */
+  warnRestart(room: Room, closesAt: number): void {
+    this.#send(room, { type: "restartWarning", closesAt });
   }
 
   /** Tells a warned room that someone acted, so it stays open. */

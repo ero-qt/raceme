@@ -32,7 +32,7 @@ function useStuckSocket() {
   StuckSocket.opened = [];
   globalThis.WebSocket = StuckSocket as never;
   (window as unknown as { happyDOM: { setURL(url: string): void } }).happyDOM.setURL(
-    "http://localhost/r/abcdefghij",
+    "http://localhost/abcdefghij",
   );
 }
 

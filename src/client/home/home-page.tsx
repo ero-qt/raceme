@@ -1,5 +1,5 @@
 import { LoaderCircle } from "lucide-solid";
-import { type JSX, Show, createSignal } from "solid-js";
+import { type JSX, Show, createResource, createSignal } from "solid-js";
 import { solveChallenge } from "../../shared/proof-of-work.ts";
 import { Button } from "../primitives/button.tsx";
 import * as titleStyles from "../room/goal-title.css.ts";
@@ -28,11 +28,14 @@ export function HomePage(props: {
   searchGames?: (query: string) => Promise<CatalogEntry[] | null>;
   loadCategories?: (gameId: string) => Promise<CatalogEntry[]>;
   searchDelayMs?: number;
+  /** Asks the server when a queued restart happens, `null` when none is queued. */
+  loadRestart?: () => Promise<number | null>;
 }): JSX.Element {
   const [value, setValue] = createSignal("");
   const [notice, setNotice] = createSignal<string | null>(props.notice ?? null);
   const [creating, setCreating] = createSignal(false);
   const busy = () => creating() || props.busy === true;
+  const [restartAt] = createResource(props.loadRestart ?? loadRestartFromServer);
   document.title = "raceme";
 
   const roomCheck = useRoomCheck(value, {
@@ -69,7 +72,7 @@ export function HomePage(props: {
   });
 
   const open = (slug: string) =>
-    props.open ? props.open(slug) : location.assign(`${import.meta.env.BASE_URL}r/${slug}`);
+    props.open ? props.open(slug) : location.assign(`${import.meta.env.BASE_URL}${slug}`);
 
   /** Joins a live room or opens a lobby. Text shaped like a code waits for the room check. */
   async function submit(): Promise<void> {
@@ -158,9 +161,25 @@ export function HomePage(props: {
       <p class={styles.notice} role="status">
         {notice()}
       </p>
+      <Show when={restartAt()}>{(at) => <p>{restartText(at(), Date.now())}</p>}</Show>
       <CornerNotes />
     </main>
   );
+}
+
+async function loadRestartFromServer(): Promise<number | null> {
+  const response = await fetch(`${import.meta.env.BASE_URL}api/restart`).catch(() => null);
+  const body = response?.ok
+    ? ((await response.json().catch(() => ({}))) as { restartAt?: unknown })
+    : {};
+  return typeof body.restartAt === "number" ? body.restartAt : null;
+}
+
+/** Writes when a queued restart happens, like `Server restart queued for 10:00 UTC (in 3 h 20 min)`. */
+function restartText(at: number, now: number): string {
+  const minutes = Math.max(0, Math.floor((at - now) / 60_000));
+  const time = new Date(at).toISOString().slice(11, 16);
+  return `Server restart queued for ${time} UTC (in ${Math.floor(minutes / 60)} h ${minutes % 60} min). Rooms close then.`;
 }
 
 interface Challenge {

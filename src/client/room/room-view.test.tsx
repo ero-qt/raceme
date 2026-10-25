@@ -35,7 +35,7 @@ const joinedBoth: RaceAction[] = [
 ];
 const race = raceAfter(joinedBoth);
 
-const inviteUrl = "https://example.test/r/abcdefghij";
+const inviteUrl = "https://example.test/abcdefghij";
 
 const catalog = {
   searchGames: async () => [{ id: "o1y9wo6q", name: "Super Mario 64" }],
@@ -360,6 +360,28 @@ describe("RoomView layout", () => {
 
     expect(renderRoom("a").getByRole("button", { name: "room closes in 00:10:05" })).toBeTruthy();
     localStorage.clear();
+  });
+
+  test("says in the timer when a server restart closes the room", () => {
+    const view = render(() => (
+      <RoomView
+        race={race}
+        me={{ entrantId: "a", isHost: false }}
+        now={Date.UTC(2026, 9, 25, 7)}
+        inviteUrl={inviteUrl}
+        notice={null}
+        feed={[]}
+        send={() => {}}
+        catalog={catalog}
+        closesAt={Date.UTC(2026, 9, 25, 10)}
+        closesFor="restart"
+      />
+    ));
+
+    const timer = view.getByRole("button", {
+      name: "Room closes for a server restart in 03:00:00",
+    });
+    expect(timer.title).toBe("Room closes for a server restart at 10:00 UTC, click to hide");
   });
 
   test("drops the watcher count once the room has closed", () => {

@@ -1,5 +1,6 @@
 const roomCode = /^[a-z2-7]{10}$/;
-const linkedCode = /\/r\/([a-z2-7]{10})(?![a-z0-9])/;
+// Only the last part of a link's path counts, so a 10-letter word before it isn't taken as the code.
+const linkedCode = /\/([a-z2-7]{10})\/?(?=$|[?#\s.,!;:)\]])/;
 // Chat apps and sentences often leave a dot or bracket right after a pasted code.
 const trailingPunctuation = /[.,!?;:)\]]+$/;
 

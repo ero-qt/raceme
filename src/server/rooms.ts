@@ -23,6 +23,8 @@ export class Room {
   readonly openedAt: number;
   /** Ends the room at this server time, however active it is. */
   readonly expiresAt: number;
+  /** Gives the server time of a queued server restart, which closes the room too. */
+  restartAt: number | null = null;
   warnedOfClosing = false;
   #lastInputAt: number;
   warnedOfIdle = false;
@@ -46,7 +48,17 @@ export class Room {
 
   /** Gives the server time the room closes, which comes sooner than `expiresAt` after `.end`. */
   get closesAt(): number {
-    return Math.min(this.expiresAt, this.clearAt ?? this.expiresAt);
+    return Math.min(this.lastsUntil, this.clearAt ?? this.lastsUntil);
+  }
+
+  /** Tells whether the room's lifetime or a queued server restart ends it first. */
+  get closesFor(): "lifetime" | "restart" {
+    return this.restartAt !== null && this.restartAt < this.expiresAt ? "restart" : "lifetime";
+  }
+
+  /** Gives the server time the room's lifetime or a queued restart ends it, `.end` aside. */
+  get lastsUntil(): number {
+    return Math.min(this.expiresAt, this.restartAt ?? this.expiresAt);
   }
 
   get lastInputAt(): number {
@@ -177,7 +189,7 @@ export interface RoomRegistryOptions {
   unusedRoomMs: number;
 }
 
-export type CloseReason = "ended" | "expired" | "idle" | "empty";
+export type CloseReason = "ended" | "expired" | "restart" | "idle" | "empty";
 
 export interface DroppedRoom {
   slug: string;
@@ -191,11 +203,28 @@ export type CreateRoomResult =
 /** Keeps every live room in memory, keyed by slug. */
 export class RoomRegistry {
   readonly #rooms = new Map<string, Room>();
+  #restartAt: number | null = null;
 
   constructor(readonly options: RoomRegistryOptions) {}
 
   get size(): number {
     return this.#rooms.size;
+  }
+
+  get restartAt(): number | null {
+    return this.#restartAt;
+  }
+
+  /** Closes every room, open now or opened later, at the server restart's time. */
+  queueRestart(at: number): void {
+    this.#restartAt = at;
+    for (const room of this.#rooms.values()) {
+      room.restartAt = at;
+    }
+  }
+
+  rooms(): IterableIterator<Room> {
+    return this.#rooms.values();
   }
 
   create(settings: NewRaceSettings, now: number): CreateRoomResult {
@@ -210,6 +239,7 @@ export class RoomRegistry {
 
     const hostToken = randomSecret();
     const room = new Room(slug, hostToken, settings, now, this.options.roomLifetimeMs);
+    room.restartAt = this.#restartAt;
     this.#rooms.set(slug, room);
     return { ok: true, room, hostToken };
   }
@@ -235,11 +265,11 @@ export class RoomRegistry {
     return idle;
   }
 
-  /** Lists the rooms that just reached their last hour, each room once. */
+  /** Lists the rooms that just reached their last hour before their lifetime or a restart ends. */
   closingSoon(now: number): string[] {
     const closing: string[] = [];
     for (const [slug, room] of this.#rooms) {
-      if (!room.warnedOfClosing && now >= room.expiresAt - this.options.closingWarningMs) {
+      if (!room.warnedOfClosing && now >= room.lastsUntil - this.options.closingWarningMs) {
         room.warnedOfClosing = true;
         closing.push(slug);
       }
@@ -272,6 +302,9 @@ export class RoomRegistry {
 
     if (room.clearAt !== null && now >= room.clearAt) {
       return "ended";
+    }
+    if (room.restartAt !== null && now >= room.restartAt) {
+      return "restart";
     }
     if (now >= room.expiresAt) {
       return "expired";

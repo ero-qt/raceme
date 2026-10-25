@@ -1,0 +1,39 @@
+[Unit]
+Description=raceme preview, served through Caddy
+After=network-online.target
+
+[Service]
+User=raceme
+Group=raceme
+WorkingDirectory=/srv/raceme-preview
+Environment=PORT=8791
+Environment=RACEME_HOST=127.0.0.1
+Environment=RACEME_BASE_PATH=apps/raceme
+Environment=RACEME_STATIC_DIR=/srv/raceme-preview/client
+# Sets RACEME_ORIGIN, which stays on the server and out of this repo.
+EnvironmentFile=/etc/raceme/preview.env
+Environment=RACEME_TRUST_PROXY=1
+Environment=RACEME_INSECURE_COOKIES=1
+ExecStart=/usr/local/bin/bun /srv/raceme-preview/server.js
+Restart=on-failure
+
+MemoryMax=512M
+CPUQuota=50%
+TasksMax=128
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=yes
+LockPersonality=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+
+[Install]
+WantedBy=multi-user.target

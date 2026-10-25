@@ -1,10 +1,13 @@
-import { For, type JSX, onCleanup } from "solid-js";
+import { For, type JSX, Show, createSignal, onCleanup } from "solid-js";
 import { catalogCacheHours, sessionCookieDays } from "../../shared/retention.ts";
+import { BuildInfoText } from "./build-info.tsx";
 import * as styles from "./corner-notes.css.ts";
 
 interface Note {
   summary: JSX.Element;
   body: () => JSX.Element;
+  /** Renders the body only once the note opens, for a body that asks the server for something. */
+  loadsOnOpen?: boolean;
 }
 
 const notes: Note[] = [
@@ -53,6 +56,7 @@ const notes: Note[] = [
       </p>
     ),
   },
+  { summary: "build", body: () => <BuildInfoText />, loadsOnOpen: true },
 ];
 
 /** Shows short notes about raceme folded away in a corner of the start page. */
@@ -83,15 +87,20 @@ export function CornerNotes(): JSX.Element {
   return (
     <div ref={corner} class={styles.corner}>
       <For each={notes}>
-        {(note) => (
-          <details name="corner-notes">
-            <summary class={styles.summary}>{note.summary}</summary>
-            {/* biome-ignore lint/a11y/noNoninteractiveTabindex: a scrollable region needs focus */}
-            <div class={styles.text} tabIndex={0}>
-              {note.body()}
-            </div>
-          </details>
-        )}
+        {(note) => {
+          const [open, setOpen] = createSignal(false);
+          return (
+            <details name="corner-notes" onToggle={(event) => setOpen(event.currentTarget.open)}>
+              <summary class={styles.summary}>{note.summary}</summary>
+              <Show when={open() || !note.loadsOnOpen}>
+                {/* biome-ignore lint/a11y/noNoninteractiveTabindex: a scrollable region needs focus */}
+                <div class={styles.text} tabIndex={0}>
+                  {note.body()}
+                </div>
+              </Show>
+            </details>
+          );
+        }}
       </For>
     </div>
   );

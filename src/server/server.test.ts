@@ -38,6 +38,9 @@ function start(overrides: Partial<ServerConfig> = {}) {
       maxSocketsPerIp: 10,
       maxSockets: 2000,
       sweepIntervalMs: 20,
+      build: null,
+      adminPort: null,
+      restartHourUtc: 10,
       ...overrides,
     },
     () => Date.now() + clockOffsetMs,
@@ -410,6 +413,102 @@ describe("server", () => {
     expect(rewelcome.type === "welcome" && rewelcome.isHost).toBe(true);
   });
 
+  describe("build info", () => {
+    test("answers with the commit and release digest the deploy wrote", async () => {
+      const build = {
+        release: "1.2.0",
+        repository: "https://github.com/ero-qt/raceme",
+        commit: "a".repeat(40),
+        digest: `sha256:${"b".repeat(64)}`,
+      };
+      const base = start({ build });
+
+      expect(await (await fetch(`${base}/api/build`)).json()).toEqual(build);
+    });
+
+    test("answers with nulls for a build that didn't come from a release", async () => {
+      const base = start();
+
+      expect(await (await fetch(`${base}/api/build`)).json()).toEqual({
+        release: null,
+        repository: null,
+        commit: null,
+        digest: null,
+      });
+    });
+  });
+
+  describe("queued restart", () => {
+    const adminUrl = () => `http://127.0.0.1:${running?.admin?.port}/restart`;
+
+    test("moves every room's close time to the next restart and tells the room", async () => {
+      clockOffsetMs = Date.UTC(2026, 9, 25, 7) - Date.now();
+      const base = start({ adminPort: 0 });
+      const { slug } = await createRoom(base);
+      const client = new Client(
+        socketUrl(base, slug),
+        "raceme_session=queue-secret-queue-secret-queue-se",
+      );
+      await client.waitFor((m) => m.type === "state");
+
+      const queued = await (await fetch(adminUrl(), { method: "POST" })).json();
+      const restartAt = Date.UTC(2026, 9, 25, 10);
+
+      expect(queued).toEqual({ restartAt, rooms: 1 });
+      await client.waitFor((m) => m.type === "state" && m.closesAt === restartAt);
+      await client.waitFor(
+        (m) =>
+          m.type === "feed" &&
+          m.entries.some(
+            (e) => e.text === "Server restart queued for 10:00 UTC. This room closes then.",
+          ),
+      );
+    });
+
+    test("marks the state as closing for the restart and shows the restart on the public API", async () => {
+      clockOffsetMs = Date.UTC(2026, 9, 25, 7) - Date.now();
+      const base = start({ adminPort: 0 });
+      const { slug } = await createRoom(base);
+      expect(await (await fetch(`${base}/api/restart`)).json()).toEqual({ restartAt: null });
+
+      await fetch(adminUrl(), { method: "POST" });
+      const client = new Client(
+        socketUrl(base, slug),
+        "raceme_session=mark-secret-mark-secret-mark-secr",
+      );
+
+      await client.waitFor((m) => m.type === "state" && m.closesFor === "restart");
+      expect(await (await fetch(`${base}/api/restart`)).json()).toEqual({
+        restartAt: Date.UTC(2026, 9, 25, 10),
+      });
+    });
+
+    test("warns every room once the restart is less than an hour away", async () => {
+      clockOffsetMs = Date.UTC(2026, 9, 25, 9, 30) - Date.now();
+      const base = start({ adminPort: 0 });
+      const { slug } = await createRoom(base);
+      const client = new Client(
+        socketUrl(base, slug),
+        "raceme_session=warn-secret-warn-secret-warn-secr",
+      );
+      await client.waitFor((m) => m.type === "state");
+
+      await fetch(adminUrl(), { method: "POST" });
+
+      await client.waitFor(
+        (m) => m.type === "restartWarning" && m.closesAt === Date.UTC(2026, 9, 25, 10),
+      );
+    });
+
+    test("reports the open rooms without queueing, and stays off the public port", async () => {
+      const base = start({ adminPort: 0 });
+      await createRoom(base);
+
+      expect(await (await fetch(adminUrl())).json()).toEqual({ restartAt: null, rooms: 1 });
+      expect((await fetch(`${base}/restart`, { method: "POST" })).status).toBe(404);
+    });
+  });
+
   describe("game picker", () => {
     let upstream: ReturnType<typeof Bun.serve> | undefined;
     let upstreamRequests = 0;
@@ -479,7 +578,7 @@ describe("server", () => {
 
       for (const q of [
         slug,
-        `https://ero-qt.eu/apps/raceme/r/${slug}/`,
+        `https://ero-qt.eu/apps/raceme/${slug}/`,
         `join ${slug.toUpperCase()}.`,
       ]) {
         const response = await fetch(`${base}/api/games?${new URLSearchParams({ q })}`);

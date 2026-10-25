@@ -270,3 +270,38 @@ describe("Room.watcherCount", () => {
     expect(room.watcherCount).toBe(0);
   });
 });
+
+describe("RoomRegistry queued restart", () => {
+  const hours = (n: number) => n * 60 * 60_000;
+  const quiet = { idleMs: hours(100), idleInputMs: hours(100) };
+
+  test("moves every room's close time up to the restart, also for rooms opened later", () => {
+    const rooms = registry(quiet);
+    const early = created(rooms.create(settings, 0)).room;
+
+    rooms.queueRestart(hours(5));
+    const late = created(rooms.create(settings, hours(1))).room;
+
+    expect([early.closesAt, late.closesAt]).toEqual([hours(5), hours(5)]);
+    expect([early.closesFor, late.closesFor]).toEqual(["restart", "restart"]);
+  });
+
+  test("keeps the room lifetime when it ends before the restart", () => {
+    const rooms = registry({ ...quiet, roomLifetimeMs: hours(2) });
+    const room = created(rooms.create(settings, 0)).room;
+
+    rooms.queueRestart(hours(5));
+
+    expect([room.closesAt, room.closesFor]).toEqual([hours(2), "lifetime"]);
+  });
+
+  test("warns 1 hour before the restart and closes the rooms at it", () => {
+    const rooms = registry(quiet);
+    const room = created(rooms.create(settings, 0)).room;
+    rooms.queueRestart(hours(5));
+
+    expect(rooms.closingSoon(hours(4) - 1)).toEqual([]);
+    expect(rooms.closingSoon(hours(4))).toEqual([room.slug]);
+    expect(rooms.sweepWithReasons(hours(5))).toEqual([{ slug: room.slug, reason: "restart" }]);
+  });
+});

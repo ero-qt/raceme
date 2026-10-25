@@ -40,16 +40,27 @@ export type RoomRefusal =
   | "muted"
   | "rateLimited";
 
+/** Tells whether the room's lifetime or a queued server restart closes the room. */
+export type ClosesFor = "lifetime" | "restart";
+
 export type ServerMessage =
   | { type: "welcome"; entrantId: string; isHost: boolean; chatEveryMs: number }
   /**
    * Gives the room's state, with `closesAt` as the server time the room will close and `watchers`
    * as the number of people with the room open who haven't entered.
    */
-  | { type: "state"; race: RaceState; serverNow: number; closesAt: number; watchers: number }
+  | {
+      type: "state";
+      race: RaceState;
+      serverNow: number;
+      closesAt: number;
+      closesFor: ClosesFor;
+      watchers: number;
+    }
   | { type: "feed"; entries: FeedEntry[] }
   | { type: "refused"; refusal: RoomRefusal }
   | { type: "idleWarning"; closesAt: number; quietFor: string }
+  | { type: "restartWarning"; closesAt: number }
   | { type: "idleCleared" };
 
 /**

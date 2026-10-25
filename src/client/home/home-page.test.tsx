@@ -43,6 +43,7 @@ function renderHome(
   const searched: string[] = [];
   const view = render(() => (
     <HomePage
+      loadRestart={async () => null}
       open={(slug) => opened.push(slug)}
       roomExists={async (slug) => {
         if (options.checkFails) {
@@ -114,7 +115,7 @@ describe("HomePage", () => {
 
   test("a pasted invite link joins too", async () => {
     const home = renderHome();
-    home.type("https://ero-qt.eu/apps/raceme/r/duxanagxds");
+    home.type("https://ero-qt.eu/apps/raceme/duxanagxds");
     await waitFor(() => expect(home.getByRole("button", { name: "join" })).toBeTruthy());
     home.submit();
 
@@ -130,7 +131,7 @@ describe("HomePage", () => {
     expect(home.field.dataset.kind).toBe("code");
 
     fireEvent.paste(home.field);
-    home.type("https://example.com/r/duxanagxds");
+    home.type("https://example.com/duxanagxds");
     expect(home.field.dataset.kind).toBe("code");
   });
 
@@ -146,7 +147,7 @@ describe("HomePage", () => {
   test("Enter right after pasting a code waits for the check, not opening a lobby", async () => {
     globalThis.fetch = mock(async () => Response.json({ slug: "x" }, { status: 201 })) as never;
     const home = renderHome(["duxanagxds"], { checkDelayMs: 10_000 });
-    home.type("https://ero-qt.eu/apps/raceme/r/duxanagxds");
+    home.type("https://ero-qt.eu/apps/raceme/duxanagxds");
     home.submit();
     await waitFor(() => expect(home.opened).toEqual(["duxanagxds"]));
 
@@ -326,9 +327,9 @@ describe("HomePage suggestions", () => {
     await waitFor(() => expect(home.searched).toEqual(["mario"]));
 
     for (const text of [
-      "https://ero-qt.eu/apps/raceme/r/duxanagxds",
-      "https://ero-qt.eu/apps/raceme/r/duxanagxds/",
-      "https://ero-qt.eu/apps/raceme/r/duxanagxds?from=chat",
+      "https://ero-qt.eu/apps/raceme/duxanagxds",
+      "https://ero-qt.eu/apps/raceme/duxanagxds/",
+      "https://ero-qt.eu/apps/raceme/duxanagxds?from=chat",
       "duxanagxds.",
     ]) {
       home.type(text);
@@ -444,5 +445,76 @@ describe("HomePage corner notes", () => {
     const notice = home.getByText("made with ai", { selector: "summary" }).parentElement;
     expect(notice?.textContent).toContain("reproducing, rewriting, rehosting encouraged.");
     expect(notice?.textContent).toContain("i'm not proud, but i think it's useful.");
+  });
+
+  test("shows the release commit once the build note opens", async () => {
+    const commit = "0123456789abcdef0123456789abcdef01234567";
+    globalThis.fetch = mock(async () =>
+      Response.json({
+        release: "1.2.0",
+        repository: "https://github.com/ero-qt/raceme",
+        commit,
+        digest: `sha256:${"b".repeat(64)}`,
+      }),
+    ) as unknown as typeof fetch;
+    const home = renderHome();
+
+    const details = home.getByText("build", { selector: "summary" })
+      .parentElement as HTMLDetailsElement;
+    details.open = true;
+    fireEvent(details, new Event("toggle"));
+
+    const link = await home.findByRole("link", { name: "0123456" });
+    expect(link.getAttribute("href")).toBe(`https://github.com/ero-qt/raceme/commit/${commit}`);
+    expect(details.textContent).toContain(`sha256:${"b".repeat(64)}`);
+    expect(home.getByRole("link", { name: "ero-qt/raceme" }).getAttribute("href")).toBe(
+      "https://github.com/ero-qt/raceme",
+    );
+    expect(home.getByRole("link", { name: "release 1.2.0" }).getAttribute("href")).toBe(
+      "https://github.com/ero-qt/raceme/releases/tag/1.2.0",
+    );
+    expect(details.textContent).toContain("sha256sum raceme.tar.gz");
+    expect(details.textContent).toContain(
+      "gh attestation verify raceme.tar.gz --repo ero-qt/raceme --signer-workflow ero-qt/raceme/.github/workflows/release.yml",
+    );
+  });
+
+  test("calls a build unverified when the server answers with something other than JSON", async () => {
+    globalThis.fetch = mock(async () => new Response("<html>")) as unknown as typeof fetch;
+    const home = renderHome();
+
+    const details = home.getByText("build", { selector: "summary" })
+      .parentElement as HTMLDetailsElement;
+    details.open = true;
+    fireEvent(details, new Event("toggle"));
+
+    expect(await home.findByText(/unverified build/)).toBeTruthy();
+  });
+
+  test("calls a build without a release unverified", async () => {
+    globalThis.fetch = mock(async () =>
+      Response.json({ release: null, repository: null, commit: null, digest: null }),
+    ) as unknown as typeof fetch;
+    const home = renderHome();
+
+    const details = home.getByText("build", { selector: "summary" })
+      .parentElement as HTMLDetailsElement;
+    details.open = true;
+    fireEvent(details, new Event("toggle"));
+
+    expect(await home.findByText(/unverified build/)).toBeTruthy();
+  });
+});
+
+describe("HomePage restart notice", () => {
+  test("tells about a queued server restart on the start page", async () => {
+    const restartAt = Date.now() + (3 * 60 + 20) * 60_000 + 30_000;
+    globalThis.fetch = mock(async () => Response.json({ restartAt })) as unknown as typeof fetch;
+    const view = render(() => <HomePage />);
+
+    const text = new Date(restartAt).toISOString().slice(11, 16);
+    expect((await view.findByText(/^Server restart queued for/)).textContent).toBe(
+      `Server restart queued for ${text} UTC (in 3 h 20 min). Rooms close then.`,
+    );
   });
 });

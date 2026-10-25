@@ -40,6 +40,9 @@ const server = startServer({
   maxSocketsPerIp: 50,
   maxSockets: 100,
   sweepIntervalMs: 60_000,
+  build: null,
+  adminPort: null,
+  restartHourUtc: 10,
 });
 
 const origin = `http://localhost:${server.server.port}`;
@@ -49,7 +52,7 @@ const created = await fetch(`${origin}/api/rooms`, {
 });
 const { slug } = (await created.json()) as { slug: string };
 
-const pages = { start: `${origin}/`, room: `${origin}/r/${slug}` };
+const pages = { start: `${origin}/`, room: `${origin}/${slug}` };
 
 const env = {
   ...process.env,

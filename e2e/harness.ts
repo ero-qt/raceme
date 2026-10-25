@@ -59,6 +59,9 @@ export async function startHarness(overrides: Partial<ServerConfig> = {}): Promi
     maxSocketsPerIp: 50,
     maxSockets: 200,
     sweepIntervalMs: 60_000,
+    build: null,
+    adminPort: null,
+    restartHourUtc: 10,
     ...overrides,
   });
   const origin = `http://localhost:${server.server.port}`;

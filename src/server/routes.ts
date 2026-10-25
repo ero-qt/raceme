@@ -88,10 +88,6 @@ async function createRoom(deps: RouteDeps, request: Request, ip: string): Promis
   if (!isAllowedOrigin(request, config.origin)) {
     return status(403);
   }
-  if (!limits.createRoom(ip)) {
-    return status(429);
-  }
-
   const body = readRoomRequest(await request.text());
   if (surge.needsProof()) {
     const proven =
@@ -99,6 +95,11 @@ async function createRoom(deps: RouteDeps, request: Request, ip: string): Promis
     if (!proven) {
       return json({ challenge: surge.issueChallenge() }, 428);
     }
+  }
+  // Charges the limits only for a request that can open a room, so the challenge round trip of a
+  // proof of work doesn't cost a second room.
+  if (!limits.createRoom(ip)) {
+    return status(429);
   }
 
   const now = clock();

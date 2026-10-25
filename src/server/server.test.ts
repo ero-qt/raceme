@@ -195,6 +195,32 @@ describe("server", () => {
     expect(proven.status).toBe(201);
   });
 
+  test("charges a room against the limits once, not for the proof of work challenge too", async () => {
+    const base = start({ surgeRoomsPerMinute: 1 });
+    const post = (body: object) =>
+      fetch(`${base}/api/rooms`, {
+        method: "POST",
+        headers: { origin },
+        body: JSON.stringify(body),
+      });
+    for (let i = 0; i < 2; i++) {
+      expect((await post({ goal: "any%" })).status).toBe(201);
+    }
+
+    // 5 rooms per address fit in the limit: 2 above and 3 more behind a proof of work each.
+    for (let i = 0; i < 3; i++) {
+      const refused = await post({ goal: "any%" });
+      expect(refused.status).toBe(428);
+      const { challenge } = (await refused.json()) as {
+        challenge: { token: string; bits: number };
+      };
+      const nonce = await solveChallenge(challenge.token, challenge.bits);
+      expect((await post({ goal: "any%", proof: { token: challenge.token, nonce } })).status).toBe(
+        201,
+      );
+    }
+  });
+
   test("refuses a room without a usable goal", async () => {
     const base = start();
     const bodies = ["{}", '{"goal":"  "}', "not json", JSON.stringify({ goal: "x".repeat(201) })];

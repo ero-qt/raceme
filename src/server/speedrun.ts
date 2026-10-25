@@ -60,6 +60,11 @@ export class SpeedrunCatalog {
   readonly #pending = new Map<string, Promise<LookupResult>>();
   #siteSearchDownUntil = 0;
 
+  /** Counts the answers in memory, expired ones not yet dropped included. */
+  get cachedCount(): number {
+    return this.#cache.size;
+  }
+
   constructor(options: CatalogOptions) {
     this.#options = options;
     const perMinute = options.perMinute ?? 60;
@@ -164,8 +169,9 @@ export class SpeedrunCatalog {
     parse: (body: unknown) => CatalogEntry[] | null,
   ): Promise<LookupResult> {
     const now = this.#options.clock();
+    this.#dropExpired(now);
     const cached = this.#cache.get(path);
-    if (cached && cached.expiresAt > now) {
+    if (cached) {
       return cached.value;
     }
 
@@ -216,6 +222,15 @@ export class SpeedrunCatalog {
       return await response.json();
     } catch {
       return null;
+    }
+  }
+
+  // Drops every expired answer on each lookup, because the keys contain what visitors typed.
+  #dropExpired(now: number): void {
+    for (const [path, entry] of this.#cache) {
+      if (entry.expiresAt <= now) {
+        this.#cache.delete(path);
+      }
     }
   }
 

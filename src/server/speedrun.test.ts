@@ -71,6 +71,19 @@ describe("SpeedrunCatalog.searchGames", () => {
     expect(api.requests).toHaveLength(2 * asked);
   });
 
+  test("forgets an expired search once the next lookup comes in", async () => {
+    const api = fakeApi({ [searchPath]: { data: [sm64] } });
+    let now = 0;
+    const games = catalog(api, () => now);
+    await games.searchGames("Super Mario 64");
+    expect(games.cachedCount).toBe(1);
+
+    now = 60 * 60_000 + 1;
+    await games.categories("o1y9wo6q");
+
+    expect(games.cachedCount).toBe(0);
+  });
+
   test("skips searches too short to narrow anything down", async () => {
     const api = fakeApi({});
 

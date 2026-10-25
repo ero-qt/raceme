@@ -44,6 +44,12 @@ if [[ ! -f "$root/pending" ]]; then
     "$tag" "$github/$repo" "$(cat "$target/commit")" "$digest" > "$target/build.json"
 
   echo "$tag" > "$root/pending"
+  # A first install has no running server to queue a restart on, so it switches right away.
+  if [[ ! -e "$root/current" ]]; then
+    touch "$root/swap"
+    echo "prepared $tag, nothing runs yet"
+    exit 0
+  fi
   "${fetch[@]}" -X POST -o /dev/null "$admin"
   echo "prepared $tag, restart queued"
 fi

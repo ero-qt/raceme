@@ -1,0 +1,45 @@
+[Unit]
+Description=raceme race rooms
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=raceme
+Group=raceme
+WorkingDirectory=/srv/raceme/current
+Environment=PORT=8790
+Environment=RACEME_HOST=127.0.0.1
+Environment=RACEME_BASE_PATH=apps/raceme
+Environment=RACEME_ORIGIN=https://ero-qt.eu
+Environment=RACEME_TRUST_PROXY=1
+Environment=RACEME_STATIC_DIR=/srv/raceme/current/client
+Environment=RACEME_BUILD_FILE=/srv/raceme/current/build.json
+Environment=RACEME_ADMIN_PORT=8796
+ExecStart=/usr/local/bin/bun /srv/raceme/current/server.js
+Restart=on-failure
+
+MemoryMax=1G
+CPUQuota=100%
+TasksMax=256
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+
+[Install]
+WantedBy=multi-user.target

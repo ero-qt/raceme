@@ -321,6 +321,14 @@ describe("server", () => {
     expect(response.headers.get("x-content-type-options")).toBe("nosniff");
   });
 
+  test("asks search engines to leave every page out", async () => {
+    const base = start();
+
+    expect((await fetch(`${base}/api/build`)).headers.get("x-robots-tag")).toBe(
+      "noindex, nofollow",
+    );
+  });
+
   test("runs a whole race between 2 clients", async () => {
     const base = start();
     const { slug, host } = await createRoom(base);

@@ -97,6 +97,8 @@ export async function newPage(
     // Wide enough for the desktop layout, where the header sits beside the page column.
     viewport: { width: 1280, height: 900 },
     colorScheme: options.colorScheme ?? "dark",
+    // Turns the page's transitions off, so axe never measures a color halfway through a fade.
+    reducedMotion: "reduce",
     bypassCSP: options.bypassCSP ?? false,
     acceptDownloads: true,
   });

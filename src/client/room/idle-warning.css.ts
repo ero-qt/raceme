@@ -19,7 +19,8 @@ export const card = style([
   {
     display: "grid",
     gap: tokens.space.s,
-    inlineSize: `min(340px, calc(100vw - 2 * ${tokens.space.l}))`,
+    inlineSize: "max-content",
+    maxInlineSize: `calc(100vw - 2 * ${tokens.space.l})`,
     paddingBlock: tokens.space.m,
     paddingInline: tokens.space.m,
     boxShadow: "0 4px 16px rgb(0 0 0 / 0.4)",

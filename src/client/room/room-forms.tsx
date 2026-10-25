@@ -35,6 +35,8 @@ export function ChatForm(
     inputRef?: (input: HTMLInputElement) => void;
     /** Keeps `send` off this long after each line, matching the server's slow mode. */
     waitMs?: number;
+    /** Turns the chat box and `send` off for an entrant the host muted. */
+    muted?: boolean;
   }>,
 ): JSX.Element {
   const [text, setText] = createSignal("");
@@ -55,7 +57,7 @@ export function ChatForm(
       class={styles.chatRow}
       onSubmit={(event) => {
         event.preventDefault();
-        if (text().trim() && !waiting()) {
+        if (text().trim() && !waiting() && !props.muted) {
           props.onSay(text());
           setText("");
           startWait();
@@ -65,7 +67,8 @@ export function ChatForm(
       <TextField
         label="Message"
         hideLabel
-        placeholder="chat"
+        placeholder={props.muted ? "you are muted" : "chat"}
+        disabled={props.muted}
         ref={(input: HTMLInputElement) => props.inputRef?.(input)}
         maxLength={maxChatLength}
         autocomplete="off"
@@ -76,7 +79,7 @@ export function ChatForm(
         type="submit"
         variant="ghost"
         class={styles.sendButton}
-        disabled={waiting()}
+        disabled={waiting() || props.muted}
         aria-label="send"
       >
         <span class={styles.sendLabel} data-waiting={waiting()}>

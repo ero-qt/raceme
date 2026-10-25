@@ -26,6 +26,8 @@ export interface RaceState {
   readonly startsAt: number | null;
   /** Server time in ms of the last finish or forfeit that ended the race. */
   readonly endedAt: number | null;
+  /** Lists the entrant ids the host muted, kept through a rematch. */
+  readonly muted: readonly string[];
 }
 
 export type RaceAction =
@@ -39,6 +41,8 @@ export type RaceAction =
   | { type: "forfeit"; entrantId: string }
   | { type: "unforfeit"; entrantId: string }
   | { type: "remove"; targetId: string }
+  | { type: "mute"; targetId: string }
+  | { type: "unmute"; targetId: string }
   | { type: "end" }
   | { type: "rematch" }
   | { type: "setFractionDigits"; digits: FractionDigits }

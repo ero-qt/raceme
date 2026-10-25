@@ -1,4 +1,4 @@
-import { TriangleAlert } from "lucide-solid";
+import { TriangleAlert, Volume2, VolumeOff } from "lucide-solid";
 import { type Accessor, Index, type JSX, Show, createEffect, on } from "solid-js";
 import type { FeedEntry } from "../../shared/feed-entry.ts";
 import type { ClientAction } from "../../shared/protocol.ts";
@@ -103,6 +103,26 @@ export function RoomView(props: RoomViewProps): JSX.Element {
         </Button>
       </Show>
     );
+  // Shows the entrant's current state, so a speaker means they can chat right now.
+  const muteButton = (row: Standing) => {
+    const muted = () => props.race.muted.includes(row.id);
+    const type = () => (muted() ? "unmute" : "mute");
+    return (
+      <Show when={row.id !== props.me.entrantId}>
+        <Button
+          variant="ghost"
+          class={styles.muteButton}
+          data-muted={muted()}
+          aria-label={`${actionLabel[type()]} ${row.name}`}
+          onClick={() => press({ type: type(), entrantId: row.id })}
+        >
+          <Show when={muted()} fallback={<Volume2 class={styles.rowIcon} aria-hidden="true" />}>
+            <VolumeOff class={styles.rowIcon} aria-hidden="true" />
+          </Show>
+        </Button>
+      </Show>
+    );
+  };
 
   const precision = useFractionDigits({
     roomDefault: () => props.race.settings.fractionDigits,
@@ -195,6 +215,7 @@ export function RoomView(props: RoomViewProps): JSX.Element {
               }}
               onSay={(text) => props.send({ type: "say", text })}
               waitMs={props.chatEveryMs ?? 0}
+              muted={props.race.muted.includes(props.me.entrantId)}
             >
               <Index each={mainActions()}>{actionButton}</Index>
             </ChatForm>
@@ -220,6 +241,7 @@ export function RoomView(props: RoomViewProps): JSX.Element {
             started={!beforeStart()}
             digits={precision.digits()}
             rowActions={rowActions}
+            muteButton={props.me.isHost && !props.closed ? muteButton : undefined}
           />
         </Show>
         <Show when={(over() || props.closed) && props.race.entrants.length > 0}>

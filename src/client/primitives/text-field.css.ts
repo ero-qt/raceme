@@ -1,4 +1,4 @@
-import { style } from "@vanilla-extract/css";
+import { globalStyle, style } from "@vanilla-extract/css";
 import { tokens } from "../styles/tokens.css.ts";
 
 export const field = style({
@@ -34,3 +34,6 @@ export const input = style({
   borderRadius: tokens.radius.s,
   font: "inherit",
 });
+
+// WCAG leaves disabled controls out of contrast rules, so their placeholder can fade.
+globalStyle(`${input}:disabled::placeholder`, { color: tokens.color.borderStrong });

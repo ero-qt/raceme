@@ -282,6 +282,21 @@ describe("ending and rematching", () => {
   });
 });
 
+describe("muting", () => {
+  test("mute and unmute an entrant in any phase, and a mute lasts through a rematch", () => {
+    const muted = run(running(), { type: "mute", targetId: "b" });
+    expect(muted.muted).toEqual(["b"]);
+
+    const ended = run(muted, { type: "end" }, startedAt + 1);
+    expect(run(ended, { type: "rematch" }).muted).toEqual(["b"]);
+    expect(run(muted, { type: "unmute", targetId: "b" }).muted).toEqual([]);
+  });
+
+  test("only mutes someone who entered", () => {
+    expect(refusal(twoJoined(), { type: "mute", targetId: "x" })).toBe("notEntrant");
+  });
+});
+
 describe("fraction digits", () => {
   test("rooms start at whole seconds like SRL", () => {
     expect(createRace({ countdownMs }).settings.fractionDigits).toBe(0);

@@ -13,6 +13,8 @@ export const actionLabel: Record<ActionType, string> = {
   unforfeit: ".undone",
   setGoal: ".setgoal",
   remove: ".remove",
+  mute: "mute",
+  unmute: "unmute",
   end: ".end",
   rematch: ".rematch",
 };
@@ -32,6 +34,7 @@ export const refusalText: Record<RoomRefusal, string> = {
   notHost: "Only the host can do that.",
   raceFull: "This race is full.",
   rateLimited: "Slow down a little.",
+  muted: "You have been muted.",
   slowMode: "Slow mode is on, wait a moment before your next message.",
   roomGone: "This room has closed.",
   tooEarly: "Too early. Wait 5 seconds after GO.",

@@ -95,6 +95,23 @@ describe("chatLine", () => {
     expect(chatLine(r, guest, "again", 4_000, 3_000)).toMatchObject({ text: "again" });
   });
 
+  test("refuses chat from an entrant the host muted, and only the host may mute", () => {
+    const r = room();
+    const joined = handleAction(r, guest, { type: "join", name: "al" }, 0);
+    if (joined.ok) {
+      r.race = joined.state;
+    }
+    const mute = { type: "mute", entrantId: "a" } as const;
+
+    expect(handleAction(r, guest, mute, 0)).toEqual(notHost);
+    const muted = handleAction(r, host, mute, 0);
+    if (muted.ok) {
+      r.race = muted.state;
+    }
+
+    expect(chatLine(r, guest, "hi", 0, 0)).toBe("muted");
+  });
+
   test("takes lines up to 512 characters", () => {
     const r = room();
     const joined = handleAction(r, guest, { type: "join", name: "al" }, 0);

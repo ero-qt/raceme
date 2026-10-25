@@ -56,7 +56,9 @@ function renderRoom(entrantId: string, isHost = false, state: RaceState = race, 
 }
 
 function rowOf(view: ReturnType<typeof renderRoom>, name: string): HTMLElement {
-  const cell = view.getAllByRole("cell").find((c) => c.textContent === name);
+  const cell = view
+    .getAllByRole("cell")
+    .find((c) => (c.querySelector("bdi")?.textContent ?? c.textContent) === name);
   const row = cell?.closest("tr");
   if (!row) {
     throw new Error(`no row for ${name}`);
@@ -204,6 +206,29 @@ describe("RoomView layout", () => {
 
     fireEvent.click(host.getByRole("button", { name: ".remove bob" }));
     expect(host.sent).toEqual([{ type: "remove", entrantId: "b" }]);
+  });
+
+  test("the host can mute and unmute others in any phase", () => {
+    const running = { ...race, phase: "running" as const, startsAt: 0 };
+    const host = renderRoom("a", true, running);
+    expect(host.queryByRole("button", { name: "mute alice" })).toBeNull();
+
+    fireEvent.click(host.getByRole("button", { name: "mute bob" }));
+    expect(host.sent).toEqual([{ type: "mute", entrantId: "b" }]);
+    cleanup();
+
+    const muted = renderRoom("a", true, { ...running, muted: ["b"] });
+    fireEvent.click(muted.getByRole("button", { name: "unmute bob" }));
+    expect(muted.sent).toEqual([{ type: "unmute", entrantId: "b" }]);
+  });
+
+  test("a muted entrant's chat box and send are off", () => {
+    const view = renderRoom("b", false, { ...race, muted: ["b"] });
+    const message = view.getByLabelText("Message") as HTMLInputElement;
+
+    expect(message.disabled).toBe(true);
+    expect(message.placeholder).toBe("you are muted");
+    expect((view.getByRole("button", { name: "send" }) as HTMLButtonElement).disabled).toBe(true);
   });
 
   test("entrants come after the chat box", () => {

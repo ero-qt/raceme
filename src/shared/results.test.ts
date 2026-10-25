@@ -8,6 +8,7 @@ const race: RaceState = {
   settings: { countdownMs: 10_000, fractionDigits: 2 },
   startsAt: Date.UTC(2026, 9, 24, 18, 0, 0),
   endedAt: Date.UTC(2026, 9, 24, 18, 20, 0),
+  muted: [],
   entrants: [
     { id: "b", name: "bob", ready: true, result: { kind: "forfeit" } },
     { id: "a", name: "alice", ready: true, result: { kind: "done", timeMs: 1_065_439 } },

@@ -32,6 +32,7 @@ export function createRace(settings: NewRaceSettings): RaceState {
     settings: { fractionDigits: 0, ...settings },
     startsAt: null,
     endedAt: null,
+    muted: [],
   };
 }
 
@@ -50,6 +51,12 @@ export function apply(state: RaceState, action: RaceAction, now: number): RaceRe
       return join(state, action.entrantId, action.name);
     case "remove":
       return remove(state, action.targetId, now);
+    case "mute":
+      return state.entrants.some((e) => e.id === action.targetId)
+        ? ok({ ...state, muted: [...new Set([...state.muted, action.targetId])] })
+        : refuse("notEntrant");
+    case "unmute":
+      return ok({ ...state, muted: state.muted.filter((id) => id !== action.targetId) });
     case "end":
       return isOver(state)
         ? refuse("wrongPhase")
@@ -58,7 +65,7 @@ export function apply(state: RaceState, action: RaceAction, now: number): RaceRe
       return ok({ ...state, settings: { ...state.settings, fractionDigits: action.digits } });
     case "rematch":
       return isOver(state)
-        ? ok({ ...createRace(state.settings), goal: state.goal })
+        ? ok({ ...createRace(state.settings), goal: state.goal, muted: state.muted })
         : refuse("wrongPhase");
     default:
       return applyEntrantAction(state, action, now);
@@ -118,7 +125,18 @@ function remove(state: RaceState, targetId: string, now: number): RaceResult {
 
 type EntrantAction = Exclude<
   RaceAction,
-  { type: "tick" | "setGoal" | "join" | "remove" | "end" | "rematch" | "setFractionDigits" }
+  {
+    type:
+      | "tick"
+      | "setGoal"
+      | "join"
+      | "remove"
+      | "mute"
+      | "unmute"
+      | "end"
+      | "rematch"
+      | "setFractionDigits";
+  }
 >;
 
 function applyEntrantAction(state: RaceState, action: EntrantAction, now: number): RaceResult {

@@ -7,6 +7,8 @@ export type ClientAction =
   | { type: "setGoal"; goal: string }
   | { type: "say"; text: string }
   | { type: "remove"; entrantId: string }
+  | { type: "mute"; entrantId: string }
+  | { type: "unmute"; entrantId: string }
   | { type: "setFractionDigits"; digits: FractionDigits }
   | { type: "end" }
   | { type: "rematch" }
@@ -32,6 +34,7 @@ export type RoomRefusal =
   | "badMessage"
   | "badChat"
   | "slowMode"
+  | "muted"
   | "rateLimited";
 
 export type ServerMessage =
@@ -85,7 +88,7 @@ export function parseClientAction(raw: string): ClientAction | null {
   if (type === "setFractionDigits") {
     return digits === 0 || digits === 1 || digits === 2 || digits === 3 ? { type, digits } : null;
   }
-  if (type === "remove") {
+  if (type === "remove" || type === "mute" || type === "unmute") {
     return typeof entrantId === "string" ? { type, entrantId } : null;
   }
 

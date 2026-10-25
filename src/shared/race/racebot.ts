@@ -18,7 +18,7 @@ export function announce(before: RaceState, action: RaceAction, after: RaceState
   if (action.type === "rematch") {
     return ["Rematch!"];
   }
-  if (action.type === "setFractionDigits") {
+  if (action.type === "setFractionDigits" || action.type === "mute" || action.type === "unmute") {
     return [];
   }
   if (action.type === "remove") {

@@ -18,6 +18,8 @@ const hostActions = new Set<ClientAction["type"]>([
   "setGoal",
   "end",
   "remove",
+  "mute",
+  "unmute",
   "setFractionDigits",
 ]);
 
@@ -54,7 +56,9 @@ function toRaceAction(
     case "setFractionDigits":
       return action;
     case "remove":
-      return { type: "remove", targetId: action.entrantId };
+    case "mute":
+    case "unmute":
+      return { type: action.type, targetId: action.entrantId };
     default:
       return { ...action, entrantId: session.entrantId };
   }
@@ -81,6 +85,10 @@ export function chatLine(
   const entrant = room.race.entrants.find((e) => e.id === session.entrantId);
   if (!entrant) {
     return "notEntrant";
+  }
+
+  if (room.race.muted.includes(entrant.id)) {
+    return "muted";
   }
 
   const text = cleanText(rawText);

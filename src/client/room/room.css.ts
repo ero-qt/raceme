@@ -159,6 +159,8 @@ export const entrantsTitle = style({
   fontSize: "1rem",
 });
 
+export const muteCell = style([cell, { inlineSize: "1%", paddingInlineEnd: 0 }]);
+
 export const actionCell = style([cell, { textAlign: "end" }]);
 
 export const download = style({
@@ -166,6 +168,17 @@ export const download = style({
   alignItems: "center",
   minBlockSize: tokens.target.min,
   color: tokens.color.link,
+});
+
+export const muteButton = style({
+  inlineSize: tokens.target.min,
+  paddingInline: 0,
+  selectors: { "&[data-muted=true]": { color: tokens.color.statusForfeit } },
+});
+
+export const rowIcon = style({
+  inlineSize: "1.25em",
+  blockSize: "1.25em",
 });
 
 export const empty = style({

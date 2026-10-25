@@ -11,6 +11,7 @@ const race: RaceState = {
   settings: { countdownMs: 10_000, fractionDigits: 0 },
   startsAt: 0,
   endedAt: 60_000,
+  muted: [],
   entrants: [{ id: "a", name: "alice", ready: true, result: { kind: "done", timeMs: 60_000 } }],
 };
 

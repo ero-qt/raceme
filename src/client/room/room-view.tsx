@@ -1,7 +1,7 @@
 import { TriangleAlert, Volume2, VolumeOff } from "lucide-solid";
 import { type Accessor, Index, type JSX, Show, createEffect, on, onCleanup } from "solid-js";
 import type { FeedEntry } from "../../shared/feed-entry.ts";
-import type { ClientAction } from "../../shared/protocol.ts";
+import type { ClientAction, ClosesFor } from "../../shared/protocol.ts";
 import { type RaceState, type Standing, standings } from "../../shared/race/race.ts";
 import type { GoalCatalog } from "../home/goal-picker.tsx";
 import { Button } from "../primitives/button.tsx";
@@ -43,6 +43,7 @@ export interface RoomViewProps {
   watchers?: number;
   /** Gives the server time the room closes, for the room timer. */
   closesAt?: number;
+  closesFor?: ClosesFor;
   /** Shows the room as it was when the server closed it, with nothing left to do in it. */
   closed?: boolean;
 }
@@ -189,7 +190,11 @@ export function RoomView(props: RoomViewProps): JSX.Element {
       />
       <Show when={!props.closed && props.closesAt !== undefined}>
         <HeaderStatus>
-          <RoomTimer closesAt={props.closesAt ?? 0} now={props.now} />
+          <RoomTimer
+            closesAt={props.closesAt ?? 0}
+            closesFor={props.closesFor ?? "lifetime"}
+            now={props.now}
+          />
         </HeaderStatus>
       </Show>
       <div class={styles.clockLine}>

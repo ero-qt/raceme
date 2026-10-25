@@ -47,6 +47,7 @@ export class RoomHub<Data> {
       race: room.race,
       serverNow: this.clock(),
       closesAt: room.closesAt,
+      closesFor: room.closesFor,
       watchers: room.watcherCount,
     };
   }

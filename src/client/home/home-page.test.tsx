@@ -43,6 +43,7 @@ function renderHome(
   const searched: string[] = [];
   const view = render(() => (
     <HomePage
+      loadRestart={async () => null}
       open={(slug) => opened.push(slug)}
       roomExists={async (slug) => {
         if (options.checkFails) {
@@ -502,5 +503,18 @@ describe("HomePage corner notes", () => {
     fireEvent(details, new Event("toggle"));
 
     expect(await home.findByText(/unverified build/)).toBeTruthy();
+  });
+});
+
+describe("HomePage restart notice", () => {
+  test("tells about a queued server restart on the start page", async () => {
+    const restartAt = Date.now() + (3 * 60 + 20) * 60_000 + 30_000;
+    globalThis.fetch = mock(async () => Response.json({ restartAt })) as unknown as typeof fetch;
+    const view = render(() => <HomePage />);
+
+    const text = new Date(restartAt).toISOString().slice(11, 16);
+    expect((await view.findByText(/^Server restart queued for/)).textContent).toBe(
+      `Server restart queued for ${text} UTC (in 3 h 20 min). Rooms close then.`,
+    );
   });
 });

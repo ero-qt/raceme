@@ -362,6 +362,28 @@ describe("RoomView layout", () => {
     localStorage.clear();
   });
 
+  test("says in the timer when a server restart closes the room", () => {
+    const view = render(() => (
+      <RoomView
+        race={race}
+        me={{ entrantId: "a", isHost: false }}
+        now={Date.UTC(2026, 9, 25, 7)}
+        inviteUrl={inviteUrl}
+        notice={null}
+        feed={[]}
+        send={() => {}}
+        catalog={catalog}
+        closesAt={Date.UTC(2026, 9, 25, 10)}
+        closesFor="restart"
+      />
+    ));
+
+    const timer = view.getByRole("button", {
+      name: "Room closes for a server restart in 03:00:00",
+    });
+    expect(timer.title).toBe("Room closes for a server restart at 10:00 UTC, click to hide");
+  });
+
   test("drops the watcher count once the room has closed", () => {
     const view = renderRoom("a", false, race, true);
 

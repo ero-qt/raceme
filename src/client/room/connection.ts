@@ -1,6 +1,6 @@
 import { type Accessor, createSignal, onCleanup } from "solid-js";
 import type { FeedEntry } from "../../shared/feed-entry.ts";
-import type { ClientAction, ServerMessage } from "../../shared/protocol.ts";
+import type { ClientAction, ClosesFor, ServerMessage } from "../../shared/protocol.ts";
 import type { RaceState } from "../../shared/race/race.ts";
 import { refusalText } from "./action-labels.ts";
 
@@ -17,6 +17,7 @@ export interface RoomConnection {
   chatEveryMs: Accessor<number>;
   /** Counts the people with the room open who haven't entered, from the latest state. */
   watchers: Accessor<number>;
+  closesFor: Accessor<ClosesFor>;
   /** Gives the server time the room closes, from the latest state. */
   closesAt: Accessor<number | null>;
   /** Turns true once the server closes the socket with the room-gone code. */
@@ -69,6 +70,7 @@ export function connectRoom(slug: string): RoomConnection {
   const [chatEveryMs, setChatEveryMs] = createSignal(0);
   const [closesAt, setClosesAt] = createSignal<number | null>(null);
   const [watchers, setWatchers] = createSignal(0);
+  const [closesFor, setClosesFor] = createSignal<ClosesFor>("lifetime");
   const [gone, setGone] = createSignal(false);
   const [closedAt, setClosedAt] = createSignal<number | null>(null);
   const [idleClosesAt, setIdleClosesAt] = createSignal<number | null>(null);
@@ -152,6 +154,7 @@ export function connectRoom(slug: string): RoomConnection {
         setRace(message.race);
         setClosesAt(message.closesAt);
         setWatchers(message.watchers);
+        setClosesFor(message.closesFor);
         break;
       case "feed": {
         // A reconnect resends the whole log, so only lines newer than the last one shown count.
@@ -190,6 +193,7 @@ export function connectRoom(slug: string): RoomConnection {
     chatEveryMs,
     closesAt,
     watchers,
+    closesFor,
     gone,
     closedAt,
     idleClosesAt,

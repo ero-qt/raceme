@@ -465,6 +465,24 @@ describe("server", () => {
       );
     });
 
+    test("marks the state as closing for the restart and shows the restart on the public API", async () => {
+      clockOffsetMs = Date.UTC(2026, 9, 25, 7) - Date.now();
+      const base = start({ adminPort: 0 });
+      const { slug } = await createRoom(base);
+      expect(await (await fetch(`${base}/api/restart`)).json()).toEqual({ restartAt: null });
+
+      await fetch(adminUrl(), { method: "POST" });
+      const client = new Client(
+        socketUrl(base, slug),
+        "raceme_session=mark-secret-mark-secret-mark-secr",
+      );
+
+      await client.waitFor((m) => m.type === "state" && m.closesFor === "restart");
+      expect(await (await fetch(`${base}/api/restart`)).json()).toEqual({
+        restartAt: Date.UTC(2026, 9, 25, 10),
+      });
+    });
+
     test("reports the open rooms without queueing, and stays off the public port", async () => {
       const base = start({ adminPort: 0 });
       await createRoom(base);

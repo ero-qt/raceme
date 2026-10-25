@@ -19,9 +19,9 @@ export function RoomTimer(props: {
   const shownTitle = () =>
     restart()
       ? `Room closes for a server restart at ${restartTime()}, click to hide`
-      : "Time until the room closes. Click to hide room timer.";
+      : "Room closes in this long, click to hide";
   const shownLabel = () =>
-    restart() ? `Room closes for a server restart in ${left()}` : `room closes in ${left()}`;
+    restart() ? `Room closes for a server restart in ${left()}` : `Room closes in ${left()}`;
 
   return (
     <>
@@ -32,8 +32,8 @@ export function RoomTimer(props: {
         variant="plain"
         class={styles.roomTimer}
         // A title that changed every second would make browsers drop the tooltip on each tick.
-        title={hidden() ? "Click to show room timer." : shownTitle()}
-        aria-label={hidden() ? "show room timer" : shownLabel()}
+        title={hidden() ? "Show room timer" : shownTitle()}
+        aria-label={hidden() ? "Show room timer" : shownLabel()}
         aria-pressed={!hidden()}
         onClick={() => setHidden(!hidden())}
       >

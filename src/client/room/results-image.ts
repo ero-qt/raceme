@@ -1,6 +1,6 @@
 import type { RaceState } from "../../shared/race/race.ts";
 import { resultsImageRows } from "../../shared/results.ts";
-import { type TextStyle, layoutResults } from "./results-image-layout.ts";
+import { type TextStyle, layoutResults, pickImageRows } from "./results-image-layout.ts";
 
 const scale = 2;
 const padding = 28;
@@ -20,13 +20,12 @@ const medals = ["#d4af37", "#b4b7bd", "#cd7f32"];
 
 /**
  * Draws the race results as a PNG in the page's own colors. The goal comes first, then the first
- * `top` places big with medal colors for the podium, then everyone else with a line before those
- * without a place. The footer gives the entrant count, the race's date and time in the
- * viewer's time zone and raceme.
+ * `shown` rows with the podium big in medal colors and a line before those without a place. The
+ * footer gives the entrant count, the race's date and time in the viewer's time zone and raceme.
  */
-export async function resultsImage(race: RaceState, top: number): Promise<Blob> {
-  const rows = resultsImageRows(race);
-  const highlighted = Math.min(top, rows.length);
+export async function resultsImage(race: RaceState, shown: number): Promise<Blob> {
+  const all = resultsImageRows(race);
+  const { rows, podium: highlighted } = pickImageRows(all, shown);
   const page = getComputedStyle(document.body);
   const canvas = document.createElement("canvas");
   const context = canvas.getContext("2d");
@@ -36,7 +35,7 @@ export async function resultsImage(race: RaceState, top: number): Promise<Blob> 
 
   const started = new Date(race.startsAt ?? race.endedAt ?? Date.now());
   const time = started.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  const entrants = `${rows.length} ${rows.length === 1 ? "entrant" : "entrants"}`;
+  const entrants = `${all.length} ${all.length === 1 ? "entrant" : "entrants"}`;
   const footer = { left: `${entrants} · ${started.toLocaleDateString()} ${time}`, right: "raceme" };
   const title = race.goal ?? "Race";
   const measure = (text: string, style: TextStyle) => {

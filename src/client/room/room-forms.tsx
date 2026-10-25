@@ -105,7 +105,7 @@ export function ChatForm(
         variant="ghost"
         class={styles.sendButton}
         disabled={waiting() || props.muted}
-        aria-label="send"
+        aria-label="Send"
       >
         <span class={styles.sendLabel} data-waiting={waiting()}>
           send

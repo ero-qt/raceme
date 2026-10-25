@@ -105,7 +105,7 @@ describe("HomePage", () => {
   test("a pasted code of a live room is recognized, masked and joins", async () => {
     const home = renderHome();
     home.type("DUXANAGXDS");
-    await waitFor(() => expect(home.getByRole("button", { name: "join" })).toBeTruthy());
+    await waitFor(() => expect(home.getByRole("button", { name: "Join" })).toBeTruthy());
     expect(home.queryByRole("button", { name: ".startrace" })).toBeNull();
     expect(home.field.dataset.kind).toBe("code");
 
@@ -116,7 +116,7 @@ describe("HomePage", () => {
   test("a pasted invite link joins too", async () => {
     const home = renderHome();
     home.type("https://ero-qt.eu/apps/raceme/duxanagxds");
-    await waitFor(() => expect(home.getByRole("button", { name: "join" })).toBeTruthy());
+    await waitFor(() => expect(home.getByRole("button", { name: "Join" })).toBeTruthy());
     home.submit();
 
     expect(home.opened).toEqual(["duxanagxds"]);
@@ -432,7 +432,7 @@ describe("HomePage corner notes", () => {
   test("explains what the server keeps, with the real cookie and cache lifetimes", () => {
     const home = renderHome();
 
-    const notice = home.getByText("privacy", { selector: "summary" }).parentElement;
+    const notice = home.getByText("Privacy", { selector: "summary" }).parentElement;
     expect(notice?.textContent).toContain("The server keeps nothing on disk.");
     expect(notice?.textContent).toContain(`expire after ${sessionCookieDays} days`);
     expect(notice?.textContent).toContain(`for up to ${catalogCacheHours} hours`);
@@ -442,7 +442,7 @@ describe("HomePage corner notes", () => {
   test("tells that raceme was made with AI", () => {
     const home = renderHome();
 
-    const notice = home.getByText("made with ai", { selector: "summary" }).parentElement;
+    const notice = home.getByText("Made with AI", { selector: "summary" }).parentElement;
     expect(notice?.textContent).toContain("reproducing, rewriting, rehosting encouraged.");
     expect(notice?.textContent).toContain("i'm not proud, but i think it's useful.");
   });
@@ -459,7 +459,7 @@ describe("HomePage corner notes", () => {
     ) as unknown as typeof fetch;
     const home = renderHome();
 
-    const details = home.getByText("build", { selector: "summary" })
+    const details = home.getByText("Build", { selector: "summary" })
       .parentElement as HTMLDetailsElement;
     details.open = true;
     fireEvent(details, new Event("toggle"));
@@ -483,7 +483,7 @@ describe("HomePage corner notes", () => {
     globalThis.fetch = mock(async () => new Response("<html>")) as unknown as typeof fetch;
     const home = renderHome();
 
-    const details = home.getByText("build", { selector: "summary" })
+    const details = home.getByText("Build", { selector: "summary" })
       .parentElement as HTMLDetailsElement;
     details.open = true;
     fireEvent(details, new Event("toggle"));
@@ -497,7 +497,7 @@ describe("HomePage corner notes", () => {
     ) as unknown as typeof fetch;
     const home = renderHome();
 
-    const details = home.getByText("build", { selector: "summary" })
+    const details = home.getByText("Build", { selector: "summary" })
       .parentElement as HTMLDetailsElement;
     details.open = true;
     fireEvent(details, new Event("toggle"));

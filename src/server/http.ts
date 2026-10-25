@@ -18,6 +18,8 @@ const securityHeaders: Record<string, string> = {
   "permissions-policy": "camera=(), microphone=(), geolocation=(), interest-cohort=()",
   "referrer-policy": "no-referrer",
   "x-content-type-options": "nosniff",
+  // Keeps every page out of search results, so a shared room link never turns up there.
+  "x-robots-tag": "noindex, nofollow",
 };
 
 /** Adds the security headers to a raceme response. */

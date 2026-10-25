@@ -33,7 +33,7 @@ async function positions(page: Page): Promise<Record<string, number[]>> {
     timeColumn: await box("timeColumn", "th >> text=Time"),
     chat: await box("chat", "[aria-label='Chat']"),
     clock: await box("clock", "[role='timer']"),
-    roomTimer: await box("roomTimer", "button[aria-label^='room closes']"),
+    roomTimer: await box("roomTimer", "button[aria-label^='Room closes']"),
   };
 }
 
@@ -111,11 +111,11 @@ describe("home layout", () => {
     const form = page.getByLabel("Goal or room code");
     const before = await form.boundingBox();
 
-    await page.getByText("privacy", { exact: true }).click();
+    await page.getByText("Privacy", { exact: true }).click();
     await page.getByText("The server keeps nothing on disk.").waitFor();
     expect(await form.boundingBox()).toEqual(before);
 
-    await page.getByText("made with ai", { exact: true }).click();
+    await page.getByText("Made with AI", { exact: true }).click();
     await page.getByText("i'm not proud, but i think it's useful.").waitFor();
     expect(await form.boundingBox()).toEqual(before);
 
@@ -130,14 +130,14 @@ describe("home layout", () => {
       Promise.all((await summaries.all()).map(async (summary) => await summary.boundingBox()));
     const before = await boxes();
 
-    await page.getByText("privacy", { exact: true }).click();
+    await page.getByText("Privacy", { exact: true }).click();
     const notice = page.getByText("The server keeps nothing on disk.");
     await notice.waitFor();
     expect(await boxes()).toEqual(before);
     expect(((await notice.boundingBox())?.y ?? 0) < (before[0]?.y ?? 0)).toBe(true);
 
     // Opening the other note closes this one, so 2 notes never cover each other.
-    await page.getByText("made with ai", { exact: true }).click();
+    await page.getByText("Made with AI", { exact: true }).click();
     await page.getByText("i'm not proud, but i think it's useful.").waitFor();
     expect(await notice.isVisible()).toBe(false);
     expect(await boxes()).toEqual(before);
@@ -149,7 +149,7 @@ describe("home layout", () => {
     const { context, page } = await newPage(harness);
     await page.setViewportSize({ width: 1280, height: 700 });
     await page.goto(`${harness.origin}/`);
-    await page.getByText("privacy", { exact: true }).click();
+    await page.getByText("Privacy", { exact: true }).click();
     await page.getByText("The server keeps nothing on disk.").waitFor();
 
     const hiddenPixels = await page.evaluate(() => {
@@ -166,12 +166,12 @@ describe("home layout", () => {
     await page.goto(`${harness.origin}/`);
     const notice = page.getByText("The server keeps nothing on disk.");
 
-    await page.getByText("privacy", { exact: true }).click();
+    await page.getByText("Privacy", { exact: true }).click();
     await notice.waitFor();
     await page.mouse.click(640, 100);
     expect(await notice.isVisible()).toBe(false);
 
-    await page.getByText("privacy", { exact: true }).click();
+    await page.getByText("Privacy", { exact: true }).click();
     await notice.waitFor();
     await page.keyboard.press("Escape");
     expect(await notice.isVisible()).toBe(false);

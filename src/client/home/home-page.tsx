@@ -154,7 +154,7 @@ export function HomePage(props: {
           }
         >
           <Button type="submit" variant="ghost">
-            join
+            Join
           </Button>
         </Show>
       </form>

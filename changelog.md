@@ -25,3 +25,6 @@ it follows [keep a changelog](https://keepachangelog.com) principles and raceme 
 - a build note in the same corner with the commit the server runs and how to check its release
 - new releases restart the server at the next 10:00 UTC, or sooner once no room is open
 - a notice on the start page and in every open room when a restart is queued, with a warning 1 hour before
+- `.done` and `.quit` buttons that stay off for the first 5 seconds after GO
+- a link card for Discord and other chats that never shows a room's goal or entrants
+- a `noindex` header and tag on every page, so search engines leave raceme out

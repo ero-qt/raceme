@@ -20,7 +20,7 @@ export const minEntrantCap = 2;
 // Entrants named like the bot could post chat that passes for its announcements.
 const reservedNames = new Set(["racebot"]);
 // Same guard racetime.gg uses against a finish or forfeit clicked by accident right after GO.
-const earliestResultMs = 5_000;
+export const earliestResultMs = 5_000;
 
 /** Lists the settings a new race needs, with the rest falling back to defaults. */
 export type NewRaceSettings = Pick<RaceSettings, "countdownMs"> & Partial<RaceSettings>;

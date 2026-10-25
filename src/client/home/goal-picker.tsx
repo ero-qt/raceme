@@ -169,7 +169,7 @@ export function GoalPicker(props: {
           value={props.picker.category()}
           onChange={(event) => props.picker.setCategory(event.currentTarget.value)}
         >
-          <option value="">no category</option>
+          <option value="">No category</option>
           <For each={props.picker.categories()}>
             {(category) => <option value={category.name}>{category.name}</option>}
           </For>

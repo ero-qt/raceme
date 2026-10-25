@@ -2,6 +2,8 @@
 
 raceme gives you a speedrun race room that works like SpeedRunsLive did, with the same commands and RaceBot messages. you start a room with a goal and send its link to the people you race with. rooms only exist in the server's memory, so nothing is kept once a room closes.
 
+![A race room with 4 entrants, 2 of them done and 2 still racing](docs/room.png)
+
 ## rooms and limits
 
 a room lives only in the server's memory. there are no accounts, no room list and no logs of rooms, goals or chat, so once a room closes nothing about it is left on the server. anyone with the link can open a room and watch it, so share the link only with the people you race with.

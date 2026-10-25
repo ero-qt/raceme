@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import type { ImageRow } from "../../shared/results.ts";
-import { layoutResults } from "./results-image-layout.ts";
+import { layoutResults, pickImageRows } from "./results-image-layout.ts";
 
 // Monospace stand-in: every character is as wide as the font size.
 const size = { title: 22, footer: 14, top: 26, row: 15 } as const;
@@ -29,5 +29,18 @@ describe("layoutResults", () => {
     const podiumLong = rows(["ero", "a long podium name", "puwexil", "kirby", "zyrrus"]);
     expect(layout(podiumLong).width).toBeGreaterThan(layout(base).width);
     expect(layout(podiumLong).nameX).toBe(layout(base).nameX);
+  });
+});
+
+describe("pickImageRows", () => {
+  const many = rows(Array.from({ length: 50 }, (_, i) => `racer${i}`));
+
+  test("lists only the places asked for and highlights the first 3", () => {
+    expect(pickImageRows(many, 10)).toEqual({ rows: many.slice(0, 10), podium: 3 });
+  });
+
+  test("highlights only placed rows, never a forfeit", () => {
+    const two = [...rows(["ero", "veract"]), { place: "", name: "kirby", time: "Forfeit" }];
+    expect(pickImageRows(two, 10)).toEqual({ rows: two, podium: 2 });
   });
 });

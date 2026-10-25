@@ -41,6 +41,10 @@ export interface ServerConfig {
   closingWarningMs: number;
   /** Drops an empty room nobody ever entered after this long. */
   unusedRoomMs: number;
+  /** Counts a room as abandoned after this long with nobody connected. */
+  abandonedAfterMs: number;
+  /** Frees abandoned rooms once fewer than this many rooms are free. */
+  abandonedRoomHeadroom: number;
   /** Asks new rooms for a proof of work once more than this many open within a minute. */
   surgeRoomsPerMinute: number;
   /** Sets how hard that proof is, as leading zero bits of a SHA-256. */
@@ -120,6 +124,8 @@ export function startServer(config: ServerConfig, clock = steadyClock): RunningS
     roomLifetimeMs: config.roomLifetimeMs,
     closingWarningMs: config.closingWarningMs,
     unusedRoomMs: config.unusedRoomMs,
+    abandonedAfterMs: config.abandonedAfterMs,
+    abandonedRoomHeadroom: config.abandonedRoomHeadroom,
   });
   const webhook = config.alertWebhook;
   const alerts = new SpikeAlerts((content) => {

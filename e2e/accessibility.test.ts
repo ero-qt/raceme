@@ -62,6 +62,23 @@ describe.each(["dark", "light"] as const)("axe-core WCAG 2.2 AAA, %s theme", (co
     await context.close();
   });
 
+  test("start page with suggestions and a category picked", async () => {
+    const { context, page } = await newPage(harness, { colorScheme, bypassCSP: true });
+    await page.goto(`${harness.origin}/`);
+    await page.getByLabel("Goal or room code").fill("mario 64");
+    await page.getByRole("option", { name: /^speedrun\.com/ }).click();
+    await page.getByRole("option", { name: "Super Mario 64", exact: true }).waitFor();
+
+    expect(await violations(page)).toEqual([]);
+
+    await page.getByRole("option", { name: "Super Mario 64", exact: true }).click();
+    await page.getByRole("combobox", { name: "Category" }).selectOption("16 Star");
+
+    expect(await violations(page)).toEqual([]);
+
+    await context.close();
+  });
+
   test("room nobody has entered yet", async () => {
     const { context, page } = await newPage(harness, { colorScheme, bypassCSP: true });
     await page.goto(`${harness.origin}/`);

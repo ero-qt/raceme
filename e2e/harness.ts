@@ -9,8 +9,32 @@ export interface Harness {
   close(): Promise<void>;
 }
 
+/**
+ * Stands in for speedrun.com with one game and its categories, so the browser tests never call
+ * the real site.
+ */
+function startFakeSpeedrun() {
+  return Bun.serve({
+    port: 0,
+    hostname: "127.0.0.1",
+    fetch(request) {
+      const { pathname } = new URL(request.url);
+      if (pathname === "/api/v2/GetSearch") {
+        return Response.json({ gameList: [{ id: "o1y9wo6q", name: "Super Mario 64" }] });
+      }
+      if (pathname === "/api/v1/games/o1y9wo6q/categories") {
+        const names = ["120 Star", "70 Star", "16 Star"];
+        const data = names.map((name, i) => ({ id: `cat${i}0000`, name, type: "per-game" }));
+        return Response.json({ data });
+      }
+      return new Response(null, { status: 404 });
+    },
+  });
+}
+
 /** Starts the real server on a free port with the built page, plus a headless Chromium. */
 export async function startHarness(): Promise<Harness> {
+  const speedrun = startFakeSpeedrun();
   const server = startServer({
     port: 0,
     hostname: "127.0.0.1",
@@ -20,7 +44,7 @@ export async function startHarness(): Promise<Harness> {
     origin: null,
     staticDir: join(import.meta.dir, "..", "dist", "client"),
     trustProxy: false,
-    speedrunApi: null,
+    speedrunApi: `http://127.0.0.1:${speedrun.port}/api`,
     maxRooms: 100,
     idleMs: 60_000,
     countdownMs: 1_000,
@@ -38,6 +62,7 @@ export async function startHarness(): Promise<Harness> {
     async close() {
       await browser.close();
       server.stop();
+      speedrun.stop();
     },
   };
 }

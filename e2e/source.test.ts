@@ -9,12 +9,12 @@ const scripts = await Promise.all(
 const bundle = scripts.join("\n");
 
 describe("built page", () => {
-  // Discord and other chats read these for the link card, the same for every page.
-  test("gives link previews a generic card and keeps search engines out", async () => {
+  // Discord and other chats build a link card from these tags, so the page leaves them out.
+  test("gives link previews nothing to show and keeps search engines out", async () => {
     const html = await Bun.file(join(dist, "index.html")).text();
 
-    expect(html).toContain('<meta property="og:title" content="raceme" />');
-    expect(html).toContain('<meta name="description" content="SRL-style speedrun race rooms." />');
+    expect(html).not.toContain('property="og:');
+    expect(html).not.toContain('name="description"');
     expect(html).toContain('<meta name="robots" content="noindex, nofollow" />');
   });
 

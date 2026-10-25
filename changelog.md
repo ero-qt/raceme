@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 
 ## [Unreleased]
 
+### Removed
+
+- The link card for Discord and other chats, along with the page description.
+
 ## [1.1.0] - 2026-10-25
 
 ### Added

@@ -612,6 +612,48 @@ describe("server", () => {
     );
   });
 
+  test("tells everyone in a room how many people watch it without entering", async () => {
+    const base = start();
+    const { slug } = await createRoom(base);
+    const first = new Client(
+      socketUrl(base, slug),
+      "raceme_session=see-secret-see-secret-see-secret-se",
+    );
+    await first.opened;
+    const watcher = new Client(
+      socketUrl(base, slug),
+      "raceme_session=two-watch-two-watch-two-watch-tw",
+    );
+    await watcher.opened;
+
+    const latestWatchers = () => {
+      const state = first.messages.filter((m) => m.type === "state").at(-1);
+      return state?.type === "state" ? state.watchers : null;
+    };
+    await first.waitFor(() => latestWatchers() === 2);
+    first.send({ type: "join", name: "alice" });
+    await first.waitFor(() => latestWatchers() === 1);
+    watcher.socket.close();
+    await first.waitFor(() => latestWatchers() === 0);
+  });
+
+  // A fresh state resets every client's clock offset, so it only goes out when the count changes.
+  test("sends a second tab of the same session its state without telling the room", async () => {
+    const base = start();
+    const { slug } = await createRoom(base);
+    const cookie = "raceme_session=tab-secret-tab-secret-tab-secret-ta";
+    const first = new Client(socketUrl(base, slug), cookie);
+    await first.waitFor((m) => m.type === "state");
+    const statesBefore = first.messages.filter((m) => m.type === "state").length;
+
+    const second = new Client(socketUrl(base, slug), cookie);
+    await second.waitFor((m) => m.type === "state");
+    second.socket.close();
+    await Bun.sleep(50);
+
+    expect(first.messages.filter((m) => m.type === "state").length).toBe(statesBefore);
+  });
+
   test("announces actions as RaceBot lines and relays chat", async () => {
     const base = start();
     const { slug } = await createRoom(base);

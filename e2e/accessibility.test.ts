@@ -62,6 +62,22 @@ describe.each(["dark", "light"] as const)("axe-core WCAG 2.2 AAA, %s theme", (co
     await context.close();
   });
 
+  test("start page with each corner note open", async () => {
+    const { context, page } = await newPage(harness, { colorScheme, bypassCSP: true });
+    await page.goto(`${harness.origin}/`);
+    await page.getByText("privacy", { exact: true }).click();
+    await page.getByText("The server keeps nothing on disk.").waitFor();
+
+    expect(await violations(page)).toEqual([]);
+
+    await page.getByText("made with ai", { exact: true }).click();
+    await page.getByText("i'm not proud, but i think it's useful.").waitFor();
+
+    expect(await violations(page)).toEqual([]);
+
+    await context.close();
+  });
+
   test("start page with suggestions and a category picked", async () => {
     const { context, page } = await newPage(harness, { colorScheme, bypassCSP: true });
     await page.goto(`${harness.origin}/`);

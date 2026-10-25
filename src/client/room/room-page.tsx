@@ -72,6 +72,7 @@ export function RoomPage(props: { slug: string; openRoom?: (slug: string) => voi
                   send={room.send}
                   closed={room.gone()}
                   chatEveryMs={room.chatEveryMs()}
+                  watchers={room.watchers()}
                   {...(room.closesAt() !== null ? { closesAt: room.closesAt() ?? 0 } : {})}
                 />
                 <IdleWarning

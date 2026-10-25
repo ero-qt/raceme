@@ -1,9 +1,9 @@
 import { globalStyle, keyframes, style } from "@vanilla-extract/css";
 import {
   controlBorder,
+  disclosureSummary,
   divider,
   inlineEdit,
-  outlined,
   panel,
   warningPanel,
 } from "../styles/controls.css.ts";
@@ -158,8 +158,10 @@ export const entrants = style({
   gap: tokens.space.s,
 });
 
+// Wraps the status and the lock onto a second line when a narrow phone has no room for them.
 export const entrantsHeader = style({
   display: "flex",
+  flexWrap: "wrap",
   alignItems: "center",
   gap: tokens.space.s,
   minBlockSize: tokens.target.min,
@@ -191,6 +193,8 @@ export const capDigits = style([
   controlBorder,
   { display: "inline-block", boxSizing: "border-box", inlineSize: capWidth, paddingInline: "2px" },
 ]);
+
+export const watcherCount = style([entrantCount, { gap: tokens.space.xs }]);
 
 export const headerSpacer = style({ flex: "1 1 auto" });
 
@@ -280,19 +284,7 @@ export const exportDetails = style({
   },
 });
 
-export const exportSummary = style([
-  outlined,
-  {
-    display: "flex",
-    alignItems: "center",
-    minBlockSize: tokens.target.min,
-    minInlineSize: "6ch",
-    paddingInline: tokens.space.m,
-    cursor: "pointer",
-    color: tokens.color.text0,
-    background: tokens.color.bg1,
-  },
-]);
+export const exportSummary = style([disclosureSummary, { minInlineSize: "6ch" }]);
 
 export const exportText = style([
   panel,

@@ -62,6 +62,7 @@ function renderRoom(entrantId: string, isHost = false, state: RaceState = race, 
       catalog={catalog}
       closed={closed}
       closesAt={10 * 60_000 + 5_000}
+      watchers={3}
     />
   ));
   return { ...view, sent };
@@ -359,6 +360,18 @@ describe("RoomView layout", () => {
 
     expect(renderRoom("a").getByRole("button", { name: "room closes in 00:10:05" })).toBeTruthy();
     localStorage.clear();
+  });
+
+  test("drops the watcher count once the room has closed", () => {
+    const view = renderRoom("a", false, race, true);
+
+    expect(view.queryByTitle("3 watching")).toBeNull();
+  });
+
+  test("shows how many people watch without entering", () => {
+    const view = renderRoom("a");
+
+    expect(view.getByTitle("3 watching").textContent).toBe("3 watching");
   });
 
   test("entrants come after the chat box", () => {

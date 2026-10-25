@@ -1,4 +1,5 @@
 import { cleanText } from "../shared/clean-text.ts";
+import { catalogCacheHours } from "../shared/retention.ts";
 import { TokenBucket } from "./rate-limit.ts";
 
 export interface CatalogEntry {
@@ -10,7 +11,7 @@ export type CatalogResult = CatalogEntry[] | "unavailable";
 
 const searchTtlMs = 60 * 60_000;
 const siteSearchRetryMs = 10 * 60_000;
-const categoriesTtlMs = 24 * 60 * 60_000;
+const categoriesTtlMs = catalogCacheHours * 60 * 60_000;
 const maxCacheEntries = 2000;
 const maxResults = 10;
 // speedrun.com sorts name matches by length, so raceme asks for more and ranks them itself.
@@ -58,6 +59,11 @@ export class SpeedrunCatalog {
   // arriving together share one request.
   readonly #pending = new Map<string, Promise<LookupResult>>();
   #siteSearchDownUntil = 0;
+
+  /** Counts the answers in memory, expired ones not yet dropped included. */
+  get cachedCount(): number {
+    return this.#cache.size;
+  }
 
   constructor(options: CatalogOptions) {
     this.#options = options;
@@ -163,8 +169,9 @@ export class SpeedrunCatalog {
     parse: (body: unknown) => CatalogEntry[] | null,
   ): Promise<LookupResult> {
     const now = this.#options.clock();
+    this.#dropExpired(now);
     const cached = this.#cache.get(path);
-    if (cached && cached.expiresAt > now) {
+    if (cached) {
       return cached.value;
     }
 
@@ -215,6 +222,15 @@ export class SpeedrunCatalog {
       return await response.json();
     } catch {
       return null;
+    }
+  }
+
+  // Drops every expired answer on each lookup, because the keys contain what visitors typed.
+  #dropExpired(now: number): void {
+    for (const [path, entry] of this.#cache) {
+      if (entry.expiresAt <= now) {
+        this.#cache.delete(path);
+      }
     }
   }
 

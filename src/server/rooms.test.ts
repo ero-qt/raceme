@@ -252,3 +252,21 @@ describe("Room sessions", () => {
     expect(room.entrantIdFor("watcher")).toBe(watcher);
   });
 });
+
+describe("Room.watcherCount", () => {
+  test("counts each open session that hasn't entered once, however many tabs it has", () => {
+    const room = created(registry().create(settings, 0)).room;
+    const racer = room.entrantIdFor("racer-secret") ?? "";
+    room.entrantIdFor("watcher-secret");
+    withEntrant(room, racer);
+
+    room.attachSession("racer-secret");
+    room.attachSession("watcher-secret");
+    room.attachSession("watcher-secret");
+    expect(room.watcherCount).toBe(1);
+
+    room.detachSession("watcher-secret");
+    room.detachSession("watcher-secret");
+    expect(room.watcherCount).toBe(0);
+  });
+});

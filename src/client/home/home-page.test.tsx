@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, mock, test } from "bun:test";
 import { cleanup, fireEvent, render, waitFor } from "@solidjs/testing-library";
+import { catalogCacheHours, sessionCookieDays } from "../../shared/retention.ts";
 import { HomePage } from "./home-page.tsx";
 
 const realFetch = globalThis.fetch;
@@ -423,5 +424,25 @@ describe("HomePage suggestions", () => {
     }
 
     expect(home.searched).toEqual(["mario", "mari"]);
+  });
+});
+
+describe("HomePage corner notes", () => {
+  test("explains what the server keeps, with the real cookie and cache lifetimes", () => {
+    const home = renderHome();
+
+    const notice = home.getByText("privacy", { selector: "summary" }).parentElement;
+    expect(notice?.textContent).toContain("The server keeps nothing on disk.");
+    expect(notice?.textContent).toContain(`expire after ${sessionCookieDays} days`);
+    expect(notice?.textContent).toContain(`for up to ${catalogCacheHours} hours`);
+    expect(notice?.textContent).toContain("no accounts, usage stats, ads or trackers");
+  });
+
+  test("tells that raceme was made with AI", () => {
+    const home = renderHome();
+
+    const notice = home.getByText("made with ai", { selector: "summary" }).parentElement;
+    expect(notice?.textContent).toContain("reproducing, rewriting, rehosting encouraged.");
+    expect(notice?.textContent).toContain("i'm not proud, but i think it's useful.");
   });
 });

@@ -10,4 +10,6 @@ export const tokens = createThemeContract({
   target: { min: null },
   // Fade for inactive things, set per theme so faded text keeps 4.5:1 for large text.
   dim: { opacity: null },
+  // Dark overlays that read the same on both themes.
+  overlay: { scrim: null, shadow: null },
 });

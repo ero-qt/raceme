@@ -10,7 +10,7 @@ export const placement = style({
   justifyItems: "center",
   alignItems: "start",
   paddingBlockStart: tokens.space.l,
-  background: "rgb(0 0 0 / 0.45)",
+  background: tokens.overlay.scrim,
   pointerEvents: "none",
 });
 
@@ -23,9 +23,12 @@ export const card = style([
     maxInlineSize: `calc(100vw - 2 * ${tokens.space.l})`,
     paddingBlock: tokens.space.m,
     paddingInline: tokens.space.m,
-    boxShadow: "0 4px 16px rgb(0 0 0 / 0.4)",
+    boxShadow: tokens.overlay.shadow,
   },
 ]);
+
+// Keeps every digit the same width, so the heading doesn't shift as the countdown ticks.
+export const countdown = style({ fontVariantNumeric: "tabular-nums" });
 
 export const title = style({
   display: "flex",

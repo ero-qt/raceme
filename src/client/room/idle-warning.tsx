@@ -28,7 +28,7 @@ export function IdleWarning(props: { closesAt: number | null; now: number }): JS
                 <TriangleAlert class={styles.icon} aria-hidden="true" /> Room closes soon due to
                 inactivity!
               </span>
-              <span>{timeLeft(closesAt(), props.now)}</span>
+              <span class={styles.countdown}>{timeLeft(closesAt(), props.now)}</span>
             </h2>
             <p class={styles.text}>Move the mouse, tap or type to keep the room open.</p>
           </div>

@@ -32,6 +32,8 @@ export function loadConfig(env: Env): ServerConfig {
     maxSocketsPerIp: count("RACEME_MAX_SOCKETS_PER_IP", 10),
     maxSockets: count("RACEME_MAX_SOCKETS", 8192),
     sweepIntervalMs: 60_000,
+    adminPort: env.RACEME_ADMIN_PORT ? count("RACEME_ADMIN_PORT", 0) : null,
+    restartHourUtc: hourUtc(env.RACEME_RESTART_HOUR_UTC),
     build: env.RACEME_BUILD_FILE ? readBuildFile(env.RACEME_BUILD_FILE) : null,
   };
 }
@@ -72,6 +74,18 @@ function positiveInteger(env: Env, name: string, fallback: number): number {
     throw new Error(`${name} must be a whole number above 0, got '${raw}'.`);
   }
   return value;
+}
+
+function hourUtc(raw: string | undefined): number {
+  if (raw === undefined) {
+    return 10;
+  }
+
+  const hour = Number(raw);
+  if (!/^\d+$/.test(raw) || hour > 23) {
+    throw new Error(`RACEME_RESTART_HOUR_UTC must be an hour from 0 to 23, got '${raw}'.`);
+  }
+  return hour;
 }
 
 const defaultSpeedrunApi = "https://www.speedrun.com/api";

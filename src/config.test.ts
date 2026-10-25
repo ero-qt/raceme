@@ -115,6 +115,24 @@ describe("loadConfig", () => {
   });
 });
 
+describe("loadConfig restart settings", () => {
+  test("restarts at 10:00 UTC with the admin port off unless set", () => {
+    expect(loadConfig({})).toMatchObject({ restartHourUtc: 10, adminPort: null });
+    expect(loadConfig({ RACEME_RESTART_HOUR_UTC: "0", RACEME_ADMIN_PORT: "8795" })).toMatchObject({
+      restartHourUtc: 0,
+      adminPort: 8795,
+    });
+  });
+
+  test("refuses an hour outside 0 to 23", () => {
+    for (const hour of ["24", "-1", "9am"]) {
+      expect(() => loadConfig({ RACEME_RESTART_HOUR_UTC: hour })).toThrow(
+        "RACEME_RESTART_HOUR_UTC",
+      );
+    }
+  });
+});
+
 describe("loadConfig build file", () => {
   const dir = mkdtempSync(join(tmpdir(), "raceme-build-"));
   const write = (name: string, body: unknown) => {

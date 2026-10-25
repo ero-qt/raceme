@@ -39,6 +39,8 @@ function start(overrides: Partial<ServerConfig> = {}) {
       maxSockets: 2000,
       sweepIntervalMs: 20,
       build: null,
+      adminPort: null,
+      restartHourUtc: 10,
       ...overrides,
     },
     () => Date.now() + clockOffsetMs,
@@ -433,6 +435,42 @@ describe("server", () => {
         commit: null,
         digest: null,
       });
+    });
+  });
+
+  describe("queued restart", () => {
+    const adminUrl = () => `http://127.0.0.1:${running?.admin?.port}/restart`;
+
+    test("moves every room's close time to the next restart and tells the room", async () => {
+      clockOffsetMs = Date.UTC(2026, 9, 25, 7) - Date.now();
+      const base = start({ adminPort: 0 });
+      const { slug } = await createRoom(base);
+      const client = new Client(
+        socketUrl(base, slug),
+        "raceme_session=queue-secret-queue-secret-queue-se",
+      );
+      await client.waitFor((m) => m.type === "state");
+
+      const queued = await (await fetch(adminUrl(), { method: "POST" })).json();
+      const restartAt = Date.UTC(2026, 9, 25, 10);
+
+      expect(queued).toEqual({ restartAt, rooms: 1 });
+      await client.waitFor((m) => m.type === "state" && m.closesAt === restartAt);
+      await client.waitFor(
+        (m) =>
+          m.type === "feed" &&
+          m.entries.some(
+            (e) => e.text === "Server restart queued for 10:00 UTC. This room closes then.",
+          ),
+      );
+    });
+
+    test("reports the open rooms without queueing, and stays off the public port", async () => {
+      const base = start({ adminPort: 0 });
+      await createRoom(base);
+
+      expect(await (await fetch(adminUrl())).json()).toEqual({ restartAt: null, rooms: 1 });
+      expect((await fetch(`${base}/restart`, { method: "POST" })).status).toBe(404);
     });
   });
 

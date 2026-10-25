@@ -69,6 +69,8 @@ the race server reads these environment variables. behind a reverse proxy like c
 | `RACEME_MAX_SOCKETS`            | `8192`                         | open sockets in total                                                                                      |
 | `RACEME_SPEEDRUN_API`           | `https://www.speedrun.com/api` | where the game picker looks up games and categories. `off` turns the picker off                            |
 | `RACEME_BUILD_FILE`             | none                           | JSON file the deploy writes with the release's repository, commit and digest, shown in the build note      |
+| `RACEME_ADMIN_PORT`             | none                           | port on 127.0.0.1 where the deploy script queues a restart and reads the open room count                   |
+| `RACEME_RESTART_HOUR_UTC`       | `10`                           | hour in UTC a queued restart happens, earlier once no room is open                                         |
 
 ## license
 

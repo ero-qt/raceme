@@ -1,6 +1,7 @@
 import type { Server } from "bun";
 import { ClientLimits } from "./client-limits.ts";
-import { withSecurityHeaders } from "./http.ts";
+import { json, status, withSecurityHeaders } from "./http.ts";
+import { nextRestartAt } from "./restart.ts";
 import { RoomHub, botLines } from "./room-hub.ts";
 import { type SocketData, roomSocketHandlers } from "./room-socket.ts";
 import { type CloseReason, RoomRegistry } from "./rooms.ts";
@@ -50,6 +51,10 @@ export interface ServerConfig {
   maxSockets: number;
   /** Checks for idle and cleared rooms this often. */
   sweepIntervalMs: number;
+  /** Listens on 127.0.0.1 at this port for the deploy script, `null` to leave it off. */
+  adminPort: number | null;
+  /** Restarts for a new release at this hour in UTC, unless no room is open before then. */
+  restartHourUtc: number;
   /** Points at the release this server runs, `null` for a build that didn't come from a release. */
   build: BuildInfo | null;
 }
@@ -66,6 +71,7 @@ export interface BuildInfo {
 
 export interface RunningServer {
   server: Server<SocketData>;
+  admin: Server<undefined> | null;
   rooms: RoomRegistry;
   stop(): void;
 }
@@ -79,6 +85,7 @@ function closeText(reason: CloseReason): string {
     expired: "Room closed: time limit reached.",
     idle: "Room closed: no activity.",
     empty: "Room closed: everyone left.",
+    restart: "Room closed: the server restarts for an update.",
   };
   return texts[reason];
 }
@@ -150,7 +157,11 @@ export function startServer(config: ServerConfig, clock = steadyClock): RunningS
     for (const slug of rooms.closingSoon(now)) {
       const room = rooms.get(slug);
       if (room) {
-        const line = `This room closes in ${spokenDuration(config.closingWarningMs)}. Rooms last at most ${spokenDuration(config.roomLifetimeMs)}, so start a new one to keep racing.`;
+        const left = spokenDuration(config.closingWarningMs);
+        const line =
+          room.closesFor === "restart"
+            ? `This room closes in ${left} for a server restart.`
+            : `This room closes in ${left}. Rooms last at most ${spokenDuration(config.roomLifetimeMs)}, so start a new one to keep racing.`;
         hub.publishLines(room, botLines([line], now));
       }
     }
@@ -160,13 +171,46 @@ export function startServer(config: ServerConfig, clock = steadyClock): RunningS
     limits.sweep(now);
   }, config.sweepIntervalMs);
 
+  const restartTime = `${String(config.restartHourUtc).padStart(2, "0")}:00 UTC`;
+  const queueRestart = () => {
+    const now = clock();
+    rooms.queueRestart(nextRestartAt(now, config.restartHourUtc));
+    for (const room of rooms.rooms()) {
+      hub.publishState(room);
+      hub.publishLines(
+        room,
+        botLines([`Server restart queued for ${restartTime}. This room closes then.`], now),
+      );
+    }
+  };
+  const admin =
+    config.adminPort === null
+      ? null
+      : Bun.serve({
+          port: config.adminPort,
+          hostname: "127.0.0.1",
+          fetch(request) {
+            if (new URL(request.url).pathname !== "/restart") {
+              return status(404);
+            }
+            if (request.method === "POST" && rooms.restartAt === null) {
+              queueRestart();
+            } else if (request.method !== "GET" && request.method !== "POST") {
+              return status(405);
+            }
+            return json({ restartAt: rooms.restartAt, rooms: rooms.size });
+          },
+        });
+
   return {
     server,
+    admin,
     rooms,
     stop() {
       clearInterval(sweeper);
       hub.stop();
       server.stop(true);
+      admin?.stop(true);
     },
   };
 }

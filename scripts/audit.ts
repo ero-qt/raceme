@@ -41,6 +41,8 @@ const server = startServer({
   maxSockets: 100,
   sweepIntervalMs: 60_000,
   build: null,
+  adminPort: null,
+  restartHourUtc: 10,
 });
 
 const origin = `http://localhost:${server.server.port}`;

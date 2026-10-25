@@ -3,14 +3,17 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "audit": "vite build && bun scripts/audit.ts",
+    "build": "vite build",
+    "check": "biome check . && tsc",
     "dev": "vite",
     "dev:server": "bun --watch src/index.ts",
-    "build": "vite build",
+    "release": "rm -rf release && vite build --outDir release/client --emptyOutDir && bun run release:server && bun run release:pack",
+    "release:pack": "git rev-parse HEAD > release/commit && tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner --mode=u=rwX,go=rX -C release -c . | gzip -n > raceme.tar.gz",
+    "release:server": "bun build src/index.ts --target bun --outfile release/server.js",
     "start": "bun src/index.ts",
-    "check": "biome check . && tsc",
     "test": "bun test --conditions browser src",
-    "test:e2e": "vite build && bun test --timeout 30000 e2e",
-    "audit": "vite build && bun scripts/audit.ts"
+    "test:e2e": "vite build && bun test --timeout 30000 e2e"
   },
   "dependencies": {
     "lucide-solid": "^1.61.0",

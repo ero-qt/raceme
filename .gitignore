@@ -3,3 +3,5 @@ dist/
 *.log
 .env
 audit/
+release/
+raceme.tar.gz

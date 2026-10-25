@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-25
+
 ### Added
 
 - A line in the privacy notice about the owner getting a Discord message with just the number when open rooms or people online pass 10, 25, 50 and so on.
@@ -47,6 +49,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - A link card for Discord and other chats that never shows a room's goal or entrants.
 - A `noindex` header and tag on every page, so search engines leave raceme out.
 
-[Unreleased]: https://github.com/ero-qt/raceme/compare/1.0.1...HEAD
+[Unreleased]: https://github.com/ero-qt/raceme/compare/1.1.0...HEAD
+[1.1.0]: https://github.com/ero-qt/raceme/compare/1.0.1...1.1.0
 [1.0.1]: https://github.com/ero-qt/raceme/compare/1.0.0...1.0.1
 [1.0.0]: https://github.com/ero-qt/raceme/releases/tag/1.0.0

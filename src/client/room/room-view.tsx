@@ -98,7 +98,7 @@ export function RoomView(props: RoomViewProps): JSX.Element {
     return (
       <Show when={row.id !== props.me.entrantId}>
         <Button
-          variant="ghost"
+          variant="plain"
           class={styles.muteButton}
           data-muted={muted()}
           aria-label={`${actionLabel[type()]} ${row.name}`}

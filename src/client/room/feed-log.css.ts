@@ -1,15 +1,18 @@
 import { style } from "@vanilla-extract/css";
+import { panel } from "../styles/controls.css.ts";
 import { tokens } from "../styles/tokens.css.ts";
 
-export const log = style({
-  blockSize: "16rem",
-  overflowY: "auto",
-  padding: tokens.space.s,
-  background: tokens.color.bg1,
-  border: `1px solid ${tokens.color.border}`,
-  fontFamily: tokens.font.mono,
-  fontSize: "0.875rem",
-});
+export const log = style([
+  panel,
+  {
+    blockSize: "16rem",
+    overflowY: "auto",
+    padding: tokens.space.s,
+    background: tokens.color.bg1,
+    fontFamily: tokens.font.mono,
+    fontSize: "0.875rem",
+  },
+]);
 
 export const line = style({
   margin: 0,

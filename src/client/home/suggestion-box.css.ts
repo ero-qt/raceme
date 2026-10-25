@@ -1,4 +1,5 @@
 import { style } from "@vanilla-extract/css";
+import { panel } from "../styles/controls.css.ts";
 import { tokens } from "../styles/tokens.css.ts";
 
 export const box = style({
@@ -7,19 +8,20 @@ export const box = style({
   minInlineSize: 0,
 });
 
-export const list = style({
-  position: "absolute",
-  insetInline: 0,
-  insetBlockStart: `calc(100% + ${tokens.space.xs})`,
-  zIndex: 1,
-  margin: 0,
-  padding: 0,
-  overflow: "hidden",
-  fontSize: "1rem",
-  background: tokens.color.bg2,
-  border: `1px solid ${tokens.color.border}`,
-  borderRadius: tokens.radius.s,
-});
+export const list = style([
+  panel,
+  {
+    position: "absolute",
+    insetInline: 0,
+    insetBlockStart: `calc(100% + ${tokens.space.xs})`,
+    zIndex: 1,
+    margin: 0,
+    padding: 0,
+    overflow: "hidden",
+    fontSize: "1rem",
+    background: tokens.color.bg2,
+  },
+]);
 
 const row = style({
   display: "flex",

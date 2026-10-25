@@ -1,4 +1,5 @@
 import { globalStyle, keyframes, style } from "@vanilla-extract/css";
+import { controlBorder, divider, inlineEdit, warningPanel } from "../styles/controls.css.ts";
 import { tokens } from "../styles/tokens.css.ts";
 
 export const page = style({
@@ -32,12 +33,14 @@ export const headCell = style({
   fontSize: "0.8125rem",
 });
 
-export const cell = style({
-  padding: tokens.space.s,
-  borderBlockStart: `1px solid ${tokens.color.border}`,
-  // A cell's height works as a minimum, so rows without a button match rows with one.
-  blockSize: `calc(${tokens.target.min} + 2 * ${tokens.space.s})`,
-});
+export const cell = style([
+  divider,
+  {
+    padding: tokens.space.s,
+    // A cell's height works as a minimum, so rows without a button match rows with one.
+    blockSize: `calc(${tokens.target.min} + 2 * ${tokens.space.s})`,
+  },
+]);
 
 export const timeCell = style([
   cell,
@@ -54,19 +57,18 @@ export const closedNotice = style({
   gap: tokens.space.s,
 });
 
-export const closedBox = style({
-  display: "flex",
-  alignItems: "flex-start",
-  gap: tokens.space.s,
-  margin: 0,
-  color: tokens.color.text0,
-  paddingBlock: tokens.space.s,
-  paddingInline: tokens.space.m,
-  background: tokens.color.bg2,
-  border: `1px solid ${tokens.color.border}`,
-  borderInlineStart: `3px solid ${tokens.color.danger}`,
-  borderRadius: tokens.radius.s,
-});
+export const closedBox = style([
+  warningPanel,
+  {
+    display: "flex",
+    alignItems: "flex-start",
+    gap: tokens.space.s,
+    margin: 0,
+    color: tokens.color.text0,
+    paddingBlock: tokens.space.s,
+    paddingInline: tokens.space.m,
+  },
+]);
 
 export const closedReason = style({
   margin: 0,
@@ -74,11 +76,7 @@ export const closedReason = style({
   fontWeight: 700,
 });
 
-export const rule = style({
-  margin: 0,
-  border: "none",
-  borderBlockStart: `1px solid ${tokens.color.border}`,
-});
+export const rule = style([divider, { margin: 0, borderInline: "none", borderBlockEnd: "none" }]);
 
 export const closedIcon = style({
   flex: "none",
@@ -167,25 +165,10 @@ export const entrantCount = style({
 // Fits 2 digits plus the browser's up and down arrows.
 const capWidth = "calc(2ch + 28px)";
 
-// Looks like plain text until hovered or focused, like the race clock's digits.
-export const capField = style({
-  boxSizing: "border-box",
-  inlineSize: capWidth,
-  padding: 0,
-  paddingInline: "2px",
-  font: "inherit",
-  color: "inherit",
-  background: "transparent",
-  border: "2px solid transparent",
-  borderRadius: tokens.radius.s,
-  selectors: {
-    "&:hover, &:focus-visible": {
-      borderColor: tokens.color.borderStrong,
-      background: tokens.color.bg1,
-      outline: "none",
-    },
-  },
-});
+export const capField = style([
+  inlineEdit,
+  { boxSizing: "border-box", inlineSize: capWidth, padding: 0, paddingInline: "2px" },
+]);
 
 // Reserves 2 digits each, so going from 9 to 10 entrants or a cap of 8 to 50 moves nothing.
 export const countDigits = style({
@@ -194,35 +177,15 @@ export const countDigits = style({
   textAlign: "end",
 });
 // Matches the cap field's box, so the count keeps its place after the start.
-export const capDigits = style({
-  display: "inline-block",
-  boxSizing: "border-box",
-  inlineSize: capWidth,
-  paddingInline: "2px",
-  border: "2px solid transparent",
-});
+export const capDigits = style([
+  controlBorder,
+  { display: "inline-block", boxSizing: "border-box", inlineSize: capWidth, paddingInline: "2px" },
+]);
 
 export const headerSpacer = style({ flex: "1 1 auto" });
 
 // Fits the longest room status, "Entry Closed", so a shorter one doesn't move the lock.
 export const headerStatus = style({ minInlineSize: "13ch", textAlign: "end" });
-
-export const headerButton = style({
-  display: "inline-grid",
-  placeItems: "center",
-  inlineSize: tokens.target.min,
-  blockSize: tokens.target.min,
-  padding: 0,
-  color: tokens.color.text1,
-  background: "transparent",
-  border: "none",
-  borderRadius: tokens.radius.s,
-  selectors: {
-    "button&": { cursor: "pointer" },
-    "button&:hover:not(:disabled)": { background: tokens.color.bgHover, color: tokens.color.text0 },
-    "button&:disabled": { cursor: "not-allowed", opacity: 0.5 },
-  },
-});
 
 export const headerIcon = style({
   inlineSize: "1.25em",
@@ -235,13 +198,15 @@ export const entrantsTitle = style({
 });
 
 export const placeColumn = style({ inlineSize: "3.5ch" });
-export const muteColumn = style({ inlineSize: tokens.target.min });
+export const muteColumn = style({
+  inlineSize: `calc(${tokens.target.min} + 2 * ${tokens.space.s})`,
+});
 export const statusColumn = style({ inlineSize: "12ch" });
 export const timeColumn = style({ inlineSize: "13ch" });
 export const actionColumn = style({ inlineSize: "10rem" });
 
 export const placeCell = style([cell, { textAlign: "end" }]);
-export const muteCell = style([cell, { paddingInline: 0, textAlign: "center" }]);
+export const muteCell = style([cell, { paddingInline: tokens.space.s, textAlign: "center" }]);
 
 export const actionCell = style([cell, { textAlign: "end" }]);
 
@@ -253,9 +218,6 @@ export const download = style({
 });
 
 export const muteButton = style({
-  inlineSize: tokens.target.min,
-  paddingInline: 0,
-  borderColor: "transparent",
   selectors: { "&[data-muted=true]": { color: tokens.color.statusForfeit } },
 });
 

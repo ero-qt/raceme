@@ -1,22 +1,24 @@
 import { style } from "@vanilla-extract/css";
+import { outlined } from "../styles/controls.css.ts";
 import { tokens } from "../styles/tokens.css.ts";
 
-export const frame = style({
-  position: "relative",
-  display: "flex",
-  alignItems: "stretch",
-  minBlockSize: tokens.target.min,
-  background: tokens.color.bg1,
-  color: tokens.color.text0,
-  border: `2px solid ${tokens.color.borderStrong}`,
-  borderRadius: tokens.radius.s,
-  selectors: {
-    '&[data-visibility="warned"]': {
-      color: tokens.color.statusForfeit,
-      borderColor: tokens.color.statusForfeit,
+export const frame = style([
+  outlined,
+  {
+    position: "relative",
+    display: "flex",
+    alignItems: "stretch",
+    minBlockSize: tokens.target.min,
+    background: tokens.color.bg1,
+    color: tokens.color.text0,
+    selectors: {
+      '&[data-visibility="warned"]': {
+        color: tokens.color.statusForfeit,
+        borderColor: tokens.color.statusForfeit,
+      },
     },
   },
-});
+]);
 
 const bare = style({
   display: "flex",

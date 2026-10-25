@@ -2,6 +2,7 @@ import { Lock, LockOpen } from "lucide-solid";
 import { type JSX, Show } from "solid-js";
 import type { ClientAction } from "../../shared/protocol.ts";
 import { type RaceState, maxEntrants, minEntrantCap } from "../../shared/race/race.ts";
+import { Button } from "../primitives/button.tsx";
 import { type Status, StatusBadge } from "../primitives/status-badge.tsx";
 import * as styles from "./room.css.ts";
 
@@ -75,17 +76,15 @@ export function EntrantsHeader(props: {
           <StatusBadge status="forfeit" label="Entry Closed" />
         </Show>
       </span>
-      <Show when={props.isHost} fallback={<span class={styles.headerButton}>{lockIcon()}</span>}>
-        <button
-          type="button"
-          class={styles.headerButton}
-          disabled={!beforeStart()}
-          aria-label={locked() ? "open entry" : "close entry"}
-          onClick={() => props.send({ type: locked() ? "unlock" : "lock" })}
-        >
-          {lockIcon()}
-        </button>
-      </Show>
+      {/* One button for everyone, so the same state always looks the same. */}
+      <Button
+        variant="plain"
+        disabled={!editable()}
+        aria-label={locked() ? "open entry" : "close entry"}
+        onClick={() => props.send({ type: locked() ? "unlock" : "lock" })}
+      >
+        {lockIcon()}
+      </Button>
     </div>
   );
 }

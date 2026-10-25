@@ -1,4 +1,5 @@
 import { style } from "@vanilla-extract/css";
+import { warningPanel } from "../styles/controls.css.ts";
 import { tokens } from "../styles/tokens.css.ts";
 
 export const placement = style({
@@ -13,18 +14,17 @@ export const placement = style({
   pointerEvents: "none",
 });
 
-export const card = style({
-  display: "grid",
-  gap: tokens.space.s,
-  inlineSize: `min(340px, calc(100vw - 2 * ${tokens.space.l}))`,
-  paddingBlock: tokens.space.m,
-  paddingInline: tokens.space.m,
-  background: tokens.color.bg2,
-  border: `1px solid ${tokens.color.border}`,
-  borderInlineStart: `3px solid ${tokens.color.danger}`,
-  borderRadius: tokens.radius.s,
-  boxShadow: "0 4px 16px rgb(0 0 0 / 0.4)",
-});
+export const card = style([
+  warningPanel,
+  {
+    display: "grid",
+    gap: tokens.space.s,
+    inlineSize: `min(340px, calc(100vw - 2 * ${tokens.space.l}))`,
+    paddingBlock: tokens.space.m,
+    paddingInline: tokens.space.m,
+    boxShadow: "0 4px 16px rgb(0 0 0 / 0.4)",
+  },
+]);
 
 export const title = style({
   display: "flex",

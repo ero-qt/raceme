@@ -254,6 +254,14 @@ describe("RoomView layout", () => {
     expect(host.sent).toEqual([{ type: "lock" }, { type: "setEntrantCap", cap: 8 }]);
   });
 
+  test("visitors see the same lock button, turned off", () => {
+    const view = renderRoom("v", false);
+
+    expect((view.getByRole("button", { name: "close entry" }) as HTMLButtonElement).disabled).toBe(
+      true,
+    );
+  });
+
   test("the lock shows closed and turns off once the race starts", () => {
     const view = renderRoom("a", true, { ...race, phase: "running", startsAt: 0 });
 

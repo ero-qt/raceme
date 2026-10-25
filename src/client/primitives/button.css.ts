@@ -1,25 +1,25 @@
 import { style, styleVariants } from "@vanilla-extract/css";
+import { controlBorder, dimWhenDisabled, outlined } from "../styles/controls.css.ts";
 import { tokens } from "../styles/tokens.css.ts";
 
-const base = style({
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  gap: tokens.space.s,
-  minBlockSize: tokens.target.min,
-  minInlineSize: tokens.target.min,
-  paddingInline: tokens.space.l,
-  border: "2px solid transparent",
-  borderRadius: tokens.radius.s,
-  font: "inherit",
-  fontFamily: tokens.font.mono,
-  fontWeight: 700,
-  cursor: "pointer",
-  transition: "background-color 120ms ease",
-  selectors: {
-    "&:disabled": { cursor: "not-allowed", opacity: 0.5 },
+const base = style([
+  controlBorder,
+  dimWhenDisabled,
+  {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: tokens.space.s,
+    minBlockSize: tokens.target.min,
+    minInlineSize: tokens.target.min,
+    paddingInline: tokens.space.l,
+    font: "inherit",
+    fontFamily: tokens.font.mono,
+    fontWeight: 700,
+    cursor: "pointer",
+    transition: "background-color 120ms ease",
   },
-});
+]);
 
 export const buttonVariant = styleVariants({
   accent: [
@@ -38,10 +38,10 @@ export const buttonVariant = styleVariants({
   ],
   ghost: [
     base,
+    outlined,
     {
       background: "transparent",
       color: tokens.color.text0,
-      borderColor: tokens.color.borderStrong,
       selectors: {
         "&:hover:not(:disabled)": { background: tokens.color.bgHover },
       },
@@ -61,13 +61,26 @@ export const buttonVariant = styleVariants({
   ],
   icon: [
     base,
+    outlined,
     {
       paddingInline: 0,
       background: "transparent",
       color: tokens.color.text0,
-      borderColor: tokens.color.borderStrong,
       selectors: {
         "&:hover:not(:disabled)": { background: tokens.color.bgHover },
+      },
+    },
+  ],
+  // Square icon button without a border, for small controls inside tables and headings.
+  plain: [
+    base,
+    {
+      inlineSize: tokens.target.min,
+      paddingInline: 0,
+      background: "transparent",
+      color: tokens.color.text1,
+      selectors: {
+        "&:hover:not(:disabled)": { background: tokens.color.bgHover, color: tokens.color.text0 },
       },
     },
   ],

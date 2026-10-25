@@ -15,6 +15,17 @@ function raceAfter(actions: RaceAction[]): RaceState {
   );
 }
 
+// Applies each action at its own server time, for races that need GO and the 5 s finish guard.
+function playAt(state: RaceState, steps: [RaceAction, number][]): RaceState {
+  return steps.reduce((current, [action, now]) => {
+    const result = apply(current, action, now);
+    if (!result.ok) {
+      throw new Error(result.refusal);
+    }
+    return result.state;
+  }, state);
+}
+
 const joined = raceAfter([
   { type: "setGoal", goal: "any%" },
   { type: "join", entrantId: "a", name: "alice" },
@@ -40,12 +51,11 @@ describe("chatCommand", () => {
       { type: "ready", entrantId: "a" },
       { type: "ready", entrantId: "b" },
     ]);
-    const started = apply(bothReady, { type: "tick" }, 10_000);
-    const quit = started.ok && apply(started.state, { type: "forfeit", entrantId: "a" }, 20_000);
-    if (!quit || !quit.ok) {
-      throw new Error("race setup failed");
-    }
-    expect(chatCommand(".undone", quit.state, "a")).toEqual({ type: "unforfeit" });
+    const quit = playAt(bothReady, [
+      [{ type: "tick" }, 10_000],
+      [{ type: "forfeit", entrantId: "a" }, 20_000],
+    ]);
+    expect(chatCommand(".undone", quit, "a")).toEqual({ type: "unforfeit" });
     expect(chatCommand(".undone", joined, "a")).toEqual({ type: "undone" });
   });
 

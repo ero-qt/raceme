@@ -17,6 +17,17 @@ function raceAfter(actions: RaceAction[]): RaceState {
   return state;
 }
 
+// Applies each action at its own server time, for races that need GO and the 5 s finish guard.
+function playAt(state: RaceState, steps: [RaceAction, number][]): RaceState {
+  return steps.reduce((current, [action, now]) => {
+    const result = apply(current, action, now);
+    if (!result.ok) {
+      throw new Error(result.refusal);
+    }
+    return result.state;
+  }, state);
+}
+
 const joinedBoth: RaceAction[] = [
   { type: "setGoal", goal: "any%" },
   { type: "join", entrantId: "a", name: "alice" },
@@ -671,16 +682,12 @@ describe("RoomView button colors", () => {
       { type: "ready", entrantId: "a" },
       { type: "ready", entrantId: "b" },
     ]);
-    const done = apply(finished, { type: "tick" }, 10_000);
-    const afterDone = done.ok && apply(done.state, { type: "done", entrantId: "a" }, 20_000);
-    const afterBoth =
-      afterDone &&
-      afterDone.ok &&
-      apply(afterDone.state, { type: "forfeit", entrantId: "b" }, 20_000);
-    if (!afterBoth || !afterBoth.ok) {
-      throw new Error("race setup failed");
-    }
-    const view = renderRoom("a", false, afterBoth.state);
+    const afterBoth = playAt(finished, [
+      [{ type: "tick" }, 10_000],
+      [{ type: "done", entrantId: "a" }, 20_000],
+      [{ type: "forfeit", entrantId: "b" }, 20_000],
+    ]);
+    const view = renderRoom("a", false, afterBoth);
     const send = view.getByRole("button", { name: "send" }).classList[0];
 
     expect(view.getByRole("button", { name: ".undone" }).classList[0]).toBe(send);

@@ -205,8 +205,7 @@ export class RoomRegistry {
     return this.#rooms.get(slug);
   }
 
-  /** Drops idle rooms and rooms past their clear time, returning their slugs. */
-  /** Lists the rooms that just went 2 hours without input, each room once until input comes. */
+  /** Lists the rooms that just went `idleInputMs` without input, each room once until input comes. */
   idleWarnings(now: number): string[] {
     const idle: string[] = [];
     for (const [slug, room] of this.#rooms) {

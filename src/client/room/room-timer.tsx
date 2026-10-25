@@ -40,5 +40,5 @@ export function RoomTimer(props: { closesAt: number; now: number }): JSX.Element
 /** Shows its children next to the site name in the header. Without a header they stay in place. */
 export function HeaderStatus(props: ParentProps): JSX.Element {
   const slot = document.getElementById(headerStatusId);
-  return slot ? <Portal mount={slot}>{props.children}</Portal> : <>{props.children}</>;
+  return slot ? <Portal mount={slot}>{props.children}</Portal> : props.children;
 }

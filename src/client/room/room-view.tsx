@@ -2,6 +2,7 @@ import { type Accessor, Index, type JSX, Show, createEffect, on } from "solid-js
 import type { FeedEntry } from "../../shared/feed-entry.ts";
 import type { ClientAction } from "../../shared/protocol.ts";
 import { type RaceState, type Standing, standings } from "../../shared/race/race.ts";
+import type { GoalCatalog } from "../home/goal-picker.tsx";
 import { Button } from "../primitives/button.tsx";
 import { type Status, StatusBadge } from "../primitives/status-badge.tsx";
 import { actionLabel } from "./action-labels.ts";
@@ -28,6 +29,8 @@ export interface RoomViewProps {
   notice: string | null;
   feed: FeedEntry[];
   send: (action: ClientAction) => void;
+  /** Swaps the speedrun.com lookups of the host's goal picker, for tests. */
+  catalog?: GoalCatalog | undefined;
 }
 
 const roomStatus: Record<RaceState["phase"], Status> = {
@@ -124,6 +127,7 @@ export function RoomView(props: RoomViewProps): JSX.Element {
         goal={props.race.goal}
         editable={props.me.isHost && beforeStart()}
         onSubmit={(goal) => props.send({ type: "setGoal", goal })}
+        catalog={props.catalog}
       />
       <div class={styles.clockLine}>
         <RaceClock elapsed={elapsed()} digits={precision.digits()} onPick={precision.pick} />

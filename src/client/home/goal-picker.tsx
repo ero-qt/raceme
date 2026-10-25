@@ -1,10 +1,27 @@
 import { For, type JSX, Show, createSignal } from "solid-js";
 import * as titleStyles from "../room/goal-title.css.ts";
-import { type CatalogEntry, useGameSearch } from "./game-search.ts";
+import {
+  type CatalogEntry,
+  loadCategoriesFromServer,
+  searchGamesOnServer,
+  useGameSearch,
+} from "./game-search.ts";
 import { forgetGoal, loadGoalHistory } from "./goal-history.ts";
 import * as styles from "./goal-picker.css.ts";
 import { parseRoomCode } from "./room-code.ts";
 import { SuggestionBox, type SuggestionGroup } from "./suggestion-box.tsx";
+
+/** Looks up speedrun.com games and categories for the picker. */
+export interface GoalCatalog {
+  searchGames: (query: string) => Promise<CatalogEntry[] | null>;
+  loadCategories: (gameId: string) => Promise<CatalogEntry[]>;
+  delayMs?: number;
+}
+
+export const serverCatalog: GoalCatalog = {
+  searchGames: searchGamesOnServer,
+  loadCategories: loadCategoriesFromServer,
+};
 
 const maxHistoryShown = 5;
 // Same limit the race rules set for a goal.
@@ -17,12 +34,9 @@ const typedOptionId = "typed";
  */
 export function useGamePicker(
   text: () => string,
-  options: {
+  options: GoalCatalog & {
     /** Gives code-shaped text once the server confirmed no room has that code. */
     noRoomHasCode?: () => string | null;
-    searchGames: (query: string) => Promise<CatalogEntry[] | null>;
-    loadCategories: (gameId: string) => Promise<CatalogEntry[]>;
-    delayMs?: number;
   },
 ) {
   const [history, setHistory] = createSignal(loadGoalHistory());
@@ -119,6 +133,8 @@ export function GoalPicker(props: {
   placeholder?: string;
   inputClass?: string;
   kind?: string;
+  onFocus?: (input: HTMLInputElement) => void;
+  onEscape?: () => void;
 }): JSX.Element {
   return (
     <>
@@ -142,6 +158,8 @@ export function GoalPicker(props: {
           onFoldChange={(groupId, folded) =>
             groupId === "speedrun" && props.picker.setSpeedrunOpen(!folded)
           }
+          onFocus={props.onFocus}
+          onEscape={props.onEscape}
         />
       </div>
       <Show when={props.picker.categories().length > 0}>

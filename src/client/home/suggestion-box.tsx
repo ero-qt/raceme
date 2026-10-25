@@ -43,6 +43,9 @@ export function SuggestionBox(props: {
   /** Sets `data-kind` on the field, for styling a room code differently from a goal. */
   kind?: string | undefined;
   onFoldChange?: (groupId: string, folded: boolean) => void;
+  onFocus?: ((input: HTMLInputElement) => void) | undefined;
+  /** Runs when Escape is pressed with the list already closed. */
+  onEscape?: (() => void) | undefined;
 }): JSX.Element {
   const listId = createUniqueId();
   const hintId = createUniqueId();
@@ -117,6 +120,8 @@ export function SuggestionBox(props: {
         if (expanded()) {
           event.preventDefault();
           close();
+        } else {
+          props.onEscape?.();
         }
         break;
     }
@@ -145,6 +150,7 @@ export function SuggestionBox(props: {
         }}
         onKeyDown={onKeyDown}
         onClick={() => setOpen(true)}
+        onFocus={(event) => props.onFocus?.(event.currentTarget)}
         onBlur={close}
       />
       <Show when={expanded()}>

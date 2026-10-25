@@ -26,6 +26,12 @@ const race = raceAfter(joinedBoth);
 
 const inviteUrl = "https://example.test/r/abcdefghij";
 
+const catalog = {
+  searchGames: async () => [{ id: "o1y9wo6q", name: "Super Mario 64" }],
+  loadCategories: async () => [{ id: "n2y55mko", name: "16 Star" }],
+  delayMs: 0,
+};
+
 afterEach(cleanup);
 
 function renderRoom(entrantId: string, isHost = false, state: RaceState = race) {
@@ -42,6 +48,7 @@ function renderRoom(entrantId: string, isHost = false, state: RaceState = race) 
         { id: 2, at: 0, kind: "chat", name: "alice", text: "gl hf" },
       ]}
       send={(action) => sent.push(action)}
+      catalog={catalog}
     />
   ));
   return { ...view, sent };
@@ -61,10 +68,10 @@ describe("RoomView goal", () => {
     expect(renderRoom("x").getByRole("heading", { level: 1 }).textContent).toBe("any%");
   });
 
-  test("the host edits the title itself, which selects all on focus", () => {
+  test("the host edits the goal in place, which selects all on focus", () => {
     const host = renderRoom("a", true);
     const input = host.getByLabelText("Goal") as HTMLInputElement;
-    expect(host.getByRole("heading", { level: 1 }).contains(input)).toBe(true);
+    expect(host.getByRole("heading", { level: 1 }).textContent).toBe("any%");
     expect(input.value).toBe("any%");
 
     fireEvent.focus(input);
@@ -105,14 +112,39 @@ describe("RoomView goal", () => {
     expect(host.sent).toEqual([{ type: "setGoal", goal: "120 star" }]);
   });
 
-  test("Escape puts the goal back", () => {
+  test("Escape closes the suggestions, then puts the goal back", () => {
     const host = renderRoom("a", true);
     const input = host.getByLabelText("Goal") as HTMLInputElement;
     fireEvent.input(input, { target: { value: "oops" } });
     fireEvent.keyDown(input, { key: "Escape" });
+    expect(input.getAttribute("aria-expanded")).toBe("false");
+
+    fireEvent.keyDown(input, { key: "Escape" });
 
     expect(input.value).toBe("any%");
     expect(host.sent).toEqual([]);
+  });
+
+  test("the host picks a speedrun.com game and category for the goal and keeps it in their goals", async () => {
+    localStorage.clear();
+    const host = renderRoom("a", true);
+    const input = host.getByLabelText("Goal");
+    fireEvent.focus(input);
+    fireEvent.input(input, { target: { value: "mario" } });
+    fireEvent.click(host.getByRole("option", { name: /^speedrun\.com/ }));
+
+    fireEvent.click(await waitFor(() => host.getByRole("option", { name: "Super Mario 64" })));
+    const category = (await waitFor(() =>
+      host.getByRole("combobox", { name: "Category" }),
+    )) as HTMLSelectElement;
+    fireEvent.change(category, { target: { value: "16 Star" } });
+    fireEvent.click(host.getByRole("button", { name: ".setgoal" }));
+
+    expect(host.sent).toEqual([{ type: "setGoal", goal: "Super Mario 64 - 16 Star" }]);
+    expect(JSON.parse(localStorage.getItem("raceme.goalHistory") ?? "[]")).toEqual([
+      "Super Mario 64 - 16 Star",
+    ]);
+    localStorage.clear();
   });
 
   test("guests get plain text", () => {

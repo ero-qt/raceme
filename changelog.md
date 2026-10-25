@@ -20,3 +20,4 @@ it follows [keep a changelog](https://keepachangelog.com) principles and raceme 
 - a mute button for the host next to each entrant, which turns off that entrant's chat until the host unmutes them
 - a lock for the host that closes entry before the start, plus a limit on how many can enter
 - a count in each room of how many people have it open without entering
+- a privacy notice in the corner of the start page that explains what the server keeps

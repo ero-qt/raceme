@@ -425,3 +425,13 @@ describe("HomePage suggestions", () => {
     expect(home.searched).toEqual(["mario", "mari"]);
   });
 });
+
+describe("HomePage corner notes", () => {
+  test("explains in a corner what the server keeps", () => {
+    const home = renderHome();
+
+    const notice = home.getByText("privacy", { selector: "summary" }).parentElement;
+    expect(notice?.textContent).toContain("raceme doesn't store anything.");
+    expect(notice?.textContent).toContain("no accounts, usage stats, ads or trackers");
+  });
+});

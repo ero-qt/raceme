@@ -103,3 +103,18 @@ describe("room layout on phones", () => {
     await context.close();
   });
 });
+
+describe("home layout", () => {
+  test("the start form stays put when the privacy notice opens", async () => {
+    const { context, page } = await newPage(harness);
+    await page.goto(`${harness.origin}/`);
+    const form = page.getByLabel("Goal or room code");
+    const before = await form.boundingBox();
+
+    await page.getByText("privacy", { exact: true }).click();
+    await page.getByText("raceme doesn't store anything.").waitFor();
+    expect(await form.boundingBox()).toEqual(before);
+
+    await context.close();
+  });
+});

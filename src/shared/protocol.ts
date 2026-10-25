@@ -49,7 +49,12 @@ export type ServerMessage =
   | { type: "idleWarning"; closesAt: number; quietFor: string }
   | { type: "idleCleared" };
 
-const maxMessageLength = 1024;
+/**
+ * Caps one client message, in UTF-16 units and in bytes alike. JSON can grow each character of a
+ * chat line to the 6 characters of `\uXXXX`. No character takes more than 6 bytes either way, so a
+ * full line plus the rest of the message always fits.
+ */
+export const maxMessageLength = maxChatLength * 6 + 256;
 const plainActions = new Set([
   "leave",
   "ready",

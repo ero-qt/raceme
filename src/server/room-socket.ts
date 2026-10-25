@@ -1,5 +1,5 @@
 import type { ServerWebSocket, WebSocketHandler } from "bun";
-import { type ServerMessage, maxChatLength, parseClientAction } from "../shared/protocol.ts";
+import { type ServerMessage, maxMessageLength, parseClientAction } from "../shared/protocol.ts";
 import type { ClientLimits } from "./client-limits.ts";
 import type { TokenBucket } from "./rate-limit.ts";
 import { type RoomActionResult, type Session, chatLine, handleAction } from "./room-actions.ts";
@@ -129,8 +129,7 @@ export function roomSocketHandlers(deps: {
   }
 
   return {
-    // Fits a full chat line even when JSON escapes every character as the 6 bytes of `\uXXXX`.
-    maxPayloadLength: maxChatLength * 8,
+    maxPayloadLength: maxMessageLength,
     perMessageDeflate: true,
     // Drops clients that stop answering pings because dead sockets would keep using a slot.
     idleTimeout: 60,

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { parseClientAction } from "./protocol.ts";
+import { maxMessageLength, parseClientAction } from "./protocol.ts";
 
 describe("parseClientAction", () => {
   test("accepts every plain action", () => {
@@ -35,6 +35,16 @@ describe("parseClientAction", () => {
     });
   });
 
+  // JSON escapes quotes and backslashes. Emoji count as 2 UTF-16 units each.
+  test("accepts a full chat line of characters JSON escapes or emoji", () => {
+    for (const text of ['"'.repeat(512), "\\".repeat(512), "🏁".repeat(256)]) {
+      expect(parseClientAction(JSON.stringify({ type: "say", text }))).toEqual({
+        type: "say",
+        text,
+      });
+    }
+  });
+
   test("accepts end and rematch, and remove with a target", () => {
     expect(parseClientAction('{"type":"end"}')).toEqual({ type: "end" });
     expect(parseClientAction('{"type":"rematch"}')).toEqual({ type: "rematch" });
@@ -68,7 +78,8 @@ describe("parseClientAction", () => {
     expect(parseClientAction('{"type":"join","name":5}')).toBeNull();
     expect(parseClientAction("not json")).toBeNull();
     expect(parseClientAction("[]")).toBeNull();
-    expect(parseClientAction(JSON.stringify({ type: "join", name: "x".repeat(2000) }))).toBeNull();
+    const oversized = JSON.stringify({ type: "join", name: "x".repeat(maxMessageLength) });
+    expect(parseClientAction(oversized)).toBeNull();
   });
 });
 

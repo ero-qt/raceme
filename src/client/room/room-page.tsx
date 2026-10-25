@@ -1,8 +1,8 @@
 import { type JSX, Show, createEffect, createResource, onCleanup } from "solid-js";
 import { HomePage } from "../home/home-page.tsx";
 import { refusalText } from "./action-labels.ts";
+import { ClosingWarning, timeLeft, useActivityPings } from "./closing-warning.tsx";
 import { connectRoom } from "./connection.ts";
-import { IdleWarning, timeLeft, useActivityPings } from "./idle-warning.tsx";
 import { RoomView } from "./room-view.tsx";
 import { useServerClock } from "./server-clock.ts";
 
@@ -76,9 +76,14 @@ export function RoomPage(props: { slug: string; openRoom?: (slug: string) => voi
                   closesFor={room.closesFor()}
                   {...(room.closesAt() !== null ? { closesAt: room.closesAt() ?? 0 } : {})}
                 />
-                <IdleWarning
+                <ClosingWarning
                   closesAt={room.gone() ? null : room.idleClosesAt()}
                   now={serverNow()}
+                />
+                <ClosingWarning
+                  closesAt={room.gone() ? null : room.restartClosesAt()}
+                  now={serverNow()}
+                  reason="restart"
                 />
               </>
             )}

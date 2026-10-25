@@ -18,6 +18,8 @@ export interface RoomConnection {
   /** Counts the people with the room open who haven't entered, from the latest state. */
   watchers: Accessor<number>;
   closesFor: Accessor<ClosesFor>;
+  /** Gives when a server restart closes the room, once it is less than an hour away. */
+  restartClosesAt: Accessor<number | null>;
   /** Gives the server time the room closes, from the latest state. */
   closesAt: Accessor<number | null>;
   /** Turns true once the server closes the socket with the room-gone code. */
@@ -71,6 +73,7 @@ export function connectRoom(slug: string): RoomConnection {
   const [closesAt, setClosesAt] = createSignal<number | null>(null);
   const [watchers, setWatchers] = createSignal(0);
   const [closesFor, setClosesFor] = createSignal<ClosesFor>("lifetime");
+  const [restartClosesAt, setRestartClosesAt] = createSignal<number | null>(null);
   const [gone, setGone] = createSignal(false);
   const [closedAt, setClosedAt] = createSignal<number | null>(null);
   const [idleClosesAt, setIdleClosesAt] = createSignal<number | null>(null);
@@ -171,6 +174,9 @@ export function connectRoom(slug: string): RoomConnection {
       case "idleWarning":
         setIdleClosesAt(message.closesAt);
         break;
+      case "restartWarning":
+        setRestartClosesAt(message.closesAt);
+        break;
       case "idleCleared":
         setIdleClosesAt(null);
         break;
@@ -194,6 +200,7 @@ export function connectRoom(slug: string): RoomConnection {
     closesAt,
     watchers,
     closesFor,
+    restartClosesAt,
     gone,
     closedAt,
     idleClosesAt,

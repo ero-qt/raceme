@@ -483,6 +483,23 @@ describe("server", () => {
       });
     });
 
+    test("warns every room once the restart is less than an hour away", async () => {
+      clockOffsetMs = Date.UTC(2026, 9, 25, 9, 30) - Date.now();
+      const base = start({ adminPort: 0 });
+      const { slug } = await createRoom(base);
+      const client = new Client(
+        socketUrl(base, slug),
+        "raceme_session=warn-secret-warn-secret-warn-secr",
+      );
+      await client.waitFor((m) => m.type === "state");
+
+      await fetch(adminUrl(), { method: "POST" });
+
+      await client.waitFor(
+        (m) => m.type === "restartWarning" && m.closesAt === Date.UTC(2026, 9, 25, 10),
+      );
+    });
+
     test("reports the open rooms without queueing, and stays off the public port", async () => {
       const base = start({ adminPort: 0 });
       await createRoom(base);

@@ -60,6 +60,7 @@ export type ServerMessage =
   | { type: "feed"; entries: FeedEntry[] }
   | { type: "refused"; refusal: RoomRefusal }
   | { type: "idleWarning"; closesAt: number; quietFor: string }
+  | { type: "restartWarning"; closesAt: number }
   | { type: "idleCleared" };
 
 /**

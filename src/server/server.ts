@@ -158,6 +158,9 @@ export function startServer(config: ServerConfig, clock = steadyClock): RunningS
       const room = rooms.get(slug);
       if (room) {
         const left = spokenDuration(config.closingWarningMs);
+        if (room.closesFor === "restart") {
+          hub.warnRestart(room, room.lastsUntil);
+        }
         const line =
           room.closesFor === "restart"
             ? `This room closes in ${left} for a server restart.`

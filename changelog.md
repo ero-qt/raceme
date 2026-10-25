@@ -24,3 +24,4 @@ it follows [keep a changelog](https://keepachangelog.com) principles and raceme 
 - a note in the same corner about raceme being made with a lot of help from AI
 - a build note in the same corner with the commit the server runs and how to check its release
 - new releases restart the server at the next 10:00 UTC, or sooner once no room is open
+- a notice on the start page and in every open room when a restart is queued, with a warning 1 hour before

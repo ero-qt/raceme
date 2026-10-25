@@ -1,6 +1,6 @@
 import { TriangleAlert } from "lucide-solid";
-import { type JSX, Show, onCleanup } from "solid-js";
-import * as styles from "./idle-warning.css.ts";
+import { type JSX, Show, createSignal, onCleanup } from "solid-js";
+import * as styles from "./closing-warning.css.ts";
 
 // Input counts once a minute, which is plenty against a 2-hour limit and keeps messages rare.
 const activityEveryMs = 60_000;
@@ -13,24 +13,53 @@ export function timeLeft(closesAt: number, now: number): string {
   return `${String(minutes).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
 }
 
+// Lists what each warning says, and whether input from anyone clears it or a click outside hides it.
+const reasons = {
+  idle: {
+    title: "Room closes soon due to inactivity!",
+    hint: "Move the mouse, tap or type to keep the room open.",
+    hidesOnClickOutside: false,
+  },
+  restart: {
+    title: "Room closes soon for a server restart!",
+    hint: "Click anywhere outside this card to hide it.",
+    hidesOnClickOutside: true,
+  },
+} as const;
+
 /**
- * Warns that an idle room closes soon. Any input from anyone in the room clears it, so the
- * card has no button of its own.
+ * Warns that a room closes soon. An idle warning goes once anyone in the room acts. A restart
+ * warning stays until the viewer clicks outside the card.
  */
-export function IdleWarning(props: { closesAt: number | null; now: number }): JSX.Element {
+export function ClosingWarning(props: {
+  closesAt: number | null;
+  now: number;
+  reason?: keyof typeof reasons;
+}): JSX.Element {
+  const reason = () => reasons[props.reason ?? "idle"];
+  const [hidden, setHidden] = createSignal(false);
+  let card: HTMLDivElement | undefined;
+
+  const onPointerDown = (event: PointerEvent) => {
+    if (reason().hidesOnClickOutside && card && !card.contains(event.target as Node)) {
+      setHidden(true);
+    }
+  };
+  document.addEventListener("pointerdown", onPointerDown);
+  onCleanup(() => document.removeEventListener("pointerdown", onPointerDown));
+
   return (
-    <Show when={props.closesAt}>
+    <Show when={!hidden() && props.closesAt}>
       {(closesAt) => (
         <div class={styles.placement}>
-          <div class={styles.card} role="alert">
+          <div ref={card} class={styles.card} role="alert">
             <h2 class={styles.title}>
               <span class={styles.heading}>
-                <TriangleAlert class={styles.icon} aria-hidden="true" /> Room closes soon due to
-                inactivity!
+                <TriangleAlert class={styles.icon} aria-hidden="true" /> {reason().title}
               </span>
               <span class={styles.countdown}>{timeLeft(closesAt(), props.now)}</span>
             </h2>
-            <p class={styles.text}>Move the mouse, tap or type to keep the room open.</p>
+            <p class={styles.text}>{reason().hint}</p>
           </div>
         </div>
       )}

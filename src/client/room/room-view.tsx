@@ -2,7 +2,12 @@ import { TriangleAlert, Volume2, VolumeOff } from "lucide-solid";
 import { type Accessor, Index, type JSX, Show, createEffect, on, onCleanup } from "solid-js";
 import type { FeedEntry } from "../../shared/feed-entry.ts";
 import type { ClientAction, ClosesFor } from "../../shared/protocol.ts";
-import { type RaceState, type Standing, standings } from "../../shared/race/race.ts";
+import {
+  type RaceState,
+  type Standing,
+  earliestResultMs,
+  standings,
+} from "../../shared/race/race.ts";
 import type { GoalCatalog } from "../home/goal-picker.tsx";
 import { Button } from "../primitives/button.tsx";
 import { actionLabel } from "./action-labels.ts";
@@ -72,6 +77,8 @@ export function RoomView(props: RoomViewProps): JSX.Element {
   // Leaving or unreadying during the countdown calls the race off, so those turn red then.
   const stopsCountdown = (action: ActionType) =>
     props.race.phase === "countdown" && (action === "unready" || action === "leave");
+  const tooEarly = (action: ActionType) =>
+    (action === "done" || action === "forfeit") && elapsed() < earliestResultMs;
   const sideActions = () => actions().filter((a) => rowActionTypes.has(a));
   const mainActions = () => actions().filter((a) => !rowActionTypes.has(a) && a !== "join");
   const actionButton = (action: Accessor<ActionType>) => (
@@ -85,6 +92,7 @@ export function RoomView(props: RoomViewProps): JSX.Element {
               ? "accent"
               : "go"
       }
+      disabled={tooEarly(action())}
       onClick={() => press({ type: action() } as ClientAction)}
     >
       {actionLabel[action()]}

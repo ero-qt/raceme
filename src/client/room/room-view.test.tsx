@@ -45,13 +45,19 @@ const catalog = {
 
 afterEach(cleanup);
 
-function renderRoom(entrantId: string, isHost = false, state: RaceState = race, closed = false) {
+function renderRoom(
+  entrantId: string,
+  isHost = false,
+  state: RaceState = race,
+  closed = false,
+  now = 0,
+) {
   const sent: ClientAction[] = [];
   const view = render(() => (
     <RoomView
       race={state}
       me={{ entrantId, isHost }}
-      now={0}
+      now={now}
       inviteUrl={inviteUrl}
       notice={null}
       feed={[
@@ -730,5 +736,20 @@ describe("RoomView button colors", () => {
     expect(view.getByRole("button", { name: ".rematch" }).classList[0]).not.toBe(
       view.getByRole("button", { name: ".undone" }).classList[0],
     );
+  });
+});
+
+describe("RoomView right after GO", () => {
+  // The server refuses a result this early, so the buttons wait instead of failing.
+  test("keeps .done and .quit unavailable for the first 5 seconds after GO", () => {
+    const running = { ...race, phase: "running" as const, startsAt: 0 };
+
+    const early = renderRoom("a", false, running, false, 4_999);
+    expect(early.getByRole("button", { name: ".done" }).hasAttribute("disabled")).toBe(true);
+    expect(early.getByRole("button", { name: ".quit" }).hasAttribute("disabled")).toBe(true);
+    cleanup();
+
+    const later = renderRoom("a", false, running, false, 5_000);
+    expect(later.getByRole("button", { name: ".done" }).hasAttribute("disabled")).toBe(false);
   });
 });

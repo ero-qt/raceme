@@ -5,6 +5,8 @@ it follows [keep a changelog](https://keepachangelog.com) principles and raceme 
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-25
+
 ### Added
 
 - race rooms that work like SpeedRunsLive's: open one from a goal, share the invite link and race with SRL's commands and RaceBot's lines
@@ -28,3 +30,6 @@ it follows [keep a changelog](https://keepachangelog.com) principles and raceme 
 - `.done` and `.quit` buttons that stay off for the first 5 seconds after GO
 - a link card for Discord and other chats that never shows a room's goal or entrants
 - a `noindex` header and tag on every page, so search engines leave raceme out
+
+[Unreleased]: https://github.com/ero-qt/raceme/compare/1.0.0...HEAD
+[1.0.0]: https://github.com/ero-qt/raceme/releases/tag/1.0.0

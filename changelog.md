@@ -19,3 +19,4 @@ it follows [keep a changelog](https://keepachangelog.com) principles and raceme 
 - SRL commands like `.ready` and `.done` typed in the chat box, plus Enter anywhere on the page to jump into the chat box
 - a mute button for the host next to each entrant, which turns off that entrant's chat until the host unmutes them
 - a lock for the host that closes entry before the start, plus a limit on how many can enter
+- a count in each room of how many people have it open without entering

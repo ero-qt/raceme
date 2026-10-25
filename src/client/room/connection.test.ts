@@ -132,6 +132,21 @@ describe("connectRoom", () => {
     });
   });
 
+  test("takes the watcher count from each state", () => {
+    useStuckSocket();
+
+    createRoot((dispose) => {
+      const room = connectRoom("abcdefghij");
+      StuckSocket.opened[0]?.onmessage?.({
+        data: JSON.stringify({ type: "state", serverNow: 0, race: { phase: "open" }, watchers: 4 }),
+      });
+
+      expect(room.watchers()).toBe(4);
+
+      dispose();
+    });
+  });
+
   test("keeps an idle warning until someone in the room acts", () => {
     useStuckSocket();
 

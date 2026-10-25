@@ -158,8 +158,10 @@ export const entrants = style({
   gap: tokens.space.s,
 });
 
+// Wraps the status and the lock onto a second line when a narrow phone has no room for them.
 export const entrantsHeader = style({
   display: "flex",
+  flexWrap: "wrap",
   alignItems: "center",
   gap: tokens.space.s,
   minBlockSize: tokens.target.min,
@@ -191,6 +193,8 @@ export const capDigits = style([
   controlBorder,
   { display: "inline-block", boxSizing: "border-box", inlineSize: capWidth, paddingInline: "2px" },
 ]);
+
+export const watcherCount = style([entrantCount, { gap: tokens.space.xs }]);
 
 export const headerSpacer = style({ flex: "1 1 auto" });
 

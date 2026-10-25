@@ -1,4 +1,4 @@
-import { Lock, LockOpen } from "lucide-solid";
+import { Eye, Lock, LockOpen } from "lucide-solid";
 import { type JSX, Show } from "solid-js";
 import type { ClientAction } from "../../shared/protocol.ts";
 import { type RaceState, maxEntrants, minEntrantCap } from "../../shared/race/race.ts";
@@ -26,6 +26,8 @@ const roomStatusLabel: Partial<Record<RaceState["phase"], string>> = {
 export function EntrantsHeader(props: {
   race: RaceState;
   isHost: boolean;
+  /** Counts the people with the room open who haven't entered, `null` once the room is gone. */
+  watchers: number | null;
   send: (action: ClientAction) => void;
 }): JSX.Element {
   const beforeStart = () => props.race.phase === "open" || props.race.phase === "countdown";
@@ -70,6 +72,13 @@ export function EntrantsHeader(props: {
           />
         </Show>
       </span>
+      <Show when={props.watchers !== null}>
+        <span class={styles.watcherCount} title={`${props.watchers} watching`}>
+          <Eye class={styles.headerIcon} aria-hidden="true" />
+          <span class={styles.countDigits}>{props.watchers}</span>
+          <span class={styles.visuallyHidden}> watching</span>
+        </span>
+      </Show>
       <span class={styles.headerSpacer} />
       <span class={styles.headerStatus}>
         <Show when={props.race.entryLocked && beforeStart()} fallback={statusBadge(props.race)}>

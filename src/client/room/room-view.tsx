@@ -39,6 +39,8 @@ export interface RoomViewProps {
   catalog?: GoalCatalog | undefined;
   /** Keeps `send` off this long after each chat line, matching the server's slow mode. */
   chatEveryMs?: number;
+  /** Counts the people with the room open who haven't entered. */
+  watchers?: number;
   /** Gives the server time the room closes, for the room timer. */
   closesAt?: number;
   /** Shows the room as it was when the server closed it, with nothing left to do in it. */
@@ -254,6 +256,7 @@ export function RoomView(props: RoomViewProps): JSX.Element {
         <EntrantsHeader
           race={props.race}
           isHost={props.me.isHost && !props.closed}
+          watchers={props.closed ? null : (props.watchers ?? 0)}
           send={props.send}
         />
         <EntrantTable

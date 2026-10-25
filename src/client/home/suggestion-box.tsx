@@ -37,11 +37,11 @@ export function SuggestionBox(props: {
   onPick: (option: SuggestionOption, group: SuggestionGroup) => void;
   onRemove: (option: SuggestionOption, group: SuggestionGroup) => void;
   value?: string;
-  placeholder?: string;
+  placeholder?: string | undefined;
   maxLength?: number;
-  inputClass?: string;
+  inputClass?: string | undefined;
   /** Sets `data-kind` on the field, for styling a room code differently from a goal. */
-  kind?: string;
+  kind?: string | undefined;
   onFoldChange?: (groupId: string, folded: boolean) => void;
 }): JSX.Element {
   const listId = createUniqueId();

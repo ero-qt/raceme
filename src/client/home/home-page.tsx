@@ -1,24 +1,14 @@
 import { LoaderCircle } from "lucide-solid";
-import { For, type JSX, Show, createSignal } from "solid-js";
+import { type JSX, Show, createSignal } from "solid-js";
 import { Button } from "../primitives/button.tsx";
 import * as titleStyles from "../room/goal-title.css.ts";
 import * as styles from "../room/room.css.ts";
-import {
-  type CatalogEntry,
-  loadCategoriesFromServer,
-  searchGamesOnServer,
-  useGameSearch,
-} from "./game-search.ts";
-import { forgetGoal, loadGoalHistory, rememberGoal } from "./goal-history.ts";
+import { type CatalogEntry, loadCategoriesFromServer, searchGamesOnServer } from "./game-search.ts";
+import { rememberGoal } from "./goal-history.ts";
+import { GoalPicker, useGamePicker } from "./goal-picker.tsx";
 import * as homeStyles from "./home-page.css.ts";
 import { useRoomCheck } from "./room-check.ts";
 import { parseRoomCode } from "./room-code.ts";
-import { SuggestionBox, type SuggestionGroup } from "./suggestion-box.tsx";
-
-const maxHistoryShown = 5;
-// Same limit the race rules set for a goal.
-const maxGoalLength = 200;
-const typedOptionId = "typed";
 
 /**
  * Opens a new lobby from a goal or an existing room from a pasted code, in one field. Text shaped
@@ -110,41 +100,15 @@ export function HomePage(props: {
           void submit();
         }}
       >
-        <div class={titleStyles.goal}>
-          <SuggestionBox
-            label="Goal or room code"
-            placeholder="set a goal or paste a room code"
-            maxLength={200}
-            inputClass={`${titleStyles.input} ${homeStyles.field}`}
-            kind={code() ? "code" : "goal"}
-            value={value()}
-            groups={picker.groups()}
-            onInput={setValue}
-            onPick={(option, group) => {
-              if (!option.typed) {
-                setValue(option.label);
-              }
-              picker.pick(option, group);
-            }}
-            onRemove={(option) => picker.forget(option.label)}
-            onFoldChange={(groupId, folded) =>
-              groupId === "speedrun" && picker.setSpeedrunOpen(!folded)
-            }
-          />
-        </div>
-        <Show when={picker.categories().length > 0}>
-          <select
-            class={homeStyles.category}
-            aria-label="Category"
-            value={picker.category()}
-            onChange={(event) => picker.setCategory(event.currentTarget.value)}
-          >
-            <option value="">no category</option>
-            <For each={picker.categories()}>
-              {(category) => <option value={category.name}>{category.name}</option>}
-            </For>
-          </select>
-        </Show>
+        <GoalPicker
+          picker={picker}
+          label="Goal or room code"
+          placeholder="set a goal or paste a room code"
+          inputClass={`${titleStyles.input} ${homeStyles.field}`}
+          kind={code() ? "code" : "goal"}
+          value={value()}
+          onInput={setValue}
+        />
         <Show
           when={code()}
           fallback={
@@ -174,101 +138,4 @@ function failureText(status: number | null): string {
     return "The goal needs 1 to 200 characters.";
   }
   return status === 429 ? "Too many new rooms. Try again in a minute." : "Couldn't open a room.";
-}
-
-/**
- * Builds the start field's suggestions from this browser's past goals and from speedrun.com
- * games. It also keeps track of a picked game and its category.
- */
-function useGamePicker(
-  text: () => string,
-  options: {
-    /** Gives code-shaped text once the server confirmed no room has that code. */
-    noRoomHasCode: () => string | null;
-    searchGames: (query: string) => Promise<CatalogEntry[] | null>;
-    loadCategories: (gameId: string) => Promise<CatalogEntry[]>;
-    delayMs?: number;
-  },
-) {
-  const [history, setHistory] = createSignal(loadGoalHistory());
-  const [game, setGame] = createSignal<CatalogEntry | null>(null);
-  const [categories, setCategories] = createSignal<CatalogEntry[]>([]);
-  const [category, setCategory] = createSignal("");
-  const [speedrunOpen, setSpeedrunOpen] = createSignal(false);
-
-  // A pasted room code must never reach speedrun.com, so code-shaped text only counts as a goal
-  // once the server confirmed no room has that code.
-  const searchable = () => {
-    const code = parseRoomCode(text());
-    return code === null || code === options.noRoomHasCode() ? text() : null;
-  };
-  // speedrun.com starts folded and is only asked once someone opens it.
-  const games = useGameSearch(() => (speedrunOpen() ? searchable() : null), {
-    searchGames: options.searchGames,
-    ...(options.delayMs !== undefined ? { delayMs: options.delayMs } : {}),
-  });
-
-  // The picked game only counts while the field still shows its name.
-  const picked = () => {
-    const current = game();
-    return current !== null && current.name === text() ? current : null;
-  };
-
-  const groups = (): SuggestionGroup[] => {
-    const typed = searchable()?.trim();
-    if (typed === undefined) {
-      return [];
-    }
-
-    const query = typed.toLowerCase();
-    const pastGoals = history()
-      .filter((goal) => goal.toLowerCase().includes(query))
-      .slice(0, maxHistoryShown)
-      .map((goal) => ({ id: goal, label: goal, removable: true }));
-    // The field's own text closes the list of goals, so it's clear any goal works.
-    const isKnown = history().some((goal) => goal.toLowerCase() === query);
-    const ownText =
-      typed === "" || isKnown ? [] : [{ id: typedOptionId, label: typed, typed: true }];
-    const found = games().map((entry) => ({ id: entry.id, label: entry.name }));
-    return [
-      { id: "history", label: "your goals", options: [...pastGoals, ...ownText] },
-      { id: "speedrun", label: "speedrun.com", options: found, startsFolded: true },
-    ];
-  };
-
-  const pick = async (option: { id: string; label: string }, group: SuggestionGroup) => {
-    setCategory("");
-    setCategories([]);
-    if (group.id !== "speedrun") {
-      setGame(null);
-      return;
-    }
-
-    setGame({ id: option.id, name: option.label });
-    const loaded = await options.loadCategories(option.id);
-    if (game()?.id === option.id) {
-      setCategories(loaded);
-    }
-  };
-
-  const forget = (goal: string) => {
-    forgetGoal(goal);
-    setHistory(loadGoalHistory());
-  };
-
-  return {
-    groups,
-    pick,
-    forget,
-    categories: () => (picked() ? categories() : []),
-    category: () => (picked() ? category() : ""),
-    setCategory,
-    setSpeedrunOpen,
-    /** Gives the goal to open the room with, the game and category joined when both are picked. */
-    goal: () => {
-      const current = picked();
-      const joined = current && category() ? `${current.name} - ${category()}` : text();
-      return joined.slice(0, maxGoalLength);
-    },
-  };
 }

@@ -9,6 +9,18 @@ export const field = style({
   },
 });
 
+export const category = style({
+  flex: "none",
+  maxInlineSize: "40%",
+  minBlockSize: tokens.target.min,
+  paddingInline: tokens.space.xs,
+  font: "inherit",
+  color: "inherit",
+  background: tokens.color.bg1,
+  border: `2px solid ${tokens.color.borderStrong}`,
+  borderRadius: tokens.radius.s,
+});
+
 export const visuallyHidden = style({
   position: "absolute",
   inlineSize: "1px",

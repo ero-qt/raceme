@@ -43,7 +43,7 @@ describe("privacy", () => {
     await context.close();
   }, 30_000);
 
-  test("stores only the 2 HttpOnly cookies the race needs and nothing else", async () => {
+  test("stores only the 2 HttpOnly cookies the race needs and the viewer's own goal list", async () => {
     const { context, page } = await newPage(harness);
     await openLobbyAndEnter(page, harness.origin, "ero");
 
@@ -62,7 +62,13 @@ describe("privacy", () => {
       caches: (await caches.keys()).length,
     }));
 
-    expect(storage).toEqual({ local: [], session: [], databases: 0, workers: 0, caches: 0 });
+    expect(storage).toEqual({
+      local: ["raceme.goalHistory"],
+      session: [],
+      databases: 0,
+      workers: 0,
+      caches: 0,
+    });
 
     await context.close();
   }, 20_000);
@@ -72,7 +78,10 @@ describe("privacy", () => {
     await openLobbyAndEnter(page, harness.origin, "ero");
     await page.getByRole("button", { name: "Theme: system" }).click();
 
-    expect(await page.evaluate(() => Object.keys(localStorage))).toEqual(["raceme.theme"]);
+    expect(await page.evaluate(() => Object.keys(localStorage).sort())).toEqual([
+      "raceme.goalHistory",
+      "raceme.theme",
+    ]);
 
     await context.close();
   }, 20_000);

@@ -35,6 +35,10 @@ export interface ServerConfig {
   idleWarningMs: number;
   /** Ends every room this long after it opened. */
   roomLifetimeMs: number;
+  /** Warns a room this long before it reaches `roomLifetimeMs`. */
+  closingWarningMs: number;
+  /** Drops an empty room nobody ever entered after this long. */
+  unusedRoomMs: number;
   /** Asks new rooms for a proof of work once more than this many open within a minute. */
   surgeRoomsPerMinute: number;
   /** Sets how hard that proof is, as leading zero bits of a SHA-256. */
@@ -92,6 +96,8 @@ export function startServer(config: ServerConfig, clock = steadyClock): RunningS
     idleInputMs: config.idleInputMs,
     idleWarningMs: config.idleWarningMs,
     roomLifetimeMs: config.roomLifetimeMs,
+    closingWarningMs: config.closingWarningMs,
+    unusedRoomMs: config.unusedRoomMs,
   });
   const limits = new ClientLimits(config, clock);
   const hub = new RoomHub<SocketData>((slug, message) => server.publish(slug, message), clock);
@@ -132,7 +138,7 @@ export function startServer(config: ServerConfig, clock = steadyClock): RunningS
     for (const slug of rooms.closingSoon(now)) {
       const room = rooms.get(slug);
       if (room) {
-        const line = `This room closes in 1 hour. Rooms last at most ${spokenDuration(config.roomLifetimeMs)}, so start a new one to keep racing.`;
+        const line = `This room closes in ${spokenDuration(config.closingWarningMs)}. Rooms last at most ${spokenDuration(config.roomLifetimeMs)}, so start a new one to keep racing.`;
         hub.publishLines(room, botLines([line], now));
       }
     }

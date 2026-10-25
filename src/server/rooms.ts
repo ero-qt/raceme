@@ -7,9 +7,6 @@ const slugLength = 10;
 const entrantIdLength = 8;
 const maxSessionsPerRoom = 200;
 const feedCapacity = 200;
-// Keeps one visitor from filling the room cap with lobbies nobody ever joins.
-const unusedRoomMs = 10 * 60_000;
-const closingWarningMs = 60 * 60_000;
 
 export class Room {
   readonly #hostToken: string;
@@ -154,13 +151,17 @@ export interface RoomRegistryOptions {
   idleMs: number;
   /**
    * Warns a room after this many ms without input and drops it `idleWarningMs` later, because an open
-   * tab nobody touches would keep it alive. Defaults to 2 hours.
+   * tab nobody touches would keep it alive.
    */
-  idleInputMs?: number;
-  /** Gives an idle room this long between the warning and the end. Defaults to 10 minutes. */
-  idleWarningMs?: number;
-  /** Ends every room this long after it opened, however active it is. Defaults to 48 hours. */
-  roomLifetimeMs?: number;
+  idleInputMs: number;
+  /** Gives an idle room this long between the warning and the end. */
+  idleWarningMs: number;
+  /** Ends every room this long after it opened, however active it is. */
+  roomLifetimeMs: number;
+  /** Warns a room this long before it reaches `roomLifetimeMs`. */
+  closingWarningMs: number;
+  /** Drops an empty room nobody ever entered after this long, so lobbies can't fill the cap. */
+  unusedRoomMs: number;
 }
 
 export type CloseReason = "ended" | "expired" | "idle" | "empty";
@@ -180,18 +181,6 @@ export class RoomRegistry {
 
   constructor(readonly options: RoomRegistryOptions) {}
 
-  get #idleWarningMs(): number {
-    return this.options.idleWarningMs ?? 10 * 60_000;
-  }
-
-  get #roomLifetimeMs(): number {
-    return this.options.roomLifetimeMs ?? 48 * 60 * 60_000;
-  }
-
-  get #idleInputMs(): number {
-    return this.options.idleInputMs ?? 2 * 60 * 60_000;
-  }
-
   get size(): number {
     return this.#rooms.size;
   }
@@ -207,7 +196,7 @@ export class RoomRegistry {
     }
 
     const hostToken = randomSecret();
-    const room = new Room(slug, hostToken, settings, now, this.#roomLifetimeMs);
+    const room = new Room(slug, hostToken, settings, now, this.options.roomLifetimeMs);
     this.#rooms.set(slug, room);
     return { ok: true, room, hostToken };
   }
@@ -221,7 +210,11 @@ export class RoomRegistry {
   idleWarnings(now: number): string[] {
     const idle: string[] = [];
     for (const [slug, room] of this.#rooms) {
-      if (!room.warnedOfIdle && !isRacing(room) && now - room.lastInputAt >= this.#idleInputMs) {
+      if (
+        !room.warnedOfIdle &&
+        !isRacing(room) &&
+        now - room.lastInputAt >= this.options.idleInputMs
+      ) {
         room.warnedOfIdle = true;
         idle.push(slug);
       }
@@ -234,7 +227,7 @@ export class RoomRegistry {
   closingSoon(now: number): string[] {
     const closing: string[] = [];
     for (const [slug, room] of this.#rooms) {
-      if (!room.warnedOfClosing && now >= room.expiresAt - closingWarningMs) {
+      if (!room.warnedOfClosing && now >= room.expiresAt - this.options.closingWarningMs) {
         room.warnedOfClosing = true;
         closing.push(slug);
       }
@@ -271,10 +264,13 @@ export class RoomRegistry {
     if (now >= room.expiresAt) {
       return "expired";
     }
-    if (!isRacing(room) && now - room.lastInputAt >= this.#idleInputMs + this.#idleWarningMs) {
+    if (
+      !isRacing(room) &&
+      now - room.lastInputAt >= this.options.idleInputMs + this.options.idleWarningMs
+    ) {
       return "idle";
     }
-    if (empty && room.race.entrants.length === 0 && quietFor > unusedRoomMs) {
+    if (empty && room.race.entrants.length === 0 && quietFor > this.options.unusedRoomMs) {
       return "idle";
     }
     if (empty && quietFor > this.options.idleMs) {

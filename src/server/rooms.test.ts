@@ -1,13 +1,19 @@
 import { describe, expect, test } from "bun:test";
+import { loadConfig } from "../config.ts";
 import type { Entrant } from "../shared/race/race.ts";
-import { type CreateRoomResult, type Room, RoomRegistry } from "./rooms.ts";
+import {
+  type CreateRoomResult,
+  type Room,
+  RoomRegistry,
+  type RoomRegistryOptions,
+} from "./rooms.ts";
 
 const settings = { countdownMs: 10_000 };
 
-function registry(
-  options: Partial<{ maxRooms: number; idleMs: number; roomLifetimeMs: number }> = {},
-) {
-  return new RoomRegistry({ maxRooms: 3, idleMs: 60_000, ...options });
+const timings = loadConfig({});
+
+function registry(options: Partial<RoomRegistryOptions> = {}) {
+  return new RoomRegistry({ ...timings, maxRooms: 3, idleMs: 60_000, ...options });
 }
 
 function created(result: CreateRoomResult): Extract<CreateRoomResult, { ok: true }> {

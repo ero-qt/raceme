@@ -21,6 +21,8 @@ export function loadConfig(env: Env): ServerConfig {
     idleInputMs: count("RACEME_IDLE_INPUT_MINUTES", 120) * 60_000,
     idleWarningMs: count("RACEME_IDLE_WARNING_MINUTES", 10) * 60_000,
     roomLifetimeMs: count("RACEME_ROOM_HOURS", 48) * 60 * 60_000,
+    closingWarningMs: 60 * 60_000,
+    unusedRoomMs: 10 * 60_000,
     surgeRoomsPerMinute: count("RACEME_SURGE_ROOMS_PER_MINUTE", 30),
     // About 65,000 hashes, roughly a second in a phone's browser.
     surgeBits: 16,

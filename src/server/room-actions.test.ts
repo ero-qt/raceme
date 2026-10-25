@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { loadConfig } from "../config.ts";
 import { chatLine, handleAction, nextTickDelay } from "./room-actions.ts";
 import { RoomRegistry } from "./rooms.ts";
 
@@ -7,7 +8,10 @@ const host = { entrantId: "a", isHost: true };
 const notHost = { ok: false, refusal: "notHost" } as const;
 
 function room() {
-  const created = new RoomRegistry({ maxRooms: 1, idleMs: 1 }).create({ countdownMs: 10_000 }, 0);
+  const created = new RoomRegistry({ ...loadConfig({}), maxRooms: 1, idleMs: 1 }).create(
+    { countdownMs: 10_000 },
+    0,
+  );
   if (!created.ok) {
     throw new Error("expected a room");
   }

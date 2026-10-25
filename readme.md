@@ -1,6 +1,6 @@
 # raceme
 
-raceme gives you a speedrun race room that works like SpeedRunsLive did, with the same commands and RaceBot messages. you start a room with a goal and send its link to the people you race with. rooms only exist in the server's memory, so nothing is kept once a room closes.
+raceme gives you a speedrun race room that works like SpeedRunsLive did, with the same commands and RaceBot messages. unlike SRL, it has no accounts, points, ratings or leaderboard. a race's results stay in its room. you start a room with a goal and send its link to the people you race with. rooms only exist in the server's memory, so nothing is kept once a room closes.
 
 ![A race room with 4 entrants, 2 of them done and 2 still racing](docs/room.png)
 

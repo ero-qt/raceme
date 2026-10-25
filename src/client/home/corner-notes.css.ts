@@ -29,3 +29,6 @@ export const text = style([
     background: tokens.color.bg0,
   },
 ]);
+
+// Breaks the 71-character digest and long commands anywhere, so the note never scrolls sideways.
+export const digest = style({ overflowWrap: "anywhere" });

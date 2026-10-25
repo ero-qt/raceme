@@ -38,6 +38,7 @@ function start(overrides: Partial<ServerConfig> = {}) {
       maxSocketsPerIp: 10,
       maxSockets: 2000,
       sweepIntervalMs: 20,
+      build: null,
       ...overrides,
     },
     () => Date.now() + clockOffsetMs,
@@ -408,6 +409,31 @@ describe("server", () => {
 
     expect(rewelcome).toEqual(welcome);
     expect(rewelcome.type === "welcome" && rewelcome.isHost).toBe(true);
+  });
+
+  describe("build info", () => {
+    test("answers with the commit and release digest the deploy wrote", async () => {
+      const build = {
+        release: "1.2.0",
+        repository: "https://github.com/ero-qt/raceme",
+        commit: "a".repeat(40),
+        digest: `sha256:${"b".repeat(64)}`,
+      };
+      const base = start({ build });
+
+      expect(await (await fetch(`${base}/api/build`)).json()).toEqual(build);
+    });
+
+    test("answers with nulls for a build that didn't come from a release", async () => {
+      const base = start();
+
+      expect(await (await fetch(`${base}/api/build`)).json()).toEqual({
+        release: null,
+        repository: null,
+        commit: null,
+        digest: null,
+      });
+    });
   });
 
   describe("game picker", () => {

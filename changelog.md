@@ -22,3 +22,4 @@ it follows [keep a changelog](https://keepachangelog.com) principles and raceme 
 - a count in each room of how many people have it open without entering
 - a privacy notice in the corner of the start page that explains what the server keeps
 - a note in the same corner about raceme being made with a lot of help from AI
+- a build note in the same corner with the commit the server runs and how to check its release

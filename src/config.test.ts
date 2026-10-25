@@ -1,4 +1,7 @@
 import { describe, expect, test } from "bun:test";
+import { mkdtempSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { configWarnings, loadConfig } from "./config.ts";
 
 describe("configWarnings", () => {
@@ -109,5 +112,58 @@ describe("loadConfig", () => {
   test("reads how long each entrant waits between chat lines", () => {
     expect(loadConfig({}).chatEveryMs).toBe(3_000);
     expect(loadConfig({ RACEME_CHAT_SECONDS: "5" }).chatEveryMs).toBe(5_000);
+  });
+});
+
+describe("loadConfig build file", () => {
+  const dir = mkdtempSync(join(tmpdir(), "raceme-build-"));
+  const write = (name: string, body: unknown) => {
+    const path = join(dir, name);
+    writeFileSync(path, JSON.stringify(body));
+    return path;
+  };
+
+  test("reads the release, repository, commit and digest the deploy wrote", () => {
+    const build = {
+      release: "1.2.0",
+      repository: "https://github.com/ero-qt/raceme",
+      commit: "a".repeat(40),
+      digest: `sha256:${"b".repeat(64)}`,
+    };
+
+    expect(loadConfig({ RACEME_BUILD_FILE: write("good.json", build) }).build).toEqual(build);
+    expect(loadConfig({}).build).toBeNull();
+  });
+
+  test("refuses a build file without a release, GitHub repository, full commit and digest", () => {
+    const repository = "https://github.com/ero-qt/raceme";
+    const release = "1.2.0";
+    for (const body of [
+      { repository, commit: "a".repeat(40), digest: `sha256:${"b".repeat(64)}` },
+      { release: "v1.2.0", repository, commit: "a".repeat(40), digest: `sha256:${"b".repeat(64)}` },
+      { release, repository, commit: "abc1234", digest: `sha256:${"b".repeat(64)}` },
+      { release, repository, commit: "a".repeat(40), digest: "b".repeat(64) },
+      { release, repository, commit: "a".repeat(40) },
+      {
+        release,
+        repository: "https://evil.test/x",
+        commit: "a".repeat(40),
+        digest: `sha256:${"b".repeat(64)}`,
+      },
+    ]) {
+      expect(() => loadConfig({ RACEME_BUILD_FILE: write("bad.json", body) })).toThrow(
+        "RACEME_BUILD_FILE",
+      );
+    }
+  });
+
+  test("names the setting when the build file is missing or isn't JSON", () => {
+    const broken = join(dir, "broken.json");
+    writeFileSync(broken, "{");
+
+    expect(() => loadConfig({ RACEME_BUILD_FILE: broken })).toThrow("RACEME_BUILD_FILE");
+    expect(() => loadConfig({ RACEME_BUILD_FILE: join(dir, "missing.json") })).toThrow(
+      "RACEME_BUILD_FILE",
+    );
   });
 });

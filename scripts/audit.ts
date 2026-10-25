@@ -40,6 +40,7 @@ const server = startServer({
   maxSocketsPerIp: 50,
   maxSockets: 100,
   sweepIntervalMs: 60_000,
+  build: null,
 });
 
 const origin = `http://localhost:${server.server.port}`;

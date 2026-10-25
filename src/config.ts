@@ -1,4 +1,5 @@
-import type { ServerConfig } from "./server/server.ts";
+import { readFileSync } from "node:fs";
+import type { BuildInfo, ServerConfig } from "./server/server.ts";
 import { normalizeBasePath } from "./shared/base-path.ts";
 
 type Env = Record<string, string | undefined>;
@@ -31,7 +32,31 @@ export function loadConfig(env: Env): ServerConfig {
     maxSocketsPerIp: count("RACEME_MAX_SOCKETS_PER_IP", 10),
     maxSockets: count("RACEME_MAX_SOCKETS", 8192),
     sweepIntervalMs: 60_000,
+    build: env.RACEME_BUILD_FILE ? readBuildFile(env.RACEME_BUILD_FILE) : null,
   };
+}
+
+/** Reads the release, repository, commit and digest the deploy script writes next to each release. */
+function readBuildFile(path: string): BuildInfo {
+  let parsed: Partial<BuildInfo>;
+  try {
+    parsed = JSON.parse(readFileSync(path, "utf8")) as Partial<BuildInfo>;
+  } catch (error) {
+    throw new Error(`RACEME_BUILD_FILE can't be read as JSON at '${path}': ${error}`);
+  }
+
+  const { release, repository, commit, digest } = parsed;
+  if (
+    !/^\d+\.\d+\.\d+$/.test(release ?? "") ||
+    !/^https:\/\/github\.com\/[\w.-]+\/[\w.-]+$/.test(repository ?? "") ||
+    !/^[0-9a-f]{40}$/.test(commit ?? "") ||
+    !/^sha256:[0-9a-f]{64}$/.test(digest ?? "")
+  ) {
+    throw new Error(
+      `RACEME_BUILD_FILE needs a release, a GitHub repository, a full commit and a sha256 digest, got '${path}'.`,
+    );
+  }
+  return { release, repository, commit, digest } as BuildInfo;
 }
 
 // A typo like `5oo` would turn into NaN, and every comparison with NaN is false, so the limit

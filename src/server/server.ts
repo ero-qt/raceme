@@ -50,6 +50,18 @@ export interface ServerConfig {
   maxSockets: number;
   /** Checks for idle and cleared rooms this often. */
   sweepIntervalMs: number;
+  /** Points at the release this server runs, `null` for a build that didn't come from a release. */
+  build: BuildInfo | null;
+}
+
+/** Points at the commit and the attested release tarball, so visitors can check the build. */
+export interface BuildInfo {
+  /** Gives the release tag, like `1.2.0`. */
+  release: string;
+  /** Links to the source on GitHub, which keeps outside hosts out of the page bundle. */
+  repository: string;
+  commit: string;
+  digest: string;
 }
 
 export interface RunningServer {

@@ -68,6 +68,7 @@ the race server reads these environment variables. behind a reverse proxy like c
 | `RACEME_MAX_SOCKETS_PER_IP`     | `10`                           | open sockets per IPv4 address or IPv6 /64                                                                  |
 | `RACEME_MAX_SOCKETS`            | `8192`                         | open sockets in total                                                                                      |
 | `RACEME_SPEEDRUN_API`           | `https://www.speedrun.com/api` | where the game picker looks up games and categories. `off` turns the picker off                            |
+| `RACEME_BUILD_FILE`             | none                           | JSON file the deploy writes with the release's repository, commit and digest, shown in the build note      |
 
 ## license
 

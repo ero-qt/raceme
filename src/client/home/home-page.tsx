@@ -1,5 +1,6 @@
 import { LoaderCircle } from "lucide-solid";
 import { type JSX, Show, createSignal } from "solid-js";
+import { solveChallenge } from "../../shared/proof-of-work.ts";
 import { Button } from "../primitives/button.tsx";
 import * as titleStyles from "../room/goal-title.css.ts";
 import * as styles from "../room/room.css.ts";
@@ -73,11 +74,18 @@ export function HomePage(props: {
 
   async function startRace(): Promise<void> {
     setCreating(true);
-    const response = await fetch(`${import.meta.env.BASE_URL}api/rooms`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ goal: picker.goal() }),
-    }).catch(() => null);
+    let response = await requestRoom(picker.goal(), null);
+
+    // During a rush of new rooms the server asks for a proof of work first.
+    if (response?.status === 428) {
+      setNotice("Lots of new rooms right now, checking this browser…");
+      const { challenge } = (await response.json()) as { challenge: Challenge };
+      // Browsers only offer crypto.subtle on https pages, so solving can fail on plain http.
+      const nonce = await solveChallenge(challenge.token, challenge.bits).catch(() => null);
+      setNotice(null);
+      response =
+        nonce === null ? null : await requestRoom(picker.goal(), { token: challenge.token, nonce });
+    }
 
     if (!response?.ok) {
       setCreating(false);
@@ -130,6 +138,19 @@ export function HomePage(props: {
       </p>
     </main>
   );
+}
+
+interface Challenge {
+  token: string;
+  bits: number;
+}
+
+function requestRoom(goal: string, proof: { token: string; nonce: number } | null) {
+  return fetch(`${import.meta.env.BASE_URL}api/rooms`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(proof === null ? { goal } : { goal, proof }),
+  }).catch(() => null);
 }
 
 /** Explains a failed room creation. Without a status the request never reached the server. */

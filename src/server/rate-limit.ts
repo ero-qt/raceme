@@ -22,6 +22,11 @@ export class TokenBucket {
     return true;
   }
 
+  hasToken(now: number): boolean {
+    this.#refill(now);
+    return this.#tokens >= 1;
+  }
+
   isFull(now: number): boolean {
     this.#refill(now);
     return this.#tokens >= this.capacity;

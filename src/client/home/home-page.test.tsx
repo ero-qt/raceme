@@ -182,6 +182,48 @@ describe("HomePage", () => {
   });
 });
 
+describe("HomePage busy server", () => {
+  test("solves the proof of work the server asks for during a rush, then opens the room", async () => {
+    const bodies: unknown[] = [];
+    globalThis.fetch = (async (_url: string, init: RequestInit) => {
+      bodies.push(JSON.parse(String(init.body)));
+      return bodies.length === 1
+        ? Response.json({ challenge: { token: "abc.1.sig", bits: 4 } }, { status: 428 })
+        : Response.json({ slug: "duxanagxds" }, { status: 201 });
+    }) as unknown as typeof fetch;
+    const home = renderHome();
+    home.type("any%");
+
+    home.submit();
+
+    await waitFor(() => expect(home.opened).toEqual(["duxanagxds"]));
+    expect(bodies[1]).toMatchObject({ goal: "any%", proof: { token: "abc.1.sig" } });
+  });
+});
+
+describe("HomePage busy server, no WebCrypto", () => {
+  // Browsers only offer crypto.subtle on https pages, so a plain http page can't solve the puzzle.
+  test("says it couldn't check the browser instead of hanging", async () => {
+    globalThis.fetch = (async () =>
+      Response.json(
+        { challenge: { token: "abc.1.sig", bits: 4 } },
+        { status: 428 },
+      )) as unknown as typeof fetch;
+    const realSubtle = crypto.subtle;
+    Object.defineProperty(crypto, "subtle", { value: undefined, configurable: true });
+    const home = renderHome();
+    home.type("any%");
+
+    home.submit();
+
+    await waitFor(() => expect(home.getByRole("status").textContent).toBe("Couldn't open a room."));
+    expect((home.getByRole("button", { name: ".startrace" }) as HTMLButtonElement).disabled).toBe(
+      false,
+    );
+    Object.defineProperty(crypto, "subtle", { value: realSubtle, configurable: true });
+  });
+});
+
 describe("HomePage suggestions", () => {
   test("typing a game name lists speedrun.com games", async () => {
     const home = renderHome();

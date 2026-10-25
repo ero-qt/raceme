@@ -87,4 +87,9 @@ describe("loadConfig", () => {
     expect(loadConfig({}).roomLifetimeMs).toBe(48 * 60 * 60_000);
     expect(loadConfig({ RACEME_ROOM_HOURS: "72" }).roomLifetimeMs).toBe(72 * 60 * 60_000);
   });
+
+  test("reads when a rush of new rooms starts asking for proof of work", () => {
+    expect(loadConfig({}).surgeRoomsPerMinute).toBe(30);
+    expect(loadConfig({ RACEME_SURGE_ROOMS_PER_MINUTE: "60" }).surgeRoomsPerMinute).toBe(60);
+  });
 });

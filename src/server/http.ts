@@ -87,3 +87,15 @@ export function rateLimitKey(ip: string): string {
   const prefix = groups.slice(0, 4).map((group) => Number.parseInt(group || "0", 16).toString(16));
   return `${prefix.join(":")}::/64`;
 }
+
+/**
+ * Groups a rate limit key into its network, an IPv4 /24 or an IPv6 /48, the blocks one provider
+ * usually hands to a single customer.
+ */
+export function networkKey(key: string): string {
+  if (key.endsWith("::/64")) {
+    return `${key.split(":").slice(0, 3).join(":")}::/48`;
+  }
+
+  return `${key.split(".").slice(0, 3).join(".")}.0/24`;
+}

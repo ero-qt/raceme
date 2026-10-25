@@ -6,6 +6,7 @@ import { type SocketData, roomSocketHandlers } from "./room-socket.ts";
 import { RoomRegistry, idleGraceMs } from "./rooms.ts";
 import { createRouter } from "./routes.ts";
 import { SpeedrunCatalog } from "./speedrun.ts";
+import { SurgeGuard } from "./surge.ts";
 
 export interface ServerConfig {
   port: number;
@@ -32,6 +33,10 @@ export interface ServerConfig {
   idleInputMs: number;
   /** Ends every room this long after it opened. */
   roomLifetimeMs: number;
+  /** Asks new rooms for a proof of work once more than this many open within a minute. */
+  surgeRoomsPerMinute: number;
+  /** Sets how hard that proof is, as leading zero bits of a SHA-256. */
+  surgeBits: number;
   countdownMs: number;
   maxSocketsPerIp: number;
   maxSockets: number;
@@ -76,7 +81,12 @@ export function startServer(config: ServerConfig, clock = steadyClock): RunningS
   const hub = new RoomHub<SocketData>((slug, message) => server.publish(slug, message), clock);
   const catalog =
     config.speedrunApi === null ? null : new SpeedrunCatalog({ apiUrl: config.speedrunApi, clock });
-  const route = createRouter({ config, rooms, limits, catalog, clock });
+  const surge = new SurgeGuard({
+    roomsPerMinute: config.surgeRoomsPerMinute,
+    bits: config.surgeBits,
+    clock,
+  });
+  const route = createRouter({ config, rooms, limits, catalog, surge, clock });
 
   const server = Bun.serve<SocketData>({
     port: config.port,

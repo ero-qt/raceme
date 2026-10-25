@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
+import { solveChallenge } from "../shared/proof-of-work.ts";
 import type { ServerMessage } from "../shared/protocol.ts";
 import { type RunningServer, type ServerConfig, startServer, steadyClock } from "./server.ts";
 
@@ -27,6 +28,8 @@ function start(overrides: Partial<ServerConfig> = {}) {
       idleMs: 60_000,
       idleInputMs: 2 * 60 * 60_000,
       roomLifetimeMs: 48 * 60 * 60_000,
+      surgeRoomsPerMinute: 1000,
+      surgeBits: 8,
       countdownMs: 50,
       maxSocketsPerIp: 10,
       maxSockets: 2000,
@@ -157,6 +160,29 @@ describe("server", () => {
     expect(feed.type === "feed" && feed.entries.map((e) => e.text)).toEqual([
       "Goal Set: sm64 16 star",
     ]);
+  });
+
+  test("asks new rooms for a proof of work once too many open in a minute", async () => {
+    const base = start({ surgeRoomsPerMinute: 2 });
+    for (let i = 0; i < 3; i++) {
+      expect((await createRoom(base)).response.status).toBe(201);
+    }
+
+    const refused = await fetch(`${base}/api/rooms`, {
+      method: "POST",
+      headers: { origin },
+      body: JSON.stringify({ goal: "any%" }),
+    });
+    expect(refused.status).toBe(428);
+
+    const { challenge } = (await refused.json()) as { challenge: { token: string; bits: number } };
+    const nonce = await solveChallenge(challenge.token, challenge.bits);
+    const proven = await fetch(`${base}/api/rooms`, {
+      method: "POST",
+      headers: { origin },
+      body: JSON.stringify({ goal: "any%", proof: { token: challenge.token, nonce } }),
+    });
+    expect(proven.status).toBe(201);
   });
 
   test("refuses a room without a usable goal", async () => {

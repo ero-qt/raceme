@@ -30,6 +30,18 @@ describe("handleAction", () => {
     expect(handleAction(r, guest, { type: "remove", entrantId: "b" }, 0)).toEqual(notHost);
   });
 
+  test("only the host may lock entry", () => {
+    expect(handleAction(room(), guest, { type: "lock" }, 0)).toEqual(notHost);
+    expect(handleAction(room(), host, { type: "lock" }, 0).ok).toBe(true);
+  });
+
+  test("only the host may cap the entrants", () => {
+    const action = { type: "setEntrantCap", cap: 4 } as const;
+
+    expect(handleAction(room(), guest, action, 0)).toEqual(notHost);
+    expect(handleAction(room(), host, action, 0).ok).toBe(true);
+  });
+
   test("only the host may set the room's fraction digits", () => {
     const r = room();
     const action = { type: "setFractionDigits", digits: 2 } as const;

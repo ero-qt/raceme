@@ -17,3 +17,4 @@ it follows [keep a changelog](https://keepachangelog.com) principles and raceme 
 - rooms where nobody has used the mouse, touch or keyboard for 2 hours close after a 10 minute warning, even with tabs still open, except while a race is running
 - a slow mode for chat, where each entrant can send 1 line of up to 512 characters every 3 seconds
 - a mute button for the host next to each entrant, which turns off that entrant's chat until the host unmutes them
+- a lock for the host that closes entry before the start, plus a limit on how many can enter

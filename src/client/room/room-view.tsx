@@ -5,10 +5,10 @@ import type { ClientAction } from "../../shared/protocol.ts";
 import { type RaceState, type Standing, standings } from "../../shared/race/race.ts";
 import type { GoalCatalog } from "../home/goal-picker.tsx";
 import { Button } from "../primitives/button.tsx";
-import { type Status, StatusBadge } from "../primitives/status-badge.tsx";
 import { actionLabel } from "./action-labels.ts";
 import { type ActionType, availableActions } from "./available-actions.ts";
 import { EntrantTable } from "./entrant-table.tsx";
+import { EntrantsHeader } from "./entrants-header.tsx";
 import { FeedLog } from "./feed-log.tsx";
 import { useFractionDigits } from "./fraction-preference.ts";
 import { GoalTitle } from "./goal-title.tsx";
@@ -39,24 +39,12 @@ export interface RoomViewProps {
   closed?: boolean;
 }
 
-const roomStatus: Record<RaceState["phase"], Status> = {
-  open: "open",
-  countdown: "countdown",
-  running: "running",
-  finished: "done",
-  terminated: "forfeit",
-};
-
-const roomStatusLabel: Partial<Record<RaceState["phase"], string>> = {
-  finished: "Complete",
-  terminated: "Terminated",
-};
-
 /** Shows one race room: goal, clock, invite link, entrants and the chat with the race buttons. */
 export function RoomView(props: RoomViewProps): JSX.Element {
   const actions = () => availableActions(props.race, props.me.entrantId, props.me.isHost);
   const beforeStart = () => props.race.phase === "open" || props.race.phase === "countdown";
   const over = () => props.race.phase === "finished" || props.race.phase === "terminated";
+  const entryRefusal = () => (props.race.entryLocked ? "entry is closed" : "race is full");
   const entered = () => props.race.entrants.some((e) => e.id === props.me.entrantId);
   const elapsed = () => {
     const { startsAt, endedAt } = props.race;
@@ -167,7 +155,7 @@ export function RoomView(props: RoomViewProps): JSX.Element {
             </span>
           </p>
         </div>
-        <hr class={styles.closedRule} />
+        <hr class={styles.rule} />
       </Show>
       <GoalTitle
         goal={props.race.goal}
@@ -198,14 +186,17 @@ export function RoomView(props: RoomViewProps): JSX.Element {
             when={entered()}
             fallback={
               <Show
-                when={actions().includes("join")}
+                when={beforeStart()}
                 fallback={
                   <div class={styles.row}>
                     <Index each={mainActions()}>{actionButton}</Index>
                   </div>
                 }
               >
-                <JoinForm onSubmit={(name) => props.send({ type: "join", name })} />
+                <JoinForm
+                  onSubmit={(name) => props.send({ type: "join", name })}
+                  closedBecause={actions().includes("join") ? null : entryRefusal()}
+                />
               </Show>
             }
           >
@@ -222,28 +213,22 @@ export function RoomView(props: RoomViewProps): JSX.Element {
           </Show>
         </section>
       </Show>
+      <Show when={!props.closed}>
+        <hr class={styles.rule} />
+      </Show>
       <section class={styles.entrants}>
-        <div class={styles.entrantsHeader}>
-          <h2 class={styles.entrantsTitle}>Entrants</h2>
-          <StatusBadge
-            status={roomStatus[props.race.phase]}
-            {...(roomStatusLabel[props.race.phase]
-              ? { label: roomStatusLabel[props.race.phase] }
-              : {})}
-          />
-        </div>
-        <Show
-          when={props.race.entrants.length > 0}
-          fallback={<p class={styles.empty}>Nobody has entered yet.</p>}
-        >
-          <EntrantTable
-            rows={standings(props.race)}
-            started={!beforeStart() && props.race.startsAt !== null}
-            digits={precision.digits()}
-            rowActions={rowActions}
-            muteButton={props.me.isHost && !props.closed ? muteButton : undefined}
-          />
-        </Show>
+        <EntrantsHeader
+          race={props.race}
+          isHost={props.me.isHost && !props.closed}
+          send={props.send}
+        />
+        <EntrantTable
+          rows={standings(props.race)}
+          started={!beforeStart() && props.race.startsAt !== null}
+          digits={precision.digits()}
+          rowActions={rowActions}
+          muteButton={props.me.isHost && !props.closed ? muteButton : undefined}
+        />
         <Show when={(over() || props.closed) && props.race.entrants.length > 0}>
           <ResultsExport race={props.race} />
         </Show>

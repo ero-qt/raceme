@@ -5,10 +5,11 @@ import { exportFileName, resultsCsv, resultsJson } from "./results.ts";
 const race: RaceState = {
   phase: "finished",
   goal: "sm64 16 star",
-  settings: { countdownMs: 10_000, fractionDigits: 2 },
+  settings: { countdownMs: 10_000, fractionDigits: 2, entrantCap: null },
   startsAt: Date.UTC(2026, 9, 24, 18, 0, 0),
   endedAt: Date.UTC(2026, 9, 24, 18, 20, 0),
   muted: [],
+  entryLocked: false,
   entrants: [
     { id: "b", name: "bob", ready: true, result: { kind: "forfeit" } },
     { id: "a", name: "alice", ready: true, result: { kind: "done", timeMs: 1_065_439 } },

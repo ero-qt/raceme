@@ -1,7 +1,10 @@
 import type { ClientAction } from "../../shared/protocol.ts";
-import type { RaceState } from "../../shared/race/race.ts";
+import { type RaceState, maxEntrants } from "../../shared/race/race.ts";
 
-export type ActionType = Exclude<ClientAction["type"], "say" | "setFractionDigits" | "active">;
+export type ActionType = Exclude<
+  ClientAction["type"],
+  "say" | "setFractionDigits" | "setEntrantCap" | "active"
+>;
 
 /** Lists the actions the viewer can take right now, in the order their buttons show. */
 export function availableActions(
@@ -18,7 +21,8 @@ export function availableActions(
     return rematch;
   }
   if (!entrant) {
-    return beforeStart ? ["join"] : rematch;
+    const full = race.entrants.length >= (race.settings.entrantCap ?? maxEntrants);
+    return beforeStart && !race.entryLocked && !full ? ["join"] : beforeStart ? [] : rematch;
   }
   if (beforeStart) {
     return [entrant.ready ? "unready" : "ready", "leave"];

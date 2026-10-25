@@ -282,6 +282,24 @@ describe("ending and rematching", () => {
   });
 });
 
+describe("locking entry", () => {
+  test("a locked room refuses new entrants until unlocked, and a rematch opens it again", () => {
+    const locked = run(twoJoined(), { type: "lock" });
+    expect(refusal(locked, { type: "join", entrantId: "c", name: "carol" })).toBe("entryClosed");
+    expect(locked.entrants).toHaveLength(2);
+
+    const unlocked = run(locked, { type: "unlock" });
+    expect(run(unlocked, { type: "join", entrantId: "c", name: "carol" }).entrants).toHaveLength(3);
+
+    const ended = run(locked, { type: "end" }, 1);
+    expect(run(ended, { type: "rematch" }).entryLocked).toBe(false);
+  });
+
+  test("only locks before the start", () => {
+    expect(refusal(running(), { type: "lock" })).toBe("wrongPhase");
+  });
+});
+
 describe("muting", () => {
   test("mute and unmute an entrant in any phase, and a mute lasts through a rematch", () => {
     const muted = run(running(), { type: "mute", targetId: "b" });
@@ -310,6 +328,23 @@ describe("fraction digits", () => {
 });
 
 describe("entrant cap", () => {
+  test("the host's cap refuses joins past it, keeps who already entered and lasts a rematch", () => {
+    let state = run(twoJoined(), { type: "join", entrantId: "c", name: "carol" });
+    state = run(state, { type: "setEntrantCap", cap: 2 });
+
+    expect(state.entrants).toHaveLength(3);
+    expect(refusal(state, { type: "join", entrantId: "d", name: "dave" })).toBe("raceFull");
+
+    const ended = run(state, { type: "end" }, 1);
+    expect(run(ended, { type: "rematch" }).settings.entrantCap).toBe(2);
+  });
+
+  test("takes a cap from 2 to 50, or none", () => {
+    expect(refusal(twoJoined(), { type: "setEntrantCap", cap: 1 })).toBe("badCap");
+    expect(refusal(twoJoined(), { type: "setEntrantCap", cap: 51 })).toBe("badCap");
+    expect(run(twoJoined(), { type: "setEntrantCap", cap: null }).settings.entrantCap).toBeNull();
+  });
+
   test("refuses joining a full race", () => {
     let state = createRace({ countdownMs });
     for (let i = 0; i < 50; i++) {

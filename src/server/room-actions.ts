@@ -20,7 +20,10 @@ const hostActions = new Set<ClientAction["type"]>([
   "remove",
   "mute",
   "unmute",
+  "lock",
+  "unlock",
   "setFractionDigits",
+  "setEntrantCap",
 ]);
 
 /** Runs a race action as the session's entrant, with the session's rights checked first. */
@@ -53,7 +56,10 @@ function toRaceAction(
     case "setGoal":
     case "end":
     case "rematch":
+    case "lock":
+    case "unlock":
     case "setFractionDigits":
+    case "setEntrantCap":
       return action;
     case "remove":
     case "mute":

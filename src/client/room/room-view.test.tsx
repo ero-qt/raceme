@@ -170,12 +170,14 @@ describe("RoomView layout", () => {
     expect(heading.parentElement?.textContent).toContain("Entry Open");
   });
 
-  test("an empty room says nobody has entered instead of showing an empty table", () => {
+  test("an empty room shows the empty table and 0 in the count", () => {
     const empty = raceAfter([{ type: "setGoal", goal: "any%" }]);
     const view = renderRoom("x", false, empty);
 
-    expect(view.queryByRole("table", { name: "Entrants" })).toBeNull();
-    expect(view.getByText("Nobody has entered yet.")).toBeTruthy();
+    expect(view.getByRole("table", { name: "Entrants" })).toBeTruthy();
+    expect(view.getByRole("heading", { name: "Entrants" }).nextElementSibling?.textContent).toBe(
+      "0/50",
+    );
   });
 
   test("lists entrants with their status", () => {
@@ -238,6 +240,42 @@ describe("RoomView layout", () => {
     expect(rowOf(view, "alice").textContent).toContain("Ready");
     expect(rowOf(view, "bob").textContent).toContain("Not ready");
     expect(view.queryByText("Racing")).toBeNull();
+  });
+
+  test("the host locks entry from the status and caps the entrants in the header", () => {
+    const host = renderRoom("a", true);
+    const limit = host.getByLabelText("Entrant limit") as HTMLInputElement;
+
+    fireEvent.click(host.getByRole("button", { name: "close entry" }));
+    fireEvent.change(limit, { target: { value: "1" } });
+    expect(limit.value).toBe("50");
+    fireEvent.change(limit, { target: { value: "8" } });
+
+    expect(host.sent).toEqual([{ type: "lock" }, { type: "setEntrantCap", cap: 8 }]);
+  });
+
+  test("the lock shows closed and turns off once the race starts", () => {
+    const view = renderRoom("a", true, { ...race, phase: "running", startsAt: 0 });
+
+    expect((view.getByRole("button", { name: "open entry" }) as HTMLButtonElement).disabled).toBe(
+      true,
+    );
+  });
+
+  test("visitors see the count against the cap and that entry is closed", () => {
+    const capped = { ...race, settings: { ...race.settings, entrantCap: 8 } };
+    const heading = renderRoom("v", false, capped).getByRole("heading", { name: "Entrants" });
+    expect(heading.nextElementSibling?.textContent).toBe("2/8");
+    cleanup();
+
+    const locked = renderRoom("v", false, { ...race, entryLocked: true });
+    expect(locked.getByText("Entry Closed")).toBeTruthy();
+    const name = locked.getByLabelText("Your name") as HTMLInputElement;
+    expect(name.disabled).toBe(true);
+    expect(name.placeholder).toBe("entry is closed");
+    expect((locked.getByRole("button", { name: ".enter" }) as HTMLButtonElement).disabled).toBe(
+      true,
+    );
   });
 
   test("entrants come after the chat box", () => {

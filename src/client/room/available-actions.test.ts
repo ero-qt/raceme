@@ -27,6 +27,13 @@ const running = run(
 );
 
 describe("availableActions", () => {
+  test("a visitor can't join a locked or full race", () => {
+    expect(availableActions(run(open, [{ type: "lock" }]), "v", false)).toEqual([]);
+    expect(availableActions(run(open, [{ type: "setEntrantCap", cap: 2 }]), "v", false)).toEqual(
+      [],
+    );
+  });
+
   test("a visitor can only join an open race", () => {
     expect(availableActions(open, "x", false)).toEqual(["join"]);
     expect(availableActions(running, "x", false)).toEqual([]);

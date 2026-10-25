@@ -5,7 +5,11 @@ import { TextField } from "../primitives/text-field.tsx";
 import { actionLabel } from "./action-labels.ts";
 import * as styles from "./room.css.ts";
 
-export function JoinForm(props: { onSubmit: (name: string) => void }): JSX.Element {
+export function JoinForm(props: {
+  onSubmit: (name: string) => void;
+  /** Turns the form off and shows why in the name field, like `entry is closed`. */
+  closedBecause?: string | null;
+}): JSX.Element {
   const [name, setName] = createSignal("");
   return (
     <form
@@ -18,12 +22,15 @@ export function JoinForm(props: { onSubmit: (name: string) => void }): JSX.Eleme
       <TextField
         label="Your name"
         hideLabel
-        placeholder="your name"
+        placeholder={props.closedBecause ?? "your name"}
+        disabled={Boolean(props.closedBecause)}
         maxLength={24}
         autocomplete="nickname"
         onInput={(e) => setName(e.currentTarget.value)}
       />
-      <Button type="submit">{actionLabel.join}</Button>
+      <Button type="submit" disabled={Boolean(props.closedBecause)}>
+        {actionLabel.join}
+      </Button>
     </form>
   );
 }

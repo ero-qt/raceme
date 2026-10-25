@@ -8,10 +8,11 @@ afterEach(cleanup);
 const race: RaceState = {
   phase: "finished",
   goal: "any%",
-  settings: { countdownMs: 10_000, fractionDigits: 0 },
+  settings: { countdownMs: 10_000, fractionDigits: 0, entrantCap: null },
   startsAt: 0,
   endedAt: 60_000,
   muted: [],
+  entryLocked: false,
   entrants: [{ id: "a", name: "alice", ready: true, result: { kind: "done", timeMs: 60_000 } }],
 };
 

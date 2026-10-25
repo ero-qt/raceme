@@ -19,6 +19,7 @@ export const row = style({
 
 export const table = style({
   inlineSize: "100%",
+  tableLayout: "fixed",
   borderCollapse: "collapse",
   background: tokens.color.bg1,
 });
@@ -73,7 +74,7 @@ export const closedReason = style({
   fontWeight: 700,
 });
 
-export const closedRule = style({
+export const rule = style({
   margin: 0,
   border: "none",
   borderBlockStart: `1px solid ${tokens.color.border}`,
@@ -151,9 +152,81 @@ export const entrants = style({
 
 export const entrantsHeader = style({
   display: "flex",
-  alignItems: "baseline",
-  justifyContent: "space-between",
+  alignItems: "center",
   gap: tokens.space.s,
+  minBlockSize: tokens.target.min,
+});
+
+export const entrantCount = style({
+  display: "inline-flex",
+  alignItems: "center",
+  color: tokens.color.text1,
+  fontVariantNumeric: "tabular-nums",
+});
+
+// Fits 2 digits plus the browser's up and down arrows.
+const capWidth = "calc(2ch + 28px)";
+
+// Looks like plain text until hovered or focused, like the race clock's digits.
+export const capField = style({
+  boxSizing: "border-box",
+  inlineSize: capWidth,
+  padding: 0,
+  paddingInline: "2px",
+  font: "inherit",
+  color: "inherit",
+  background: "transparent",
+  border: "2px solid transparent",
+  borderRadius: tokens.radius.s,
+  selectors: {
+    "&:hover, &:focus-visible": {
+      borderColor: tokens.color.borderStrong,
+      background: tokens.color.bg1,
+      outline: "none",
+    },
+  },
+});
+
+// Reserves 2 digits each, so going from 9 to 10 entrants or a cap of 8 to 50 moves nothing.
+export const countDigits = style({
+  display: "inline-block",
+  minInlineSize: "2ch",
+  textAlign: "end",
+});
+// Matches the cap field's box, so the count keeps its place after the start.
+export const capDigits = style({
+  display: "inline-block",
+  boxSizing: "border-box",
+  inlineSize: capWidth,
+  paddingInline: "2px",
+  border: "2px solid transparent",
+});
+
+export const headerSpacer = style({ flex: "1 1 auto" });
+
+// Fits the longest room status, "Entry Closed", so a shorter one doesn't move the lock.
+export const headerStatus = style({ minInlineSize: "13ch", textAlign: "end" });
+
+export const headerButton = style({
+  display: "inline-grid",
+  placeItems: "center",
+  inlineSize: tokens.target.min,
+  blockSize: tokens.target.min,
+  padding: 0,
+  color: tokens.color.text1,
+  background: "transparent",
+  border: "none",
+  borderRadius: tokens.radius.s,
+  selectors: {
+    "button&": { cursor: "pointer" },
+    "button&:hover:not(:disabled)": { background: tokens.color.bgHover, color: tokens.color.text0 },
+    "button&:disabled": { cursor: "not-allowed", opacity: 0.5 },
+  },
+});
+
+export const headerIcon = style({
+  inlineSize: "1.25em",
+  blockSize: "1.25em",
 });
 
 export const entrantsTitle = style({
@@ -161,7 +234,14 @@ export const entrantsTitle = style({
   fontSize: "1rem",
 });
 
-export const muteCell = style([cell, { inlineSize: "1%", paddingInlineEnd: 0 }]);
+export const placeColumn = style({ inlineSize: "3.5ch" });
+export const muteColumn = style({ inlineSize: tokens.target.min });
+export const statusColumn = style({ inlineSize: "12ch" });
+export const timeColumn = style({ inlineSize: "13ch" });
+export const actionColumn = style({ inlineSize: "10rem" });
+
+export const placeCell = style([cell, { textAlign: "end" }]);
+export const muteCell = style([cell, { paddingInline: 0, textAlign: "center" }]);
 
 export const actionCell = style([cell, { textAlign: "end" }]);
 
@@ -175,6 +255,7 @@ export const download = style({
 export const muteButton = style({
   inlineSize: tokens.target.min,
   paddingInline: 0,
+  borderColor: "transparent",
   selectors: { "&[data-muted=true]": { color: tokens.color.statusForfeit } },
 });
 

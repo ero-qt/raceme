@@ -10,8 +10,11 @@ export type ClientAction =
   | { type: "mute"; entrantId: string }
   | { type: "unmute"; entrantId: string }
   | { type: "setFractionDigits"; digits: FractionDigits }
+  | { type: "setEntrantCap"; cap: number | null }
   | { type: "end" }
   | { type: "rematch" }
+  | { type: "lock" }
+  | { type: "unlock" }
   /** Tells the server someone is still at the screen, so the room doesn't end as idle. */
   | { type: "active" }
   | { type: EntrantActionType };
@@ -57,6 +60,8 @@ const plainActions = new Set([
   "active",
   "end",
   "rematch",
+  "lock",
+  "unlock",
 ]);
 
 /** Reads one client message, keeping only the fields its action type allows. */
@@ -75,7 +80,7 @@ export function parseClientAction(raw: string): ClientAction | null {
     return null;
   }
 
-  const { type, name, goal, text, entrantId, digits } = message as Record<string, unknown>;
+  const { type, name, goal, text, entrantId, digits, cap } = message as Record<string, unknown>;
   if (type === "join") {
     return typeof name === "string" ? { type, name } : null;
   }
@@ -87,6 +92,9 @@ export function parseClientAction(raw: string): ClientAction | null {
   }
   if (type === "setFractionDigits") {
     return digits === 0 || digits === 1 || digits === 2 || digits === 3 ? { type, digits } : null;
+  }
+  if (type === "setEntrantCap") {
+    return cap === null || typeof cap === "number" ? { type, cap } : null;
   }
   if (type === "remove" || type === "mute" || type === "unmute") {
     return typeof entrantId === "string" ? { type, entrantId } : null;

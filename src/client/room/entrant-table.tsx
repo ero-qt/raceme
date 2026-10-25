@@ -15,6 +15,17 @@ export function EntrantTable(props: {
 }): JSX.Element {
   return (
     <table class={styles.table} aria-label="Entrants">
+      {/* Fixed widths keep the columns still when statuses change length. */}
+      <colgroup>
+        <Show when={props.muteButton}>
+          <col class={styles.muteColumn} />
+        </Show>
+        <col class={styles.placeColumn} />
+        <col />
+        <col class={styles.statusColumn} />
+        <col class={styles.timeColumn} />
+        <col class={styles.actionColumn} />
+      </colgroup>
       <thead>
         <tr>
           <Show when={props.muteButton}>
@@ -46,7 +57,7 @@ export function EntrantTable(props: {
               <Show when={props.muteButton}>
                 {(muteButton) => <td class={styles.muteCell}>{muteButton()(row)}</td>}
               </Show>
-              <td class={styles.cell}>{row.place ?? ""}</td>
+              <td class={styles.placeCell}>{row.place ?? ""}</td>
               <td class={styles.cell}>
                 <bdi>{row.name}</bdi>
               </td>

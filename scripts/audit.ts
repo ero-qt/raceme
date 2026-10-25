@@ -42,6 +42,7 @@ const server = startServer({
   sweepIntervalMs: 60_000,
   build: null,
   adminPort: null,
+  alertWebhook: null,
   restartHourUtc: 10,
 });
 

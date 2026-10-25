@@ -26,6 +26,8 @@ interface RouteDeps {
   catalog: SpeedrunCatalog | null;
   surge: SurgeGuard;
   clock: () => number;
+  /** Runs when a room opens, for the spike alerts. */
+  countsChanged?: () => void;
 }
 
 type Router = (request: Request, server: Server<SocketData>) => Promise<Response | undefined>;
@@ -120,6 +122,7 @@ async function createRoom(deps: RouteDeps, request: Request, ip: string): Promis
   }
 
   const created = rooms.create(settings, now);
+  deps.countsChanged?.();
   if (!created.ok) {
     return status(503);
   }

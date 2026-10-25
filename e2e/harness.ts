@@ -61,6 +61,7 @@ export async function startHarness(overrides: Partial<ServerConfig> = {}): Promi
     sweepIntervalMs: 60_000,
     build: null,
     adminPort: null,
+    alertWebhook: null,
     restartHourUtc: 10,
     ...overrides,
   });

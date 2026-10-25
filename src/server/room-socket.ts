@@ -29,6 +29,8 @@ export function roomSocketHandlers(deps: {
   limits: ClientLimits;
   clock: () => number;
   chatEveryMs: number;
+  /** Runs whenever a socket opens or closes, for the spike alerts. */
+  countsChanged?: () => void;
 }): WebSocketHandler<SocketData> {
   const { rooms, hub, limits, clock, chatEveryMs } = deps;
 
@@ -44,6 +46,7 @@ export function roomSocketHandlers(deps: {
     room.connect(clock());
     const watchersBefore = room.watcherCount;
     room.attachSession(socket.data.sessionSecret);
+    deps.countsChanged?.();
 
     send(socket, {
       type: "welcome",
@@ -73,6 +76,7 @@ export function roomSocketHandlers(deps: {
         room.disconnect(clock());
         const watchersBefore = room.watcherCount;
         room.detachSession(socket.data.sessionSecret);
+        deps.countsChanged?.();
         if (room.watcherCount !== watchersBefore) {
           hub.publishState(room);
         }

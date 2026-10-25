@@ -479,7 +479,7 @@ describe("server", () => {
 
       for (const q of [
         slug,
-        `https://ero-qt.eu/apps/raceme/r/${slug}/`,
+        `https://ero-qt.eu/apps/raceme/${slug}/`,
         `join ${slug.toUpperCase()}.`,
       ]) {
         const response = await fetch(`${base}/api/games?${new URLSearchParams({ q })}`);

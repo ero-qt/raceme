@@ -14,7 +14,7 @@ import { RoomPage } from "./room/room-page.tsx";
 
 const Catalog = lazy(() => import("./catalog/catalog.tsx").then((m) => ({ default: m.Catalog })));
 
-const roomPath = /^\/r\/([a-z2-7]{10})$/;
+const roomPath = /^\/([a-z2-7]{10})$/;
 
 function currentPath(): string {
   return location.pathname.slice(import.meta.env.BASE_URL.length - 1);
@@ -33,7 +33,7 @@ export function App(): JSX.Element {
   onCleanup(() => removeEventListener("popstate", onPopState));
 
   const openRoom = (slug: string) => {
-    history.pushState(null, "", `${import.meta.env.BASE_URL}r/${slug}`);
+    history.pushState(null, "", `${import.meta.env.BASE_URL}${slug}`);
     void startTransition(() => setPath(currentPath()));
   };
   const goHome = () => {

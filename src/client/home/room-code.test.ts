@@ -7,14 +7,14 @@ describe("parseRoomCode", () => {
   });
 
   test("accepts a pasted invite link", () => {
-    expect(parseRoomCode("https://ero-qt.eu/apps/raceme/r/duxanagxds")).toBe("duxanagxds");
+    expect(parseRoomCode("https://ero-qt.eu/apps/raceme/duxanagxds")).toBe("duxanagxds");
   });
 
   test("accepts a link copied with a trailing slash, a query or punctuation after it", () => {
     for (const text of [
-      "https://ero-qt.eu/apps/raceme/r/duxanagxds/",
-      "https://ero-qt.eu/apps/raceme/r/duxanagxds?from=chat",
-      "ero-qt.eu/apps/raceme/r/duxanagxds#top",
+      "https://ero-qt.eu/apps/raceme/duxanagxds/",
+      "https://ero-qt.eu/apps/raceme/duxanagxds?from=chat",
+      "ero-qt.eu/apps/raceme/duxanagxds#top",
       "duxanagxds.",
     ]) {
       expect(parseRoomCode(text)).toBe("duxanagxds");
@@ -25,5 +25,11 @@ describe("parseRoomCode", () => {
     expect(parseRoomCode("duxanagxd")).toBeNull();
     expect(parseRoomCode("duxanagxd1")).toBeNull();
     expect(parseRoomCode("")).toBeNull();
+    expect(parseRoomCode("https://ero-qt.eu/apps/raceme/catalog")).toBeNull();
+  });
+
+  test("takes the code from the last part of a link's path", () => {
+    expect(parseRoomCode("https://example.com/tournament/duxanagxds")).toBe("duxanagxds");
+    expect(parseRoomCode("https://example.com/speedraces/duxanagxds/")).toBe("duxanagxds");
   });
 });

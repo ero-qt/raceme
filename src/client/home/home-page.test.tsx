@@ -114,7 +114,7 @@ describe("HomePage", () => {
 
   test("a pasted invite link joins too", async () => {
     const home = renderHome();
-    home.type("https://ero-qt.eu/apps/raceme/r/duxanagxds");
+    home.type("https://ero-qt.eu/apps/raceme/duxanagxds");
     await waitFor(() => expect(home.getByRole("button", { name: "join" })).toBeTruthy());
     home.submit();
 
@@ -130,7 +130,7 @@ describe("HomePage", () => {
     expect(home.field.dataset.kind).toBe("code");
 
     fireEvent.paste(home.field);
-    home.type("https://example.com/r/duxanagxds");
+    home.type("https://example.com/duxanagxds");
     expect(home.field.dataset.kind).toBe("code");
   });
 
@@ -146,7 +146,7 @@ describe("HomePage", () => {
   test("Enter right after pasting a code waits for the check, not opening a lobby", async () => {
     globalThis.fetch = mock(async () => Response.json({ slug: "x" }, { status: 201 })) as never;
     const home = renderHome(["duxanagxds"], { checkDelayMs: 10_000 });
-    home.type("https://ero-qt.eu/apps/raceme/r/duxanagxds");
+    home.type("https://ero-qt.eu/apps/raceme/duxanagxds");
     home.submit();
     await waitFor(() => expect(home.opened).toEqual(["duxanagxds"]));
 
@@ -326,9 +326,9 @@ describe("HomePage suggestions", () => {
     await waitFor(() => expect(home.searched).toEqual(["mario"]));
 
     for (const text of [
-      "https://ero-qt.eu/apps/raceme/r/duxanagxds",
-      "https://ero-qt.eu/apps/raceme/r/duxanagxds/",
-      "https://ero-qt.eu/apps/raceme/r/duxanagxds?from=chat",
+      "https://ero-qt.eu/apps/raceme/duxanagxds",
+      "https://ero-qt.eu/apps/raceme/duxanagxds/",
+      "https://ero-qt.eu/apps/raceme/duxanagxds?from=chat",
       "duxanagxds.",
     ]) {
       home.type(text);

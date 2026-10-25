@@ -49,7 +49,7 @@ const created = await fetch(`${origin}/api/rooms`, {
 });
 const { slug } = (await created.json()) as { slug: string };
 
-const pages = { start: `${origin}/`, room: `${origin}/r/${slug}` };
+const pages = { start: `${origin}/`, room: `${origin}/${slug}` };
 
 const env = {
   ...process.env,

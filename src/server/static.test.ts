@@ -22,7 +22,7 @@ describe("serveStatic", () => {
   });
 
   test("falls back to index.html for client routes", async () => {
-    expect(await (await serveStatic(dir, "/r/abcdefghij")).text()).toBe("index");
+    expect(await (await serveStatic(dir, "/abcdefghij")).text()).toBe("index");
   });
 
   test("never leaves the static folder", async () => {

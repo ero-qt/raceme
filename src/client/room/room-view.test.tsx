@@ -35,7 +35,7 @@ const joinedBoth: RaceAction[] = [
 ];
 const race = raceAfter(joinedBoth);
 
-const inviteUrl = "https://example.test/r/abcdefghij";
+const inviteUrl = "https://example.test/abcdefghij";
 
 const catalog = {
   searchGames: async () => [{ id: "o1y9wo6q", name: "Super Mario 64" }],

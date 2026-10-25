@@ -69,7 +69,7 @@ export function HomePage(props: {
   });
 
   const open = (slug: string) =>
-    props.open ? props.open(slug) : location.assign(`${import.meta.env.BASE_URL}r/${slug}`);
+    props.open ? props.open(slug) : location.assign(`${import.meta.env.BASE_URL}${slug}`);
 
   /** Joins a live room or opens a lobby. Text shaped like a code waits for the room check. */
   async function submit(): Promise<void> {

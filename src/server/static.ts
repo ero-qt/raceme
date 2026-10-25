@@ -2,7 +2,7 @@ import { join, normalize } from "node:path";
 
 /**
  * Serves a built client file from `staticDir`, falling back to `index.html` so the client router
- * can show `/r/<slug>` and `/catalog`.
+ * can show `/<slug>` and `/catalog`.
  */
 export async function serveStatic(staticDir: string, path: string): Promise<Response> {
   const relative = normalize(path);

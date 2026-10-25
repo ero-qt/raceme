@@ -78,8 +78,9 @@ function finishLine(name: string, result: EntrantResult | null, after: RaceState
 
 /** Announces the countdown when an action starts it. */
 function countdownStart(before: RaceState, after: RaceState): string[] {
+  const seconds = after.settings.countdownMs / 1000;
   return before.phase !== "countdown" && after.phase === "countdown"
-    ? [`The race will begin in ${after.settings.countdownMs / 1000} seconds!`]
+    ? [`The race will begin in ${seconds} ${seconds === 1 ? "second" : "seconds"}!`]
     : [];
 }
 

@@ -12,8 +12,12 @@ function step(state: RaceState, action: RaceAction, now = 0) {
   return { lines: announce(state, action, result.state), state: result.state };
 }
 
-function steps(actions: RaceAction[], now = 0): { lines: string[]; state: RaceState } {
-  let state = createRace({ countdownMs: 10_000, fractionDigits: 0 });
+function steps(
+  actions: RaceAction[],
+  now = 0,
+  countdownMs = 10_000,
+): { lines: string[]; state: RaceState } {
+  let state = createRace({ countdownMs, fractionDigits: 0 });
   let lines: string[] = [];
   for (const action of actions) {
     ({ lines, state } = step(state, action, now));
@@ -54,6 +58,10 @@ describe("announce", () => {
       "Veract is ready! 0 remaining.",
       "The race will begin in 10 seconds!",
     ]);
+  });
+
+  test("says 1 second, not 1 seconds, for a 1 second countdown", () => {
+    expect(steps(bothReady, 0, 1_000).lines).toContain("The race will begin in 1 second!");
   });
 
   test("unready and unenter", () => {

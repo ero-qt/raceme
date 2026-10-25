@@ -28,6 +28,7 @@ async function positions(page: Page): Promise<Record<string, number[]>> {
     statusColumn: await box("statusColumn", "th >> text=Status"),
     timeColumn: await box("timeColumn", "th >> text=Time"),
     chat: await box("chat", "[aria-label='Chat']"),
+    clock: await box("clock", "[role='timer']"),
   };
 }
 

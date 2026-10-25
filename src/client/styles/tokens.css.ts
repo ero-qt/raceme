@@ -8,4 +8,6 @@ export const tokens = createThemeContract({
   radius: { s: null },
   // WCAG 2.5.5 AAA target size.
   target: { min: null },
+  // Fade for inactive things, set per theme so faded text keeps 4.5:1 for large text.
+  dim: { opacity: null },
 });

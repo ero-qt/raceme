@@ -12,8 +12,11 @@ export const outlined = style([controlBorder, { borderColor: tokens.color.border
 
 /** Turns any disabled control see-through the same way, buttons and fields alike. */
 export const dimWhenDisabled = style({
-  selectors: { "&:disabled": { cursor: "not-allowed", opacity: 0.5 } },
+  selectors: { "&:disabled": { cursor: "not-allowed", opacity: tokens.dim.opacity } },
 });
+
+/** Fades content that isn't live yet with the same look as a disabled control. */
+export const dimmed = style({ opacity: tokens.dim.opacity });
 
 /** Makes a text field or select that reads as plain text until hovered or focused. */
 export const inlineEdit = style([

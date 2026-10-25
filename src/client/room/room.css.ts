@@ -203,12 +203,19 @@ export const muteColumn = style({
 });
 export const statusColumn = style({ inlineSize: "12ch" });
 export const timeColumn = style({ inlineSize: "13ch" });
-export const actionColumn = style({ inlineSize: "10rem" });
+// Fits the widest row button, `.unenter`, in the monospace button font: 8 characters plus the
+// button's padding and border and the cell's padding.
+export const actionColumn = style({
+  inlineSize: `calc(8ch + 2 * ${tokens.space.l} + 4px + 2 * ${tokens.space.s})`,
+});
 
 export const placeCell = style([cell, { textAlign: "end" }]);
 export const muteCell = style([cell, { paddingInline: tokens.space.s, textAlign: "center" }]);
 
 export const actionCell = style([cell, { textAlign: "end" }]);
+
+// Stretches every row button to the column, so .unenter, .quit and .remove line up.
+globalStyle(`${actionCell} button`, { inlineSize: "100%" });
 
 export const download = style({
   display: "inline-flex",

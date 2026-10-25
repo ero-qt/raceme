@@ -202,6 +202,37 @@ describe("RoomView layout", () => {
     expect(rowOf(view, "alice").contains(view.getByRole("button", { name: ".quit" }))).toBe(true);
   });
 
+  test(".unenter is neutral like send, .remove is red because it acts on someone else", () => {
+    const host = renderRoom("a", true);
+    const send = host.getByRole("button", { name: "send" }).classList[0];
+
+    expect(host.getByRole("button", { name: ".unenter" }).classList[0]).toBe(send);
+    expect(host.getByRole("button", { name: ".remove bob" }).classList[0]).not.toBe(send);
+  });
+
+  test(".unready and .unenter turn red once the countdown runs, since they stop it", () => {
+    const counting = { ...race, phase: "countdown" as const, startsAt: 10_000 };
+    const view = renderRoom(
+      "a",
+      false,
+      raceAfter([...joinedBoth, { type: "ready", entrantId: "a" }]),
+    );
+    const neutral = view.getByRole("button", { name: ".unready" }).classList[0];
+    cleanup();
+
+    const ready = raceAfter([
+      ...joinedBoth,
+      { type: "ready", entrantId: "a" },
+      { type: "ready", entrantId: "b" },
+    ]);
+    const live = renderRoom("a", false, { ...ready, ...counting, entrants: ready.entrants });
+
+    expect(live.getByRole("button", { name: ".unready" }).classList[0]).not.toBe(neutral);
+    expect(live.getByRole("button", { name: ".unenter" }).classList[0]).toBe(
+      live.getByRole("button", { name: ".unready" }).classList[0],
+    );
+  });
+
   test("the host can .remove others but not themselves", () => {
     const host = renderRoom("a", true);
     expect(host.queryByRole("button", { name: ".remove alice" })).toBeNull();
@@ -387,9 +418,16 @@ describe("RoomView precision", () => {
     });
 
     expect(localStorage.getItem("raceme.fractionDigits")).toBeNull();
-    expect(host.getByRole("timer").getAttribute("aria-label")).toBe("00:00:00");
+    expect(host.getByRole("timer").getAttribute("aria-label")).toBe("-00:00:10");
 
     localStorage.clear();
+  });
+
+  test("before GO the clock shows the countdown dimmed, without a minus sign", () => {
+    const timer = renderRoom("a").getByRole("timer");
+
+    expect(timer.textContent).toBe("00:00:10");
+    expect(timer.closest("label")?.dataset.countdown).toBe("true");
   });
 
   test("a guest's pick only changes their own view", () => {
@@ -400,7 +438,7 @@ describe("RoomView precision", () => {
     });
 
     expect(guest.sent).toEqual([]);
-    expect(guest.getByRole("timer").getAttribute("aria-label")).toBe("00:00:00.000");
+    expect(guest.getByRole("timer").getAttribute("aria-label")).toBe("-00:00:10.000");
 
     localStorage.clear();
   });
@@ -416,11 +454,7 @@ describe("RoomView actions", () => {
   });
 
   test(".unready is neutral like send, not green", () => {
-    const state = raceAfter([
-      { type: "setGoal", goal: "any%" },
-      { type: "join", entrantId: "a", name: "alice" },
-      { type: "ready", entrantId: "a" },
-    ]);
+    const state = raceAfter([...joinedBoth, { type: "ready", entrantId: "a" }]);
     const view = renderRoom("a", false, state);
 
     expect(view.getByRole("button", { name: ".unready" }).classList[0]).toBe(

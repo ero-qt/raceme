@@ -18,8 +18,10 @@ import { ResultsExport } from "./results-export.tsx";
 import * as styles from "./room.css.ts";
 import { ChatForm, JoinForm } from "./room-forms.tsx";
 
-const dangerActions = new Set<ActionType>(["forfeit", "leave"]);
-const neutralActions = new Set<ActionType>(["unready", "undone", "unforfeit"]);
+// Shows the actions that take you out of the race in your own row.
+const rowActionTypes = new Set<ActionType>(["forfeit", "leave"]);
+const dangerActions = new Set<ActionType>(["forfeit"]);
+const neutralActions = new Set<ActionType>(["unready", "undone", "unforfeit", "leave"]);
 const accentActions = new Set<ActionType>(["rematch"]);
 
 export interface RoomViewProps {
@@ -47,8 +49,9 @@ export function RoomView(props: RoomViewProps): JSX.Element {
   const entryRefusal = () => (props.race.entryLocked ? "entry is closed" : "race is full");
   const entered = () => props.race.entrants.some((e) => e.id === props.me.entrantId);
   const elapsed = () => {
-    const { startsAt, endedAt } = props.race;
-    return startsAt === null ? 0 : (endedAt ?? props.now) - startsAt;
+    const { startsAt, endedAt, settings } = props.race;
+    // Before the countdown the clock waits at its start, like -00:00:10.
+    return startsAt === null ? -settings.countdownMs : (endedAt ?? props.now) - startsAt;
   };
 
   // A pressed button often makes way for its opposite, like .ready for .unready. Keeping the
@@ -59,12 +62,15 @@ export function RoomView(props: RoomViewProps): JSX.Element {
     props.send(action);
   };
 
-  const sideActions = () => actions().filter((a) => dangerActions.has(a));
-  const mainActions = () => actions().filter((a) => !dangerActions.has(a) && a !== "join");
+  // Leaving or unreadying during the countdown calls the race off, so those turn red then.
+  const stopsCountdown = (action: ActionType) =>
+    props.race.phase === "countdown" && (action === "unready" || action === "leave");
+  const sideActions = () => actions().filter((a) => rowActionTypes.has(a));
+  const mainActions = () => actions().filter((a) => !rowActionTypes.has(a) && a !== "join");
   const actionButton = (action: Accessor<ActionType>) => (
     <Button
       variant={
-        dangerActions.has(action())
+        dangerActions.has(action()) || stopsCountdown(action())
           ? "danger"
           : neutralActions.has(action())
             ? "ghost"
@@ -83,7 +89,7 @@ export function RoomView(props: RoomViewProps): JSX.Element {
     ) : (
       <Show when={props.me.isHost && beforeStart()}>
         <Button
-          variant="ghost"
+          variant="danger"
           aria-label={`${actionLabel.remove} ${row.name}`}
           onClick={() => press({ type: "remove", entrantId: row.id })}
         >

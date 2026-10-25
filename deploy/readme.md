@@ -44,7 +44,7 @@ sudo systemctl restart raceme-preview
    git push origin 1.2.0
    ```
 
-The release workflow refuses a tag that isn't on `main` or has no changelog section. It runs every check and test, builds the tarball, attests it and publishes the release `v1.2.0` with that changelog section as its notes. The server picks it up within 10 minutes.
+The release workflow refuses a tag that isn't on `main` or has no changelog section. It runs every check and test, builds the tarball, attests it and publishes the release `v1.2.0` with the merged pull requests as its notes. The server picks it up within 10 minutes.
 
 To check a release yourself, rebuild it from its tag with the Bun version in `.bun-version` and compare the digests:
 

@@ -15,6 +15,9 @@ Environment=RACEME_TRUST_PROXY=1
 Environment=RACEME_STATIC_DIR=/srv/raceme/current/client
 Environment=RACEME_BUILD_FILE=/srv/raceme/current/build.json
 Environment=RACEME_ADMIN_PORT=8796
+# The webhook stays root-only in /etc/raceme. systemd hands raceme a copy it can read.
+LoadCredential=discord-webhook:/etc/raceme/discord-webhook
+Environment=RACEME_ALERT_WEBHOOK_FILE=%d/discord-webhook
 ExecStart=/usr/local/bin/bun /srv/raceme/current/server.js
 Restart=on-failure
 

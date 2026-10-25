@@ -1,4 +1,5 @@
 import type { Server } from "bun";
+import { SpikeAlerts } from "./alerts.ts";
 import { ClientLimits } from "./client-limits.ts";
 import { json, status, withSecurityHeaders } from "./http.ts";
 import { nextRestartAt } from "./restart.ts";
@@ -51,6 +52,8 @@ export interface ServerConfig {
   maxSockets: number;
   /** Checks for idle and cleared rooms this often. */
   sweepIntervalMs: number;
+  /** Posts to this Discord webhook when rooms or people online climb past a level, `null` for none. */
+  alertWebhook: string | null;
   /** Listens on 127.0.0.1 at this port for the deploy script, `null` to leave it off. */
   adminPort: number | null;
   /** Restarts for a new release at this hour in UTC, unless no room is open before then. */
@@ -118,6 +121,21 @@ export function startServer(config: ServerConfig, clock = steadyClock): RunningS
     closingWarningMs: config.closingWarningMs,
     unusedRoomMs: config.unusedRoomMs,
   });
+  const webhook = config.alertWebhook;
+  const alerts = new SpikeAlerts((content) => {
+    if (webhook) {
+      // Sends without waiting for the answer, so a slow or failing Discord never delays a room.
+      void fetch(webhook, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ content }),
+      }).catch(() => {});
+    }
+  });
+  const countsChanged = () => {
+    alerts.update("rooms", rooms.size);
+    alerts.update("people", rooms.peopleCount);
+  };
   const limits = new ClientLimits(config, clock);
   const hub = new RoomHub<SocketData>((slug, message) => server.publish(slug, message), clock);
   const catalog =
@@ -127,7 +145,7 @@ export function startServer(config: ServerConfig, clock = steadyClock): RunningS
     bits: config.surgeBits,
     clock,
   });
-  const route = createRouter({ config, rooms, limits, catalog, surge, clock });
+  const route = createRouter({ config, rooms, limits, catalog, surge, clock, countsChanged });
 
   const server = Bun.serve<SocketData>({
     port: config.port,
@@ -143,6 +161,7 @@ export function startServer(config: ServerConfig, clock = steadyClock): RunningS
       limits,
       clock,
       chatEveryMs: config.chatEveryMs,
+      countsChanged,
     }),
   });
 
@@ -170,6 +189,7 @@ export function startServer(config: ServerConfig, clock = steadyClock): RunningS
     }
     for (const { slug, reason } of rooms.sweepWithReasons(now)) {
       hub.closeRoom(slug, closeText(reason));
+      countsChanged();
     }
     limits.sweep(now);
   }, config.sweepIntervalMs);

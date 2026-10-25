@@ -133,6 +133,22 @@ describe("loadConfig restart settings", () => {
   });
 });
 
+describe("loadConfig alert webhook", () => {
+  test("reads the webhook from its file and names the setting when the file is missing", () => {
+    const dir = mkdtempSync(join(tmpdir(), "raceme-alert-"));
+    const file = join(dir, "webhook");
+    writeFileSync(file, "https://discord.test/hook\n");
+
+    expect(loadConfig({ RACEME_ALERT_WEBHOOK_FILE: file }).alertWebhook).toBe(
+      "https://discord.test/hook",
+    );
+    expect(loadConfig({}).alertWebhook).toBeNull();
+    expect(() => loadConfig({ RACEME_ALERT_WEBHOOK_FILE: join(dir, "missing") })).toThrow(
+      "RACEME_ALERT_WEBHOOK_FILE",
+    );
+  });
+});
+
 describe("loadConfig build file", () => {
   const dir = mkdtempSync(join(tmpdir(), "raceme-build-"));
   const write = (name: string, body: unknown) => {

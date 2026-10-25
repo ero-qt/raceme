@@ -32,6 +32,9 @@ export function loadConfig(env: Env): ServerConfig {
     maxSocketsPerIp: count("RACEME_MAX_SOCKETS_PER_IP", 10),
     maxSockets: count("RACEME_MAX_SOCKETS", 8192),
     sweepIntervalMs: 60_000,
+    alertWebhook: env.RACEME_ALERT_WEBHOOK_FILE
+      ? readSecret(env.RACEME_ALERT_WEBHOOK_FILE, "RACEME_ALERT_WEBHOOK_FILE")
+      : null,
     adminPort: env.RACEME_ADMIN_PORT ? count("RACEME_ADMIN_PORT", 0) : null,
     restartHourUtc: hourUtc(env.RACEME_RESTART_HOUR_UTC),
     build: env.RACEME_BUILD_FILE ? readBuildFile(env.RACEME_BUILD_FILE) : null,
@@ -74,6 +77,14 @@ function positiveInteger(env: Env, name: string, fallback: number): number {
     throw new Error(`${name} must be a whole number above 0, got '${raw}'.`);
   }
   return value;
+}
+
+function readSecret(path: string, name: string): string {
+  try {
+    return readFileSync(path, "utf8").trim();
+  } catch (error) {
+    throw new Error(`${name} can't be read at '${path}': ${error}`);
+  }
 }
 
 function hourUtc(raw: string | undefined): number {

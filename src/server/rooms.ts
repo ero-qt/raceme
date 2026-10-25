@@ -120,6 +120,11 @@ export class Room {
     return count;
   }
 
+  /** Counts the people with this room open, each session once however many tabs it has. */
+  get sessionCount(): number {
+    return this.#sessionSockets.size;
+  }
+
   attachSession(sessionSecret: string): void {
     this.#sessionSockets.set(sessionSecret, (this.#sessionSockets.get(sessionSecret) ?? 0) + 1);
   }
@@ -221,6 +226,15 @@ export class RoomRegistry {
     for (const room of this.#rooms.values()) {
       room.restartAt = at;
     }
+  }
+
+  /** Counts the people with any room open, a person in 2 rooms twice. */
+  get peopleCount(): number {
+    let people = 0;
+    for (const room of this.#rooms.values()) {
+      people += room.sessionCount;
+    }
+    return people;
   }
 
   rooms(): IterableIterator<Room> {

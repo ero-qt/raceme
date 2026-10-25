@@ -41,6 +41,7 @@ function start(overrides: Partial<ServerConfig> = {}) {
       build: null,
       adminPort: null,
       restartHourUtc: 10,
+      alertWebhook: null,
       ...overrides,
     },
     () => Date.now() + clockOffsetMs,
@@ -444,6 +445,32 @@ describe("server", () => {
         digest: null,
       });
     });
+  });
+
+  test("posts to the alert webhook once 10 people are online", async () => {
+    const posts: unknown[] = [];
+    const webhook = Bun.serve({
+      port: 0,
+      async fetch(request) {
+        posts.push(await request.json());
+        return new Response(null, { status: 204 });
+      },
+    });
+    const base = start({ alertWebhook: `http://127.0.0.1:${webhook.port}/hook` });
+    const { slug } = await createRoom(base);
+
+    const clients = Array.from(
+      { length: 10 },
+      (_, i) =>
+        new Client(socketUrl(base, slug), `raceme_session=${`person-${i}-`.padEnd(32, "x")}`),
+    );
+    await Promise.all(clients.map((client) => client.waitFor((m) => m.type === "state")));
+    for (let i = 0; i < 50 && posts.length === 0; i++) {
+      await Bun.sleep(10);
+    }
+
+    expect(posts).toEqual([{ content: "raceme: 10 people online" }]);
+    webhook.stop(true);
   });
 
   describe("queued restart", () => {

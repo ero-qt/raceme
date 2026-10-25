@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 
 ## [Unreleased]
 
+### Added
+
+- A line in the privacy notice about the owner getting a Discord message with just the number when open rooms or people online pass 10, 25, 50 and so on.
+
 ## [1.0.1] - 2026-10-25
 
 ### Fixed

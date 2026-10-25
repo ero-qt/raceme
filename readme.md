@@ -41,13 +41,13 @@ the race server reads these environment variables. behind a reverse proxy like c
 | `RACEME_TRUST_PROXY`            | off                            | `1` reads the client address from the last `X-Forwarded-For` entry                                         |
 | `RACEME_STATIC_DIR`             | none                           | folder with the built page, usually `dist/client`                                                          |
 | `RACEME_INSECURE_COOKIES`       | off                            | `1` drops the `Secure` cookie flag, only for a plain http preview                                          |
-| `RACEME_MAX_ROOMS`              | `500`                          | live rooms at once                                                                                         |
+| `RACEME_MAX_ROOMS`              | `2048`                         | live rooms at once                                                                                         |
 | `RACEME_IDLE_MINUTES`           | `360`                          | minutes a room lives with nobody connected                                                                 |
 | `RACEME_IDLE_INPUT_MINUTES`     | `120`                          | minutes a room lives without input from anyone, even with tabs open, before a 5 minute warning             |
 | `RACEME_ROOM_HOURS`             | `48`                           | hours a room lives at most, however active it is                                                           |
 | `RACEME_SURGE_ROOMS_PER_MINUTE` | `30`                           | rooms per minute, across all visitors, before new rooms need a proof of work                               |
 | `RACEME_MAX_SOCKETS_PER_IP`     | `10`                           | open sockets per IPv4 address or IPv6 /64                                                                  |
-| `RACEME_MAX_SOCKETS`            | `2000`                         | open sockets in total                                                                                      |
+| `RACEME_MAX_SOCKETS`            | `8192`                         | open sockets in total                                                                                      |
 | `RACEME_SPEEDRUN_API`           | `https://www.speedrun.com/api` | where the game picker looks up games and categories. `off` turns the picker off                            |
 
 ## license

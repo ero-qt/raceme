@@ -92,4 +92,8 @@ describe("loadConfig", () => {
     expect(loadConfig({}).surgeRoomsPerMinute).toBe(30);
     expect(loadConfig({ RACEME_SURGE_ROOMS_PER_MINUTE: "60" }).surgeRoomsPerMinute).toBe(60);
   });
+
+  test("allows 2048 rooms and 8192 sockets unless told otherwise", () => {
+    expect(loadConfig({})).toMatchObject({ maxRooms: 2048, maxSockets: 8192 });
+  });
 });

@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-10-25
+
 ### Fixed
 
 - RaceBot's countdown line uses "1 second" instead of "1 seconds" when a countdown is 1 second long.
@@ -36,5 +38,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - A link card for Discord and other chats that never shows a room's goal or entrants.
 - A `noindex` header and tag on every page, so search engines leave raceme out.
 
-[Unreleased]: https://github.com/ero-qt/raceme/compare/1.0.0...HEAD
+[Unreleased]: https://github.com/ero-qt/raceme/compare/1.0.1...HEAD
+[1.0.1]: https://github.com/ero-qt/raceme/compare/1.0.0...1.0.1
 [1.0.0]: https://github.com/ero-qt/raceme/releases/tag/1.0.0

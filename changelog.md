@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- Bot lines in the room chat show without a name.
+- Chat lines in the room chat show as `name: text`.
+
 ## [1.1.2] - 2026-10-26
 
 ### Changed

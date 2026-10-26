@@ -2,7 +2,7 @@ import { For, type JSX, createEffect, on } from "solid-js";
 import type { FeedEntry } from "../../shared/feed-entry.ts";
 import * as styles from "./feed-log.css.ts";
 
-/** Shows the room's RaceBot lines and chat like an IRC channel. */
+/** Shows the room's chat log, with bot lines in their own color and chat lines as `name: text`. */
 export function FeedLog(props: { entries: FeedEntry[] }): JSX.Element {
   let log: HTMLDivElement | undefined;
   createEffect(
@@ -25,11 +25,14 @@ export function FeedLog(props: { entries: FeedEntry[] }): JSX.Element {
       <For each={props.entries}>
         {(entry) => (
           <p class={styles.line}>
-            <span class={styles.time}>[{wallClock(entry.at)}]</span>{" "}
-            <span class={entry.kind === "bot" ? styles.bot : styles.nick}>
-              &lt;<bdi>{entry.kind === "bot" ? "RaceBot" : entry.name}</bdi>&gt;
-            </span>{" "}
-            <bdi>{entry.text}</bdi>
+            <span class={styles.time}>{wallClock(entry.at)}</span>{" "}
+            {entry.kind === "chat" && (
+              <>
+                <bdi class={styles.nick}>{entry.name}</bdi>
+                {": "}
+              </>
+            )}
+            <bdi class={entry.kind === "bot" ? styles.bot : undefined}>{entry.text}</bdi>
           </p>
         )}
       </For>

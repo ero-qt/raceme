@@ -10,6 +10,7 @@ import {
 } from "solid-js";
 import { HomePage } from "./home/home-page.tsx";
 import { SiteHeader } from "./layout/site-header.tsx";
+import { homePath, pagePath } from "./page-path.ts";
 import { RoomPage } from "./room/room-page.tsx";
 
 const Catalog = lazy(() => import("./catalog/catalog.tsx").then((m) => ({ default: m.Catalog })));
@@ -17,7 +18,7 @@ const Catalog = lazy(() => import("./catalog/catalog.tsx").then((m) => ({ defaul
 const roomPath = /^\/([a-z2-7]{10})$/;
 
 function currentPath(): string {
-  return location.pathname.slice(import.meta.env.BASE_URL.length - 1);
+  return pagePath(location.pathname, import.meta.env.BASE_URL);
 }
 
 /**
@@ -37,7 +38,7 @@ export function App(): JSX.Element {
     void startTransition(() => setPath(currentPath()));
   };
   const goHome = () => {
-    history.pushState(null, "", import.meta.env.BASE_URL);
+    history.pushState(null, "", homePath(import.meta.env.BASE_URL));
     void startTransition(() => setPath(currentPath()));
   };
 

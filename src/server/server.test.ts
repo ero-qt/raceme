@@ -1,4 +1,7 @@
 import { afterEach, describe, expect, test } from "bun:test";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { solveChallenge } from "../shared/proof-of-work.ts";
 import type { ServerMessage } from "../shared/protocol.ts";
 import { type RunningServer, type ServerConfig, startServer, steadyClock } from "./server.ts";
@@ -322,6 +325,17 @@ describe("server", () => {
 
     expect(response.headers.get("content-security-policy")).toContain("default-src 'none'");
     expect(response.headers.get("x-content-type-options")).toBe("nosniff");
+  });
+
+  test("serves the page at the base path without a trailing slash", async () => {
+    const staticDir = mkdtempSync(join(tmpdir(), "raceme-static-"));
+    writeFileSync(join(staticDir, "index.html"), "<title>raceme</title>");
+    const base = start({ staticDir });
+
+    const response = await fetch(base, { redirect: "manual" });
+
+    expect([response.status, await response.text()]).toEqual([200, "<title>raceme</title>"]);
+    rmSync(staticDir, { recursive: true });
   });
 
   test("asks search engines to leave every page out", async () => {

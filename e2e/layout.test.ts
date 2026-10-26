@@ -104,6 +104,60 @@ describe("room layout on phones", () => {
   });
 });
 
+describe("entrants header on phones", () => {
+  test("keeps the lock on the title's line on a 412 and a 390 pixel wide screen", async () => {
+    const { context, page } = await newPage(harness);
+    await openLobbyAndEnter(page, harness.origin, "ero");
+
+    for (const width of [412, 390]) {
+      await page.setViewportSize({ width, height: 800 });
+      // Waits because Chromium applies the phone styles a moment after the resize.
+      const onTitleLine = await page
+        .waitForFunction(
+          () => {
+            const middle = (element: Element | null | undefined) => {
+              const box = element?.getBoundingClientRect();
+              return (box?.top ?? 0) + (box?.height ?? 0) / 2;
+            };
+            const title = document.querySelector("h2");
+            const lock = title?.parentElement?.querySelector("button");
+            return Math.abs(middle(title) - middle(lock)) <= 4;
+          },
+          undefined,
+          { timeout: 2_000 },
+        )
+        .then(() => true)
+        .catch(() => false);
+      expect([width, onTitleLine]).toEqual([width, true]);
+    }
+
+    await context.close();
+  });
+});
+
+describe("entrant table on phones", () => {
+  // A finished entrant's time takes the place of the Done badge, so the name keeps room to read.
+  test("leaves the host at least 100 pixels for names on a 412 and a 360 pixel wide screen", async () => {
+    const { context, page } = await newPage(harness);
+    await openLobbyAndEnter(page, harness.origin, "ero");
+
+    for (const width of [412, 360]) {
+      await page.setViewportSize({ width, height: 800 });
+      await page.getByRole("columnheader", { name: "Time" }).waitFor({ state: "detached" });
+      const sizes = await page.evaluate(() => {
+        const name = [...document.querySelectorAll("th")].find((th) => th.textContent === "Name");
+        return {
+          name: Math.round(name?.getBoundingClientRect().width ?? 0),
+          overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        };
+      });
+      expect([width, sizes.name >= 100, sizes.overflow]).toEqual([width, true, 0]);
+    }
+
+    await context.close();
+  });
+});
+
 describe("home layout", () => {
   test("the start form stays put when the corner notes open", async () => {
     const { context, page } = await newPage(harness);

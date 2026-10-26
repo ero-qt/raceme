@@ -8,6 +8,7 @@ import {
   resultsJson,
   resultsText,
 } from "../../shared/results.ts";
+import { homePath } from "../page-path.ts";
 import { Button } from "../primitives/button.tsx";
 import { numberField } from "../styles/controls.css.ts";
 import { resultsImage } from "./results-image.ts";
@@ -22,7 +23,7 @@ const defaultShown = 10;
  * the viewer's time zone. `-#` makes it small print in Discord.
  */
 function chatHeading(race: RaceState): string {
-  const site = new URL(import.meta.env.BASE_URL, location.origin).href;
+  const site = new URL(homePath(import.meta.env.BASE_URL), location.origin).href;
   const started = new Date(race.startsAt ?? race.endedAt ?? Date.now());
   const time = started.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   return `-# [raceme](${site}) · ${started.toLocaleDateString()} ${time}`;

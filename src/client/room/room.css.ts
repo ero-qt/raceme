@@ -158,13 +158,15 @@ export const entrants = style({
   gap: tokens.space.s,
 });
 
-// Wraps the status and the lock onto a second line when a narrow phone has no room for them.
+// Wraps the status and the lock onto a second line only below 390 pixels, since phones get
+// smaller gaps.
 export const entrantsHeader = style({
   display: "flex",
   flexWrap: "wrap",
   alignItems: "center",
   gap: tokens.space.s,
   minBlockSize: tokens.target.min,
+  "@media": { "(max-width: 40rem)": { gap: tokens.space.xs } },
 });
 
 export const entrantCount = style({
@@ -198,8 +200,13 @@ export const watcherCount = style([entrantCount, { gap: tokens.space.xs }]);
 
 export const headerSpacer = style({ flex: "1 1 auto" });
 
-// Fits the longest room status, "Entry Closed", so a shorter one doesn't move the lock.
-export const headerStatus = style({ minInlineSize: "13ch", textAlign: "end" });
+// Fits the longest room status, "Entry Closed", so a shorter one doesn't move the lock. Phones
+// give that space to the title's line instead.
+export const headerStatus = style({
+  minInlineSize: "13ch",
+  textAlign: "end",
+  "@media": { "(max-width: 40rem)": { minInlineSize: 0 } },
+});
 
 export const headerIcon = style({
   inlineSize: "1.25em",
@@ -228,8 +235,11 @@ export const muteCell = style([cell, { paddingInline: tokens.space.s, textAlign:
 
 export const actionCell = style([cell, { textAlign: "end" }]);
 
+export const stackedActions = style({ marginBlockStart: tokens.space.xs });
+
 // Stretches every row button to the column, so .unenter, .quit and .remove line up.
 globalStyle(`${actionCell} button`, { inlineSize: "100%" });
+globalStyle(`${stackedActions} button`, { inlineSize: "auto" });
 
 export const download = style({
   display: "inline-flex",

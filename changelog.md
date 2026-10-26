@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- The privacy notice mentions the Discord message at 5 open rooms or 5 people online too.
+- The start page's address has no trailing slash, like `ero-qt.eu/apps/raceme`.
+
+### Fixed
+
+- The entrant table fits on phones, with a finished entrant's time in the Status column and the row buttons under the name.
+- The lock next to the entrants heading stays on the heading's line on phones 390 pixels wide or more.
+
 ## [1.1.1] - 2026-10-25
 
 ### Removed

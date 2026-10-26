@@ -45,10 +45,11 @@ export function createRouter(deps: RouteDeps): Router {
 
   return async (request, server) => {
     const url = new URL(request.url);
-    if (!url.pathname.startsWith(`${config.basePath}/`)) {
+    const atBase = url.pathname === config.basePath;
+    if (!atBase && !url.pathname.startsWith(`${config.basePath}/`)) {
       return status(404);
     }
-    const path = url.pathname.slice(config.basePath.length);
+    const path = atBase ? "/" : url.pathname.slice(config.basePath.length);
     const ip = clientIp(config, request, server);
 
     if (path === "/api/rooms") {

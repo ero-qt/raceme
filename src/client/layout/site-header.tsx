@@ -1,5 +1,6 @@
 import { Monitor, Moon, Sun } from "lucide-solid";
 import { type JSX, createSignal } from "solid-js";
+import { homePath } from "../page-path.ts";
 import * as styles from "./site-header.css.ts";
 import { type ThemeChoice, applyTheme, loadTheme } from "./theme-preference.ts";
 
@@ -26,7 +27,7 @@ export function SiteHeader(props: { onHome: () => void }): JSX.Element {
     <header class={styles.header}>
       <a
         class={styles.home}
-        href={import.meta.env.BASE_URL}
+        href={homePath(import.meta.env.BASE_URL)}
         onClick={(event) => {
           event.preventDefault();
           props.onHome();

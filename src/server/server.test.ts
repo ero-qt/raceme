@@ -1,4 +1,7 @@
 import { afterEach, describe, expect, test } from "bun:test";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { solveChallenge } from "../shared/proof-of-work.ts";
 import type { ServerMessage } from "../shared/protocol.ts";
 import { type RunningServer, type ServerConfig, startServer, steadyClock } from "./server.ts";
@@ -324,6 +327,17 @@ describe("server", () => {
     expect(response.headers.get("x-content-type-options")).toBe("nosniff");
   });
 
+  test("serves the page at the base path without a trailing slash", async () => {
+    const staticDir = mkdtempSync(join(tmpdir(), "raceme-static-"));
+    writeFileSync(join(staticDir, "index.html"), "<title>raceme</title>");
+    const base = start({ staticDir });
+
+    const response = await fetch(base, { redirect: "manual" });
+
+    expect([response.status, await response.text()]).toEqual([200, "<title>raceme</title>"]);
+    rmSync(staticDir, { recursive: true });
+  });
+
   test("asks search engines to leave every page out", async () => {
     const base = start();
 
@@ -449,7 +463,7 @@ describe("server", () => {
     });
   });
 
-  test("posts to the alert webhook once 10 people are online", async () => {
+  test("posts to the alert webhook once 5 people are online", async () => {
     const posts: unknown[] = [];
     const webhook = Bun.serve({
       port: 0,
@@ -462,7 +476,7 @@ describe("server", () => {
     const { slug } = await createRoom(base);
 
     const clients = Array.from(
-      { length: 10 },
+      { length: 5 },
       (_, i) =>
         new Client(socketUrl(base, slug), `raceme_session=${`person-${i}-`.padEnd(32, "x")}`),
     );
@@ -471,7 +485,7 @@ describe("server", () => {
       await Bun.sleep(10);
     }
 
-    expect(posts).toEqual([{ content: "raceme: 10 people online" }]);
+    expect(posts).toEqual([{ content: "raceme: 5 people online" }]);
     webhook.stop(true);
   });
 

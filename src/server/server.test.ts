@@ -449,7 +449,7 @@ describe("server", () => {
     });
   });
 
-  test("posts to the alert webhook once 10 people are online", async () => {
+  test("posts to the alert webhook once 5 people are online", async () => {
     const posts: unknown[] = [];
     const webhook = Bun.serve({
       port: 0,
@@ -462,7 +462,7 @@ describe("server", () => {
     const { slug } = await createRoom(base);
 
     const clients = Array.from(
-      { length: 10 },
+      { length: 5 },
       (_, i) =>
         new Client(socketUrl(base, slug), `raceme_session=${`person-${i}-`.padEnd(32, "x")}`),
     );
@@ -471,7 +471,7 @@ describe("server", () => {
       await Bun.sleep(10);
     }
 
-    expect(posts).toEqual([{ content: "raceme: 10 people online" }]);
+    expect(posts).toEqual([{ content: "raceme: 5 people online" }]);
     webhook.stop(true);
   });
 

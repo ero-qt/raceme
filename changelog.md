@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- The privacy notice mentions the Discord message at 5 open rooms or 5 people online too.
+
 ## [1.1.1] - 2026-10-25
 
 ### Removed

@@ -1,5 +1,5 @@
 // Posts once at each of these, so a busy evening sends a handful of messages and not hundreds.
-const levels = [10, 25, 50, 100, 250, 500, 1000];
+const levels = [5, 10, 25, 50, 100, 250, 500, 1000];
 
 const labels = { rooms: "rooms open", people: "people online" } as const;
 

@@ -228,8 +228,11 @@ export const muteCell = style([cell, { paddingInline: tokens.space.s, textAlign:
 
 export const actionCell = style([cell, { textAlign: "end" }]);
 
+export const stackedActions = style({ marginBlockStart: tokens.space.xs });
+
 // Stretches every row button to the column, so .unenter, .quit and .remove line up.
 globalStyle(`${actionCell} button`, { inlineSize: "100%" });
+globalStyle(`${stackedActions} button`, { inlineSize: "auto" });
 
 export const download = style({
   display: "inline-flex",

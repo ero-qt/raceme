@@ -104,6 +104,29 @@ describe("room layout on phones", () => {
   });
 });
 
+describe("entrant table on phones", () => {
+  // A finished entrant's time takes the place of the Done badge, so the name keeps room to read.
+  test("leaves the host at least 100 pixels for names on a 412 and a 360 pixel wide screen", async () => {
+    const { context, page } = await newPage(harness);
+    await openLobbyAndEnter(page, harness.origin, "ero");
+
+    for (const width of [412, 360]) {
+      await page.setViewportSize({ width, height: 800 });
+      await page.getByRole("columnheader", { name: "Time" }).waitFor({ state: "detached" });
+      const sizes = await page.evaluate(() => {
+        const name = [...document.querySelectorAll("th")].find((th) => th.textContent === "Name");
+        return {
+          name: Math.round(name?.getBoundingClientRect().width ?? 0),
+          overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        };
+      });
+      expect([width, sizes.name >= 100, sizes.overflow]).toEqual([width, true, 0]);
+    }
+
+    await context.close();
+  });
+});
+
 describe("home layout", () => {
   test("the start form stays put when the corner notes open", async () => {
     const { context, page } = await newPage(harness);

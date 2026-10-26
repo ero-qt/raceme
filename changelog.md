@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 ### Fixed
 
 - The entrant table fits on phones, with a finished entrant's time in the Status column and the row buttons under the name.
+- The lock next to the entrants heading stays on the heading's line on phones 390 pixels wide or more.
 
 ## [1.1.1] - 2026-10-25
 

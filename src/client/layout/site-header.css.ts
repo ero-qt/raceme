@@ -40,26 +40,6 @@ export const home = style({
   },
 });
 
-// Keeps the 44px touch target while the visible icon stays small and frameless.
-export const theme = style({
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  inlineSize: tokens.target.min,
-  blockSize: tokens.target.min,
-  padding: 0,
-  color: tokens.color.text1,
-  background: "transparent",
-  border: "none",
-  borderRadius: tokens.radius.s,
-  cursor: "pointer",
-  selectors: {
-    "&:hover": { color: tokens.color.text0, background: tokens.color.bgHover },
-  },
-});
-
-export const themeIcon = style({ inlineSize: "1.125rem", blockSize: "1.125rem" });
-
 export const status = style({
   display: "flex",
   alignItems: "center",

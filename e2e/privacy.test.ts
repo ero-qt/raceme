@@ -76,11 +76,9 @@ describe("privacy", () => {
   test("only a viewer's own picks land in local storage", async () => {
     const { context, page } = await newPage(harness);
     await openLobbyAndEnter(page, harness.origin, "ero");
-    await page.getByRole("button", { name: "Theme: system" }).click();
 
     expect(await page.evaluate(() => Object.keys(localStorage).sort())).toEqual([
       "raceme.goalHistory",
-      "raceme.theme",
     ]);
 
     await context.close();

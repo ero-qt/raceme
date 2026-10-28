@@ -94,12 +94,11 @@ export async function openLobbyAndEnter(page: Page, origin: string, name: string
 
 export async function newPage(
   harness: Harness,
-  options: { colorScheme?: "dark" | "light"; bypassCSP?: boolean } = {},
+  options: { bypassCSP?: boolean } = {},
 ): Promise<{ context: BrowserContext; page: Page }> {
   const context = await harness.browser.newContext({
     // Wide enough for the desktop layout, where the header sits beside the page column.
     viewport: { width: 1280, height: 900 },
-    colorScheme: options.colorScheme ?? "dark",
     // Turns the page's transitions off, so axe never measures a color halfway through a fade.
     reducedMotion: "reduce",
     bypassCSP: options.bypassCSP ?? false,

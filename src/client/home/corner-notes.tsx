@@ -35,8 +35,8 @@ const notes: Note[] = [
             hours and then drops them.
           </li>
           <li>
-            Your theme, time digits and recent goals stay in your browser's local storage. After a
-            room closes, its results stay in that tab until you close it. None of this reaches the
+            Your time digits and recent goals stay in your browser's local storage. After a room
+            closes, its results stay in that tab until you close it. None of this reaches the
             server.
           </li>
         </ul>

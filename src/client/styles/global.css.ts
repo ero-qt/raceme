@@ -1,12 +1,9 @@
 import { assignVars, globalStyle } from "@vanilla-extract/css";
-import { darkTheme } from "./themes/dark.ts";
-import { lightTheme } from "./themes/light.ts";
+import { palette } from "./palette.ts";
 import { tokens } from "./tokens.css.ts";
 
-// Measured against each theme's text and page colors: 0.5 gives 4.8:1 in dark, light needs 0.62
-// for 4.9:1.
-const darkDim = { opacity: "0.5" };
-const lightDim = { opacity: "0.62" };
+// Measured against the palette's text and page colors: 0.5 keeps faded text at 5.3:1.
+const dim = { opacity: "0.5" };
 
 const scale = {
   space: { xs: "0.25rem", s: "0.5rem", m: "0.75rem", l: "1rem", xl: "1.5rem" },
@@ -19,25 +16,9 @@ const scale = {
 };
 
 globalStyle(":root", {
-  // Lets native controls like select popups and scrollbars follow the dark or light theme.
-  colorScheme: "light dark",
-  vars: assignVars(tokens, { ...scale, color: darkTheme, dim: darkDim }),
-  "@media": {
-    "(prefers-color-scheme: light)": {
-      vars: assignVars(tokens, { ...scale, color: lightTheme, dim: lightDim }),
-    },
-  },
-});
-
-// A theme picked in the header wins over the system setting.
-globalStyle(':root[data-theme="dark"]', {
+  // Keeps native controls like select popups and scrollbars dark too.
   colorScheme: "dark",
-  vars: { ...assignVars(tokens.color, darkTheme), ...assignVars(tokens.dim, darkDim) },
-});
-
-globalStyle(':root[data-theme="light"]', {
-  colorScheme: "light",
-  vars: { ...assignVars(tokens.color, lightTheme), ...assignVars(tokens.dim, lightDim) },
+  vars: assignVars(tokens, { ...scale, color: palette, dim }),
 });
 
 globalStyle("*, *::before, *::after", { boxSizing: "border-box" });

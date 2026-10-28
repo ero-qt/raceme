@@ -1,8 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { contrastRatio } from "../contrast.ts";
-import type { Theme } from "../theme.ts";
-import { darkTheme } from "./dark.ts";
-import { lightTheme } from "./light.ts";
+import { contrastRatio } from "./contrast.ts";
+import { palette as theme } from "./palette.ts";
 
 // WCAG 2.2 AAA: 7:1 for text (1.4.6), 3:1 for UI component boundaries and focus (1.4.11).
 const textMinimum = 7;
@@ -20,10 +18,7 @@ const texts = [
 ] as const;
 const lines = ["borderStrong", "focus"] as const;
 
-describe.each([
-  ["dark", darkTheme],
-  ["light", lightTheme],
-] as [string, Theme][])("%s theme", (_name, theme) => {
+describe("palette", () => {
   for (const surface of surfaces) {
     for (const text of texts) {
       test(`${text} on ${surface} reaches 7:1`, () => {
@@ -58,11 +53,4 @@ describe.each([
   test("dangerFg on danger reaches 7:1", () => {
     expect(contrastRatio(theme.dangerFg, theme.danger)).toBeGreaterThanOrEqual(textMinimum);
   });
-});
-
-// Button fills come with their own text color, so they can look the same in both themes.
-test("button fills and their text are the same in dark and light", () => {
-  for (const key of ["accent", "accentFg", "go", "goFg", "danger", "dangerFg"] as const) {
-    expect(lightTheme[key]).toBe(darkTheme[key]);
-  }
 });

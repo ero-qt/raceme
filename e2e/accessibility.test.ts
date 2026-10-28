@@ -49,10 +49,10 @@ interface AxeResults {
   incomplete: { id: string; nodes: { target: string[] }[] }[];
 }
 
-describe.each(["dark", "light"] as const)("axe-core WCAG 2.2 AAA, %s theme", (colorScheme) => {
+describe("axe-core WCAG 2.2 AAA", () => {
   // Bypasses the CSP only here because axe gets injected as an inline script, which the CSP blocks.
   test("start page", async () => {
-    const { context, page } = await newPage(harness, { colorScheme, bypassCSP: true });
+    const { context, page } = await newPage(harness, { bypassCSP: true });
     await page.goto(`${harness.origin}/`);
     // axe can't rate the contrast of an empty field, so it gets a goal typed in first.
     await page.getByLabel("Goal or room code").fill("sm64 16 star");
@@ -63,7 +63,7 @@ describe.each(["dark", "light"] as const)("axe-core WCAG 2.2 AAA, %s theme", (co
   });
 
   test("start page with each corner note open", async () => {
-    const { context, page } = await newPage(harness, { colorScheme, bypassCSP: true });
+    const { context, page } = await newPage(harness, { bypassCSP: true });
     await page.goto(`${harness.origin}/`);
     await page.getByText("Privacy", { exact: true }).click();
     await page.getByText("The server keeps nothing on disk.").waitFor();
@@ -79,7 +79,7 @@ describe.each(["dark", "light"] as const)("axe-core WCAG 2.2 AAA, %s theme", (co
   });
 
   test("start page with suggestions and a category picked", async () => {
-    const { context, page } = await newPage(harness, { colorScheme, bypassCSP: true });
+    const { context, page } = await newPage(harness, { bypassCSP: true });
     await page.goto(`${harness.origin}/`);
     await page.getByLabel("Goal or room code").fill("mario 64");
     await page.getByRole("option", { name: /^speedrun\.com/ }).click();
@@ -96,7 +96,7 @@ describe.each(["dark", "light"] as const)("axe-core WCAG 2.2 AAA, %s theme", (co
   });
 
   test("room nobody has entered yet", async () => {
-    const { context, page } = await newPage(harness, { colorScheme, bypassCSP: true });
+    const { context, page } = await newPage(harness, { bypassCSP: true });
     await page.goto(`${harness.origin}/`);
     await page.getByLabel("Goal or room code").fill("sm64 16 star");
     await page.getByRole("button", { name: ".startrace" }).click();
@@ -108,7 +108,7 @@ describe.each(["dark", "light"] as const)("axe-core WCAG 2.2 AAA, %s theme", (co
   });
 
   test("room before, during and after a race", async () => {
-    const { context, page } = await newPage(harness, { colorScheme, bypassCSP: true });
+    const { context, page } = await newPage(harness, { bypassCSP: true });
     await openLobbyAndEnter(page, harness.origin, "ero");
 
     expect(await violations(page)).toEqual([]);

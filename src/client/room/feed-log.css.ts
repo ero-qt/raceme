@@ -19,8 +19,15 @@ export const line = style({
   overflowWrap: "anywhere",
 });
 
-export const time = style({ color: tokens.color.text1 });
+export const time = style({
+  color: tokens.color.text1,
+  fontSize: "0.75rem",
+});
 
-export const bot = style({ color: tokens.color.statusCountdown, fontWeight: 700 });
+export const bot = style({ color: tokens.color.statusCountdown });
 
-export const nick = style({ color: tokens.color.statusRunning, fontWeight: 700 });
+export const nick = style({
+  color: tokens.color.statusRunning,
+  fontSize: "0.8125rem",
+  fontWeight: 700,
+});

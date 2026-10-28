@@ -595,12 +595,13 @@ describe("RoomView actions", () => {
     expect(renderRoom("x", false, state).getByText("Complete")).toBeTruthy();
   });
 
-  test("shows RaceBot lines and chat IRC style", () => {
+  test("shows bot lines without a name and chat as name: text", () => {
     const log = renderRoom("x").getByRole("log", { name: "Race chat" });
+    const lines = [...log.querySelectorAll("p")].map((line) => line.textContent ?? "");
 
-    expect(log.textContent).toContain("<RaceBot>");
-    expect(log.textContent).toContain("alice enters the race! 1 entrant.");
-    expect(log.textContent).toContain("<alice>");
+    const botLine = /^\d\d:\d\d:\d\d alice enters the race! 1 entrant\.$/;
+    expect(lines.some((line) => botLine.test(line))).toBe(true);
+    expect(lines.some((line) => line.endsWith(" alice: gl hf"))).toBe(true);
   });
 
   test("an entrant can chat", () => {

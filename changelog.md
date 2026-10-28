@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 ### Changed
 
 - One mid-gray look for everyone, without a theme button or a light theme.
+- A header bar across the top of every page and a footer bar with the privacy, AI and build notes at the bottom.
 
 - Bot lines in the room chat show without a name.
 - Chat lines in the room chat show as `name: text`.

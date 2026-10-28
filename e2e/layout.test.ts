@@ -144,6 +144,9 @@ describe("entrant table on phones", () => {
     for (const width of [412, 360]) {
       await page.setViewportSize({ width, height: 800 });
       await page.getByRole("columnheader", { name: "Time" }).waitFor({ state: "detached" });
+      await page.waitForFunction(
+        () => getComputedStyle(document.querySelector("#app") as Element).minHeight === "800px",
+      );
       const sizes = await page.evaluate(() => {
         const name = [...document.querySelectorAll("th")].find((th) => th.textContent === "Name");
         return {
@@ -152,6 +155,53 @@ describe("entrant table on phones", () => {
         };
       });
       expect([width, sizes.name >= 100, sizes.overflow]).toEqual([width, true, 0]);
+    }
+
+    await context.close();
+  });
+});
+
+describe("page shell", () => {
+  test("the header is a bar across the window above the content, the footer one below it", async () => {
+    const { context, page } = await newPage(harness);
+    await page.goto(`${harness.origin}/`);
+
+    for (const width of [1280, 390]) {
+      await page.setViewportSize({ width, height: 800 });
+      await page.waitForFunction(
+        () => getComputedStyle(document.querySelector("#app") as Element).minHeight === "800px",
+      );
+      const boxes = await page.evaluate(() => {
+        const box = (selector: string) => {
+          const rect = document.querySelector(selector)?.getBoundingClientRect();
+          return rect
+            ? [Math.round(rect.width), Math.round(rect.top), Math.round(rect.bottom)]
+            : [];
+        };
+        return { header: box("header"), main: box("main"), footer: box("footer") };
+      });
+      const [headerWidth, , headerBottom] = boxes.header;
+      const [, mainTop, mainBottom] = boxes.main;
+      const [footerWidth, footerTop, footerBottom] = boxes.footer;
+      expect({
+        width,
+        headerFills: headerWidth === width,
+        headerTall: headerBottom !== undefined && headerBottom >= 44,
+        mainBelowHeader:
+          mainTop !== undefined && headerBottom !== undefined && mainTop >= headerBottom,
+        footerFills: footerWidth === width,
+        footerBelowMain:
+          footerTop !== undefined && mainBottom !== undefined && footerTop >= mainBottom,
+        footerOnScreen: footerBottom !== undefined && footerBottom <= 800,
+      }).toEqual({
+        width,
+        headerFills: true,
+        headerTall: true,
+        mainBelowHeader: true,
+        footerFills: true,
+        footerBelowMain: true,
+        footerOnScreen: true,
+      });
     }
 
     await context.close();

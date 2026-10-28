@@ -7,19 +7,21 @@ export const headerStatusId = "header-status";
 /** Shows the name linking home. */
 export function SiteHeader(props: { onHome: () => void }): JSX.Element {
   return (
-    <header class={styles.header}>
-      <a
-        class={styles.home}
-        href={homePath(import.meta.env.BASE_URL)}
-        onClick={(event) => {
-          event.preventDefault();
-          props.onHome();
-        }}
-      >
-        raceme
-      </a>
-      {/* Pages put their own status next to the name here, like the room timer. */}
-      <span id={headerStatusId} class={styles.status} />
+    <header class={styles.bar}>
+      <div class={styles.inner}>
+        <a
+          class={styles.home}
+          href={homePath(import.meta.env.BASE_URL)}
+          onClick={(event) => {
+            event.preventDefault();
+            props.onHome();
+          }}
+        >
+          raceme
+        </a>
+        {/* Pages put their own status next to the name here, like the room timer. */}
+        <span id={headerStatusId} class={styles.status} />
+      </div>
     </header>
   );
 }

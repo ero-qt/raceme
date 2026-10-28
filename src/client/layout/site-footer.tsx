@@ -1,7 +1,7 @@
 import { For, type JSX, Show, createSignal, onCleanup } from "solid-js";
 import { catalogCacheHours, sessionCookieDays } from "../../shared/retention.ts";
-import { BuildInfoText } from "./build-info.tsx";
-import * as styles from "./corner-notes.css.ts";
+import { BuildInfoText } from "../home/build-info.tsx";
+import * as styles from "./site-footer.css.ts";
 
 interface Note {
   summary: JSX.Element;
@@ -63,8 +63,8 @@ const notes: Note[] = [
   { summary: "Build", body: () => <BuildInfoText />, loadsOnOpen: true },
 ];
 
-/** Shows short notes about raceme folded away in a corner of the start page. */
-export function CornerNotes(): JSX.Element {
+/** Shows short notes about raceme folded away in a bar at the foot of every page. */
+export function SiteFooter(): JSX.Element {
   let corner!: HTMLDivElement;
   const closeAll = () => {
     for (const note of corner.querySelectorAll("details[open]")) {
@@ -89,23 +89,25 @@ export function CornerNotes(): JSX.Element {
   });
 
   return (
-    <div ref={corner} class={styles.corner}>
-      <For each={notes}>
-        {(note) => {
-          const [open, setOpen] = createSignal(false);
-          return (
-            <details name="corner-notes" onToggle={(event) => setOpen(event.currentTarget.open)}>
-              <summary class={styles.summary}>{note.summary}</summary>
-              <Show when={open() || !note.loadsOnOpen}>
-                {/* biome-ignore lint/a11y/noNoninteractiveTabindex: a scrollable region needs focus */}
-                <div class={styles.text} tabIndex={0}>
-                  {note.body()}
-                </div>
-              </Show>
-            </details>
-          );
-        }}
-      </For>
-    </div>
+    <footer class={styles.bar}>
+      <div ref={corner} class={styles.inner}>
+        <For each={notes}>
+          {(note) => {
+            const [open, setOpen] = createSignal(false);
+            return (
+              <details name="site-footer" onToggle={(event) => setOpen(event.currentTarget.open)}>
+                <summary class={styles.summary}>{note.summary}</summary>
+                <Show when={open() || !note.loadsOnOpen}>
+                  {/* biome-ignore lint/a11y/noNoninteractiveTabindex: a scrollable region needs focus */}
+                  <div class={styles.text} tabIndex={0}>
+                    {note.body()}
+                  </div>
+                </Show>
+              </details>
+            );
+          }}
+        </For>
+      </div>
+    </footer>
   );
 }

@@ -1,5 +1,5 @@
 import { type JSX, Show, createResource } from "solid-js";
-import * as styles from "./corner-notes.css.ts";
+import * as styles from "../layout/site-footer.css.ts";
 
 interface Release {
   release: string;

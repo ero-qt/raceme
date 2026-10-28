@@ -11,9 +11,10 @@ export const goal = style({
 });
 
 // Matches the editable goal's height, so the page doesn't move when editing ends at the start.
+// `flex: none` keeps the heading from growing into the page's spare height.
 export const plainGoal = style([
   goal,
-  { display: "flex", alignItems: "center", minBlockSize: `calc(${tokens.target.min})` },
+  { display: "flex", flex: "none", alignItems: "center", minBlockSize: tokens.target.min },
 ]);
 
 // Pulls the input left by its padding and border so the editable goal lines up with plain text.

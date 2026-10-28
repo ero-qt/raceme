@@ -4,7 +4,6 @@ import { solveChallenge } from "../../shared/proof-of-work.ts";
 import { Button } from "../primitives/button.tsx";
 import * as titleStyles from "../room/goal-title.css.ts";
 import * as styles from "../room/room.css.ts";
-import { CornerNotes } from "./corner-notes.tsx";
 import { type CatalogEntry, loadCategoriesFromServer, searchGamesOnServer } from "./game-search.ts";
 import { rememberGoal } from "./goal-history.ts";
 import { GoalPicker, useGamePicker } from "./goal-picker.tsx";
@@ -169,7 +168,6 @@ export function HomePage(props: {
           </p>
         )}
       </Show>
-      <CornerNotes />
     </main>
   );
 }

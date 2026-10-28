@@ -32,6 +32,13 @@ globalStyle("body", {
   lineHeight: 1.5,
 });
 
+// Lets the footer push itself to the foot of the window on short pages.
+globalStyle("#app", { display: "flex", flexDirection: "column", minBlockSize: "100dvh" });
+
+// Keeps a page at the window's width, because a flex item with auto side margins would take its
+// content's width instead, and lets it fill the page down to the footer.
+globalStyle("#app > main", { flex: "1 0 auto", inlineSize: "100%" });
+
 globalStyle("a", { color: tokens.color.link });
 
 globalStyle(":focus-visible", {

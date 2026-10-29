@@ -2,8 +2,9 @@ import { assignVars, globalStyle } from "@vanilla-extract/css";
 import { palette } from "./palette.ts";
 import { tokens } from "./tokens.css.ts";
 
-// Measured against the palette's text and page colors: 0.5 keeps faded text at 5.3:1.
-const dim = { opacity: "0.5" };
+// Measured against the palette: 0.58 keeps faded main text at 4.5:1 or better on the page, the
+// cards and the table heads.
+const dim = { opacity: "0.58" };
 
 const scale = {
   space: { xs: "0.25rem", s: "0.5rem", m: "0.75rem", l: "1rem", xl: "1.5rem" },

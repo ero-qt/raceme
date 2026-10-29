@@ -183,10 +183,98 @@ describe("RoomView layout", () => {
     expect(renderRoom("a").queryByRole("button", { name: ".end" })).toBeNull();
   });
 
-  test("the room status sits with the entrants heading", () => {
-    const heading = renderRoom("x").getByRole("heading", { name: /entrants/ });
+  test("the room status sits under the clock in the chat column", () => {
+    const view = renderRoom("x");
+    const chat = view.getByRole("region", { name: "chat" });
 
-    expect(heading.parentElement?.textContent).toContain("entry open");
+    expect(chat.contains(view.getByRole("timer"))).toBe(true);
+    expect(chat.textContent).toContain("entry open");
+  });
+
+  test("a notice shows as a red line in the chat log, kept in time order with the feed", () => {
+    const [notice, setNotice] = createSignal<string | null>(null);
+    const view = render(() => (
+      <RoomView
+        race={race}
+        me={{ entrantId: "x", isHost: false }}
+        now={5_000}
+        inviteUrl={inviteUrl}
+        notice={notice()}
+        feed={[{ id: 1, at: 0, kind: "bot", text: "alice enters the race! 1 entrant." }]}
+        send={() => {}}
+      />
+    ));
+    const log = view.getByRole("log", { name: "race chat" });
+    expect(log.querySelectorAll("p").length).toBe(1);
+
+    setNotice("only the host can do that.");
+
+    const lines = [...log.querySelectorAll("p")];
+    expect(lines.length).toBe(2);
+    expect(lines[1]?.textContent).toContain("only the host can do that.");
+    expect(lines[1]?.querySelector("bdi")?.className).not.toBe(
+      lines[0]?.querySelector("bdi")?.className,
+    );
+    expect(view.container.querySelector('main > p[role="status"]')).toBeNull();
+  });
+
+  test("a closed room goes back to the race card and loses the tab bar", () => {
+    const [closed, setClosed] = createSignal(false);
+    const view = render(() => (
+      <RoomView
+        race={race}
+        me={{ entrantId: "x", isHost: false }}
+        now={0}
+        inviteUrl="https://example.test/r/abc"
+        notice={null}
+        feed={[]}
+        send={() => {}}
+        closed={closed()}
+      />
+    ));
+    expect(view.getByRole("region", { name: "chat" }).dataset.active).toBe("true");
+
+    setClosed(true);
+
+    expect(view.getByRole("region", { name: "race" }).dataset.active).toBe("true");
+    expect(view.queryByRole("navigation", { hidden: true })).toBeNull();
+  });
+
+  test("a phone shows the clock on the race card as well, so each tab has one", () => {
+    const realMatchMedia = globalThis.matchMedia;
+    globalThis.matchMedia = (() => ({
+      matches: true,
+      addEventListener() {},
+      removeEventListener() {},
+    })) as unknown as typeof matchMedia;
+    try {
+      const view = renderRoom("a");
+
+      const timers = view.getAllByRole("timer", { hidden: true });
+      expect(timers.length).toBe(2);
+      expect(view.getByRole("region", { name: "race" }).contains(timers[0] ?? null)).toBe(true);
+      expect(view.getByRole("navigation", { hidden: true }).textContent).not.toMatch(/\d\d:\d\d/);
+    } finally {
+      globalThis.matchMedia = realMatchMedia;
+    }
+  });
+
+  test("a visitor starts on the chat card, where the join form is", () => {
+    const view = renderRoom("x");
+
+    expect(view.getByRole("region", { name: "chat" }).dataset.active).toBe("true");
+  });
+
+  test("the phone tabs mark which card is active, race first for an entrant", () => {
+    const view = renderRoom("a");
+    const race = view.getByRole("region", { name: "race" });
+    const chat = view.getByRole("region", { name: "chat" });
+    expect([race.dataset.active, chat.dataset.active]).toEqual(["true", "false"]);
+
+    // The bar only shows on phones, so the test DOM counts it as hidden.
+    fireEvent.click(view.getByRole("button", { name: "chat", pressed: false, hidden: true }));
+
+    expect([race.dataset.active, chat.dataset.active]).toEqual(["false", "true"]);
   });
 
   test("an empty room shows the empty table and 0 in the count", () => {
@@ -402,12 +490,12 @@ describe("RoomView layout", () => {
     expect(view.getByTitle("3 watching").textContent).toBe("3 watching");
   });
 
-  test("entrants come after the chat box", () => {
+  test("the chat box comes after the entrants, in the chat card", () => {
     const view = renderRoom("a");
     const message = view.getByLabelText("message");
     const table = view.getByRole("table", { name: "entrants" });
 
-    expect(message.compareDocumentPosition(table) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(table.compareDocumentPosition(message) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   test(".ready sits right next to send", () => {
@@ -583,12 +671,12 @@ describe("RoomView actions", () => {
     expect(renderRoom("x").queryByRole("button", { name: "download CSV" })).toBeNull();
 
     const state: RaceState = { ...race, phase: "finished", startsAt: 0, endedAt: 1 };
-    expect(
-      renderRoom("x", false, state).getByRole("button", { name: "download CSV" }),
-    ).toBeTruthy();
+    const over = renderRoom("x", false, state);
+    expect(over.getByRole("button", { name: "download CSV" })).toBeTruthy();
+    expect(over.getByRole("heading", { name: "save results" })).toBeTruthy();
   });
 
-  // SRL called a finished race "complete".
+  // SRL called a finished race "Complete".
   test("a finished race shows Complete", () => {
     const state: RaceState = { ...race, phase: "finished", startsAt: 0, endedAt: 1 };
 

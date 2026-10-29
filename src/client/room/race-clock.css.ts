@@ -15,7 +15,7 @@ export const clock = style([
     marginInlineStart: `calc(-1 * ${inset})`,
     paddingInline: tokens.space.xs,
     fontFamily: tokens.font.mono,
-    fontSize: "2.5rem",
+    fontSize: "2rem",
     fontVariantNumeric: "tabular-nums",
     fontWeight: 700,
     cursor: "pointer",

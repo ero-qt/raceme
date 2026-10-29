@@ -190,7 +190,7 @@ export function HomePage(props: {
   );
 }
 
-/** Writes when a queued restart happens, like `Server restart queued for 10:00 UTC (in 3 h 20 min)`. */
+/** Writes when a queued restart happens, like `server restart queued for 10:00 UTC (in 3 h 20 min)`. */
 function restartText(at: number, now: number): string {
   const minutes = Math.max(0, Math.floor((at - now) / 60_000));
   const time = new Date(at).toISOString().slice(11, 16);

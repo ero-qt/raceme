@@ -7,16 +7,97 @@ import {
   panel,
   warningPanel,
 } from "../styles/controls.css.ts";
+import { container } from "../styles/layout.css.ts";
 import { tokens } from "../styles/tokens.css.ts";
 
-export const page = style({
-  maxInlineSize: "52rem",
-  marginInline: "auto",
-  padding: tokens.space.l,
+const phone = "(max-width: 47.99rem)";
+
+// The race card takes the wide left column and the chat the right one. Phones show one card at a
+// time and keep room for the tab bar at the bottom.
+export const page = style([
+  container,
+  {
+    display: "grid",
+    gridTemplateColumns: "minmax(0, 1fr)",
+    alignItems: "start",
+    gap: tokens.space.l,
+    paddingBlock: tokens.space.l,
+    "@media": {
+      "(min-width: 48rem)": {
+        gridTemplateColumns: "minmax(0, 2fr) minmax(0, 1fr)",
+        selectors: { '&[data-closed="true"]': { gridTemplateColumns: "minmax(0, 1fr)" } },
+      },
+      [phone]: { paddingBlockEnd: `calc(${tokens.target.min} + 2 * ${tokens.space.l})` },
+    },
+  },
+]);
+
+const card = style([
+  panel,
+  {
+    display: "flex",
+    flexDirection: "column",
+    gap: tokens.space.s,
+    padding: tokens.space.l,
+    background: tokens.color.bg1,
+    "@media": { [phone]: { selectors: { '&[data-active="false"]': { display: "none" } } } },
+  },
+]);
+
+export const raceCard = card;
+
+// Stretches to the row, so the chat log gets the height the race card or the window gives it.
+export const chatCard = style([card, { alignSelf: "stretch" }]);
+
+// Keeps the footer's links above the phone tab bar in a room.
+globalStyle(`${page} ~ footer`, {
+  "@media": { [phone]: { paddingBlockEnd: `calc(${tokens.target.min} + 2 * ${tokens.space.s})` } },
+});
+
+export const clockBlock = style({
   display: "flex",
   flexDirection: "column",
-  gap: tokens.space.s,
+  alignItems: "flex-start",
 });
+
+// Fits the longest room status, "entry closed", so a shorter one keeps the same box.
+export const clockStatus = style({ display: "inline-block", minInlineSize: "13ch" });
+
+// A bar across the bottom of a phone's screen with the 2 cards and the running time.
+export const tabBar = style({
+  display: "none",
+  "@media": {
+    [phone]: {
+      position: "fixed",
+      insetInline: 0,
+      insetBlockEnd: 0,
+      zIndex: 1,
+      display: "flex",
+      alignItems: "center",
+      gap: tokens.space.s,
+      paddingInline: tokens.space.l,
+      paddingBlock: tokens.space.s,
+      background: tokens.color.bg1,
+      borderBlockStart: `1px solid ${tokens.color.border}`,
+    },
+  },
+});
+
+export const tabButton = style([
+  controlBorder,
+  {
+    minBlockSize: tokens.target.min,
+    paddingInline: tokens.space.m,
+    font: "inherit",
+    fontWeight: 700,
+    color: tokens.color.text1,
+    background: "transparent",
+    cursor: "pointer",
+    selectors: {
+      '&[aria-pressed="true"]': { color: tokens.color.text0, borderColor: tokens.color.accent },
+    },
+  },
+]);
 
 export const row = style({
   display: "flex",
@@ -106,12 +187,6 @@ export const visuallyHidden = style({
   whiteSpace: "nowrap",
 });
 
-export const chat = style({
-  display: "flex",
-  flexDirection: "column",
-  gap: tokens.space.s,
-});
-
 export const chatRow = style({
   display: "flex",
   alignItems: "flex-end",
@@ -158,8 +233,7 @@ export const entrants = style({
   gap: tokens.space.s,
 });
 
-// Wraps the status and the lock onto a second line only below 390 pixels, since phones get
-// smaller gaps.
+// Wraps the lock onto a second line only below 390 pixels, since phones get smaller gaps.
 export const entrantsHeader = style({
   display: "flex",
   flexWrap: "wrap",
@@ -200,14 +274,6 @@ export const watcherCount = style([entrantCount, { gap: tokens.space.xs }]);
 
 export const headerSpacer = style({ flex: "1 1 auto" });
 
-// Fits the longest room status, "Entry Closed", so a shorter one doesn't move the lock. Phones
-// give that space to the title's line instead.
-export const headerStatus = style({
-  minInlineSize: "13ch",
-  textAlign: "end",
-  "@media": { "(max-width: 40rem)": { minInlineSize: 0 } },
-});
-
 export const headerIcon = style({
   inlineSize: "1.25em",
   blockSize: "1.25em",
@@ -227,7 +293,7 @@ export const timeColumn = style({ inlineSize: "13ch" });
 // Fits the widest row button, `.unenter`, in the monospace button font: 8 characters plus the
 // button's padding and border and the cell's padding.
 export const actionColumn = style({
-  inlineSize: `calc(8ch + 2 * ${tokens.space.l} + 4px + 2 * ${tokens.space.s})`,
+  inlineSize: `calc(8ch + 2 * ${tokens.space.m} + 4px + 2 * ${tokens.space.s})`,
 });
 
 export const placeCell = style([cell, { textAlign: "end" }]);

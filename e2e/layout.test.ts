@@ -27,7 +27,11 @@ async function positions(page: Page): Promise<Record<string, number[]>> {
     title: await box("title", "h2"),
     count: await box("count", "h2 + span"),
     watchers: await box("watchers", "[title$=' watching']"),
-    status: await box("status", "h2 ~ span", /^(entry|starting|in progress|complete|terminated)/),
+    status: await box(
+      "status",
+      "[aria-label='chat'] span",
+      /^(entry|starting|in progress|complete|terminated)/,
+    ),
     nameColumn: await box("nameColumn", "th >> text=Name"),
     statusColumn: await box("statusColumn", "th >> text=Status"),
     timeColumn: await box("timeColumn", "th >> text=Time"),
@@ -86,6 +90,45 @@ describe("room layout", () => {
   }, 30_000);
 });
 
+describe("room columns", () => {
+  test("the race card takes the wide left column and the chat the right, tabs on phones", async () => {
+    const { context, page } = await newPage(harness);
+    await openLobbyAndEnter(page, harness.origin, "ero");
+    const race = page.getByRole("region", { name: "race" });
+    const chat = page.getByRole("region", { name: "chat" });
+
+    const wideRace = await race.boundingBox();
+    const wideChat = await chat.boundingBox();
+    const main = await page.locator("main").boundingBox();
+    expect({
+      sideBySide: (wideChat?.x ?? 0) >= (wideRace?.x ?? 0) + (wideRace?.width ?? 0),
+      raceWider: (wideRace?.width ?? 0) > (wideChat?.width ?? 0),
+      // The chat card runs down to the page's bottom padding, so the log gets the spare height.
+      chatFillsHeight:
+        (wideChat?.y ?? 0) + (wideChat?.height ?? 0) >= (main?.y ?? 0) + (main?.height ?? 0) - 17,
+      noTabs: await page.getByRole("button", { name: "chat", exact: true }).isHidden(),
+    }).toEqual({ sideBySide: true, raceWider: true, chatFillsHeight: true, noTabs: true });
+
+    // The host entered after the room opened, so the chat card with the join form is up first.
+    await page.setViewportSize({ width: 390, height: 800 });
+    await page.getByRole("button", { name: "race", exact: true }).waitFor();
+    expect([await race.isVisible(), await chat.isVisible()]).toEqual([false, true]);
+    await page.getByRole("button", { name: "race", exact: true }).click();
+    expect([await race.isVisible(), await chat.isVisible()]).toEqual([true, false]);
+    // Each card has its own clock on a phone, so the race tab keeps the time in view.
+    expect(await race.getByRole("timer").isVisible()).toBe(true);
+
+    // The footer's links sit above the tab bar, not under it.
+    const privacy = page.getByText("privacy", { exact: true });
+    await privacy.scrollIntoViewIfNeeded();
+    const link = await privacy.boundingBox();
+    const bar = await page.getByRole("navigation", { name: "room cards" }).boundingBox();
+    expect((link?.y ?? 0) + (link?.height ?? 0) <= (bar?.y ?? 0)).toBe(true);
+
+    await context.close();
+  });
+});
+
 describe("room layout on phones", () => {
   test("the entrants header fits a 320 and a 390 pixel wide screen", async () => {
     const { context, page } = await newPage(harness);
@@ -137,12 +180,15 @@ describe("entrants header on phones", () => {
 
 describe("entrant table on phones", () => {
   // A finished entrant's time takes the place of the Done badge, so the name keeps room to read.
-  test("leaves the host at least 100 pixels for names on a 412 and a 360 pixel wide screen", async () => {
+  test("leaves the host at least 100 pixels for names on an 800, 412 and 360 pixel wide screen", async () => {
     const { context, page } = await newPage(harness);
     await openLobbyAndEnter(page, harness.origin, "ero");
 
-    for (const width of [412, 360]) {
+    for (const width of [800, 412, 360]) {
       await page.setViewportSize({ width, height: 800 });
+      if (width < 768) {
+        await page.getByRole("button", { name: "race", exact: true }).click();
+      }
       await page.getByRole("columnheader", { name: "time" }).waitFor({ state: "detached" });
       await page.waitForFunction(
         () => getComputedStyle(document.querySelector("#app") as Element).minHeight === "800px",

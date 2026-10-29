@@ -20,6 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - The site meets WCAG 2.2 AA instead of AAA, which allows richer status colors.
 - Everything on the page is lowercase, apart from names like SRL and RaceBot.
 - The footer notes read as links.
+- The room has 2 columns: the goal, invite link and entrants on the left, the clock, room status and chat on the right. Phones show one at a time, with a bar at the bottom to switch and the running time.
 - Bot lines in the room chat show without a name.
 - Chat lines in the room chat show as `name: text`.
 

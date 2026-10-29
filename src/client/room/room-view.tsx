@@ -1,5 +1,14 @@
 import { TriangleAlert, Volume2, VolumeOff } from "lucide-solid";
-import { type Accessor, Index, type JSX, Show, createEffect, on, onCleanup } from "solid-js";
+import {
+  type Accessor,
+  Index,
+  type JSX,
+  Show,
+  createEffect,
+  createSignal,
+  on,
+  onCleanup,
+} from "solid-js";
 import type { FeedEntry } from "../../shared/feed-entry.ts";
 import type { ClientAction, ClosesFor } from "../../shared/protocol.ts";
 import {
@@ -15,7 +24,7 @@ import { type ActionType, availableActions } from "./available-actions.ts";
 import { chatCommand } from "./chat-command.ts";
 import { EntrantTable } from "./entrant-table.tsx";
 import { EntrantsHeader } from "./entrants-header.tsx";
-import { FeedLog } from "./feed-log.tsx";
+import { FeedLog, type NoticeLine } from "./feed-log.tsx";
 import { useFractionDigits } from "./fraction-preference.ts";
 import { GoalTitle } from "./goal-title.tsx";
 import { InviteLink } from "./invite-link.tsx";
@@ -23,6 +32,7 @@ import { RaceClock } from "./race-clock.tsx";
 import { ResultsExport } from "./results-export.tsx";
 import * as styles from "./room.css.ts";
 import { ChatForm, JoinForm } from "./room-forms.tsx";
+import { RoomStatus } from "./room-status.tsx";
 import { HeaderStatus, RoomTimer } from "./room-timer.tsx";
 
 // Shows the actions that take you out of the race in your own row.
@@ -51,6 +61,16 @@ export interface RoomViewProps {
   closesFor?: ClosesFor;
   /** Shows the room as it was when the server closed it, with nothing left to do in it. */
   closed?: boolean;
+}
+
+/** Tracks whether the screen is a phone's, where the room shows one card at a time. */
+function usePhoneScreen(): () => boolean {
+  const query = globalThis.matchMedia?.("(max-width: 47.99rem)");
+  const [phone, setPhone] = createSignal(query?.matches ?? false);
+  const onChange = (event: MediaQueryListEvent) => setPhone(event.matches);
+  query?.addEventListener("change", onChange);
+  onCleanup(() => query?.removeEventListener("change", onChange));
+  return phone;
 }
 
 /** Shows one race room: goal, clock, invite link, entrants and the chat with the race buttons. */
@@ -139,8 +159,51 @@ export function RoomView(props: RoomViewProps): JSX.Element {
     setRoomDefault: (digits) => props.send({ type: "setFractionDigits", digits }),
   });
 
+  // Every notice becomes a red line in the log that only this browser sees, dated when it came.
+  const [notices, setNotices] = createSignal<NoticeLine[]>([]);
+  createEffect(
+    on(
+      () => props.notice,
+      (text) => {
+        if (text !== null) {
+          setNotices((lines) => [...lines, { at: props.now, kind: "notice", text }]);
+        }
+      },
+    ),
+  );
+  const logLines = () =>
+    [...props.feed, ...notices()].sort((a, b) => a.at - b.at || Number(a.kind === "notice"));
+
   let messageBox: HTMLInputElement | undefined;
+  let race: HTMLElement | undefined;
   let chat: HTMLElement | undefined;
+  const phoneScreen = usePhoneScreen();
+  // The clock line sits on the chat card. A phone shows one card at a time, so the race card
+  // gets its own copy. Only one of the 2 is ever on screen.
+  const clockLine = () => (
+    <div class={styles.clockLine}>
+      <div class={styles.clockBlock}>
+        <RaceClock elapsed={elapsed()} digits={precision.digits()} onPick={precision.pick} />
+        <span class={styles.clockStatus}>
+          <RoomStatus race={props.race} />
+        </span>
+      </div>
+      <Show when={props.me.isHost && !over() && !props.closed}>
+        <Button variant="danger" onClick={() => props.send({ type: "end" })}>
+          {actionLabel.end}
+        </Button>
+      </Show>
+    </div>
+  );
+  // Phones show one card at a time, picked in the bar at the bottom. The join form is on the
+  // chat card, so that's where someone who hasn't entered starts.
+  const [tab, setTab] = createSignal<"race" | "chat">(entered() ? "race" : "chat");
+  // A closed room has its results on the race card, so a phone shows that card.
+  createEffect(() => {
+    if (props.closed) {
+      setTab("race");
+    }
+  });
 
   // Enter on the page goes to the chat box, where commands like `.done` work, so a stray key
   // press never runs an action by itself.
@@ -148,6 +211,7 @@ export function RoomView(props: RoomViewProps): JSX.Element {
     const onPage = document.activeElement === null || document.activeElement === document.body;
     if (event.key === "Enter" && onPage && messageBox && !messageBox.disabled) {
       event.preventDefault();
+      setTab("chat");
       messageBox.focus();
     }
   };
@@ -166,7 +230,9 @@ export function RoomView(props: RoomViewProps): JSX.Element {
       () => {
         const lost = document.activeElement === null || document.activeElement === document.body;
         if (pressed && lost) {
-          chat?.querySelector<HTMLElement>("input, button")?.focus();
+          // On a phone the chat card may be hidden. A hidden control can't take focus.
+          const card = tab() === "race" && phoneScreen() ? race : chat;
+          card?.querySelector<HTMLElement>("input, button")?.focus();
         }
         pressed = false;
       },
@@ -175,55 +241,66 @@ export function RoomView(props: RoomViewProps): JSX.Element {
   );
 
   return (
-    <main class={styles.page}>
-      <Show when={props.closed}>
-        <div class={styles.closedNotice} role="status">
-          <p class={styles.closedReason}>{props.notice}</p>
-          <p class={styles.closedBox}>
-            <TriangleAlert class={styles.closedIcon} aria-hidden="true" />
-            <span>
-              this page is only kept in this tab.
-              <br />
-              save the results now, they're gone once you close it.
-            </span>
-          </p>
-        </div>
-        <hr class={styles.rule} />
-      </Show>
-      <GoalTitle
-        goal={props.race.goal}
-        editable={props.me.isHost && beforeStart() && !props.closed}
-        onSubmit={(goal) => props.send({ type: "setGoal", goal })}
-        catalog={props.catalog}
-      />
-      <Show when={!props.closed && props.closesAt !== undefined}>
-        <HeaderStatus>
-          <RoomTimer
-            closesAt={props.closesAt ?? 0}
-            closesFor={props.closesFor ?? "lifetime"}
-            now={props.now}
-          />
-        </HeaderStatus>
-      </Show>
-      <div class={styles.clockLine}>
-        <RaceClock elapsed={elapsed()} digits={precision.digits()} onPick={precision.pick} />
-        <Show when={props.me.isHost && !over() && !props.closed}>
-          <Button variant="danger" onClick={() => props.send({ type: "end" })}>
-            {actionLabel.end}
-          </Button>
+    <main class={styles.page} data-closed={props.closed === true}>
+      <section class={styles.raceCard} data-active={tab() === "race"} aria-label="race" ref={race}>
+        <Show when={props.closed}>
+          <div class={styles.closedNotice} role="status">
+            <p class={styles.closedReason}>{props.notice}</p>
+            <p class={styles.closedBox}>
+              <TriangleAlert class={styles.closedIcon} aria-hidden="true" />
+              <span>
+                this page is only kept in this tab.
+                <br />
+                save the results now, they're gone once you close it.
+              </span>
+            </p>
+          </div>
+          <hr class={styles.rule} />
         </Show>
-      </div>
-      <Show when={!props.closed}>
-        <InviteLink url={props.inviteUrl} />
-      </Show>
-      <Show when={!props.closed}>
-        <p class={styles.notice} role="status">
-          {props.notice}
-        </p>
-      </Show>
-      <Show when={!props.closed}>
-        <section class={styles.chat} aria-label="chat" ref={chat}>
-          <FeedLog entries={props.feed} />
+        <GoalTitle
+          goal={props.race.goal}
+          editable={props.me.isHost && beforeStart() && !props.closed}
+          onSubmit={(goal) => props.send({ type: "setGoal", goal })}
+          catalog={props.catalog}
+        />
+        <Show when={phoneScreen()}>{clockLine()}</Show>
+        <Show when={!props.closed && props.closesAt !== undefined}>
+          <HeaderStatus>
+            <RoomTimer
+              closesAt={props.closesAt ?? 0}
+              closesFor={props.closesFor ?? "lifetime"}
+              now={props.now}
+            />
+          </HeaderStatus>
+        </Show>
+        <Show when={!props.closed}>
+          <InviteLink url={props.inviteUrl} />
+        </Show>
+        <section class={styles.entrants}>
+          <EntrantsHeader
+            race={props.race}
+            isHost={props.me.isHost && !props.closed}
+            watchers={props.closed ? null : (props.watchers ?? 0)}
+            send={props.send}
+          />
+          <EntrantTable
+            rows={standings(props.race)}
+            started={!beforeStart() && props.race.startsAt !== null}
+            digits={precision.digits()}
+            rowActions={rowActions}
+            muteButton={props.me.isHost && !props.closed ? muteButton : undefined}
+          />
+          <Show when={(over() || props.closed) && props.race.entrants.length > 0}>
+            <hr class={styles.rule} />
+            <h2 class={styles.entrantsTitle}>save results</h2>
+            <ResultsExport race={props.race} />
+          </Show>
+        </section>
+      </section>
+      <section class={styles.chatCard} data-active={tab() === "chat"} aria-label="chat" ref={chat}>
+        {clockLine()}
+        <Show when={!props.closed}>
+          <FeedLog entries={logLines()} />
           <Show
             when={entered()}
             fallback={
@@ -260,30 +337,28 @@ export function RoomView(props: RoomViewProps): JSX.Element {
               <Index each={mainActions()}>{actionButton}</Index>
             </ChatForm>
           </Show>
-        </section>
-      </Show>
-      <Show when={!props.closed}>
-        <hr class={styles.rule} />
-      </Show>
-      <section class={styles.entrants}>
-        <EntrantsHeader
-          race={props.race}
-          isHost={props.me.isHost && !props.closed}
-          watchers={props.closed ? null : (props.watchers ?? 0)}
-          send={props.send}
-        />
-        <EntrantTable
-          rows={standings(props.race)}
-          started={!beforeStart() && props.race.startsAt !== null}
-          digits={precision.digits()}
-          rowActions={rowActions}
-          muteButton={props.me.isHost && !props.closed ? muteButton : undefined}
-        />
-        <Show when={(over() || props.closed) && props.race.entrants.length > 0}>
-          <hr class={styles.rule} />
-          <ResultsExport race={props.race} />
         </Show>
       </section>
+      <Show when={!props.closed}>
+        <nav class={styles.tabBar} aria-label="room cards">
+          <button
+            type="button"
+            class={styles.tabButton}
+            aria-pressed={tab() === "race"}
+            onClick={() => setTab("race")}
+          >
+            race
+          </button>
+          <button
+            type="button"
+            class={styles.tabButton}
+            aria-pressed={tab() === "chat"}
+            onClick={() => setTab("chat")}
+          >
+            chat
+          </button>
+        </nav>
+      </Show>
     </main>
   );
 }

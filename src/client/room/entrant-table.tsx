@@ -120,7 +120,7 @@ function doneTime(row: Standing, digits: FractionDigits): string {
  * entrant's time shows in the Status column and the row buttons sit under the name.
  */
 function wideScreen(): () => boolean {
-  const query = globalThis.matchMedia?.("(min-width: 40rem)");
+  const query = globalThis.matchMedia?.("(min-width: 64rem)");
   const [wide, setWide] = createSignal(query?.matches ?? true);
   const onChange = (event: MediaQueryListEvent) => setWide(event.matches);
   query?.addEventListener("change", onChange);

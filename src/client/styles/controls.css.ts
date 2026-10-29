@@ -44,6 +44,7 @@ export const disclosureSummary = style([
     alignItems: "center",
     minBlockSize: tokens.target.min,
     paddingInline: tokens.space.m,
+    fontSize: "0.875rem",
     cursor: "pointer",
     color: tokens.color.text0,
     background: tokens.color.bg1,
@@ -54,6 +55,7 @@ export const disclosureSummary = style([
 export const panel = style({
   border: `1px solid ${tokens.color.border}`,
   borderRadius: tokens.radius.s,
+  boxShadow: tokens.overlay.shadow,
 });
 
 /** Marks a panel as a warning with a red edge, like the idle card and the closed-room note. */

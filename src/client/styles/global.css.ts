@@ -11,7 +11,7 @@ const scale = {
   // `monospace` to 13px.
   font: { body: "monospace, monospace", mono: "monospace, monospace" },
   radius: { s: "0.2rem" },
-  target: { min: "44px" },
+  target: { min: "32px" },
   overlay: { scrim: "rgb(0 0 0 / 0.45)", shadow: "0 4px 16px rgb(0 0 0 / 0.4)" },
 };
 
@@ -55,7 +55,7 @@ globalStyle("*", {
   },
 });
 
-// Browsers fade placeholders below the 7:1 contrast WCAG AAA asks for.
+// Browsers fade placeholders below the 4.5:1 contrast WCAG AA asks for.
 globalStyle("::placeholder", {
   color: tokens.color.placeholder,
   fontStyle: "italic",

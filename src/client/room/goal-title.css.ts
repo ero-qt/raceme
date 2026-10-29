@@ -7,6 +7,8 @@ export const goal = style({
   minInlineSize: 0,
   margin: 0,
   fontSize: "1.25rem",
+  // Keeps the editable goal's box at the control height, so it matches the plain heading.
+  lineHeight: 1.2,
   overflowWrap: "anywhere",
 });
 

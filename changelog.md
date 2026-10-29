@@ -11,6 +11,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - One mid-gray look for everyone, without a theme button or a light theme.
 - A header bar across the top of every page and a footer bar with the privacy, AI and build notes at the bottom.
 - The start page has a column next to the form that tells what raceme is and how a race goes.
+- Buttons, fields and the footer notes are smaller.
+- Panels like the chat log and the intro have a shadow and a lighter surface.
+- The site meets WCAG 2.2 AA instead of AAA, which allows richer status colors.
 
 - Bot lines in the room chat show without a name.
 - Chat lines in the room chat show as `name: text`.

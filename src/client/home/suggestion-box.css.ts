@@ -39,9 +39,7 @@ const row = style({
   },
 });
 
-// Rows meet the WCAG 2.2 AA target size of 24px, a deliberate step below the 44px AAA one so the
-// list stays compact.
-const rowHeight = "2rem";
+const rowHeight = tokens.target.min;
 
 export const header = style([
   row,

@@ -6,16 +6,8 @@ import { type Harness, newPage, openLobbyAndEnter, startHarness } from "./harnes
 const axeSource = await Bun.file(
   join(import.meta.dir, "..", "node_modules", "axe-core", "axe.min.js"),
 ).text();
-// Every WCAG level up to AAA for 2.0, 2.1 and 2.2, plus axe's best practices.
-const wcagTags = [
-  "wcag2a",
-  "wcag2aa",
-  "wcag2aaa",
-  "wcag21a",
-  "wcag21aa",
-  "wcag22aa",
-  "best-practice",
-];
+// Every WCAG level up to AA for 2.0, 2.1 and 2.2, plus axe's best practices.
+const wcagTags = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa", "best-practice"];
 
 let harness: Harness;
 
@@ -49,7 +41,7 @@ interface AxeResults {
   incomplete: { id: string; nodes: { target: string[] }[] }[];
 }
 
-describe("axe-core WCAG 2.2 AAA", () => {
+describe("axe-core WCAG 2.2 AA", () => {
   // Bypasses the CSP only here because axe gets injected as an inline script, which the CSP blocks.
   test("start page", async () => {
     const { context, page } = await newPage(harness, { bypassCSP: true });

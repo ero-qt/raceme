@@ -208,6 +208,23 @@ describe("page shell", () => {
   });
 });
 
+describe("control size", () => {
+  // WCAG 2.2 AA asks for 24px targets. 32px keeps buttons easy to hit without the AAA bulk.
+  test("buttons and fields are 32 pixels tall", async () => {
+    const { context, page } = await newPage(harness);
+    await page.goto(`${harness.origin}/`);
+
+    const heights = await Promise.all(
+      [page.getByRole("button", { name: ".startrace" }), page.getByLabel("Goal or room code")].map(
+        async (control) => Math.round((await control.boundingBox())?.height ?? 0),
+      ),
+    );
+    expect(heights).toEqual([32, 32]);
+
+    await context.close();
+  });
+});
+
 describe("home layout", () => {
   test("the start form takes the wide left column, the intro the right, stacked on phones", async () => {
     const { context, page } = await newPage(harness);

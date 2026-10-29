@@ -40,10 +40,6 @@ const notes: Note[] = [
             server.
           </li>
         </ul>
-        <p>
-          the server tells its owner on Discord when the number of open rooms or people online
-          passes 5, 10, 25, 50 and so on. that message contains only the number.
-        </p>
         <p>there are no accounts, usage stats, ads or trackers.</p>
       </>
     ),

@@ -1,4 +1,4 @@
-import { keyframes, style } from "@vanilla-extract/css";
+import { globalStyle, keyframes, style } from "@vanilla-extract/css";
 import { outlined, panel } from "../styles/controls.css.ts";
 import { container } from "../styles/layout.css.ts";
 import { tokens } from "../styles/tokens.css.ts";
@@ -22,23 +22,33 @@ export const start = style({
   gap: tokens.space.s,
 });
 
-export const intro = style([
+export const side = style({
+  display: "flex",
+  flexDirection: "column",
+  gap: tokens.space.l,
+});
+
+// The cards space their lines with the gap, so every card ends the same distance below its text.
+export const card = style([
   panel,
   {
+    display: "flex",
+    flexDirection: "column",
+    gap: tokens.space.m,
     padding: tokens.space.l,
     color: tokens.color.text1,
     background: tokens.color.bg1,
   },
 ]);
 
-export const introHeading = style({
-  margin: 0,
+globalStyle(`${card} > p, ${card} > h2`, { margin: 0 });
+
+export const cardHeading = style({
   fontSize: "1rem",
   color: tokens.color.text0,
 });
 
 export const introNote = style({
-  margin: 0,
   color: tokens.color.text0,
 });
 

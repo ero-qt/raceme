@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 
 ## [Unreleased]
 
+### Added
+
+- A server status card on the start page with the open rooms and people online, refreshed every 30 seconds.
+
 ### Changed
 
 - One mid-gray look for everyone, without a theme button or a light theme.
@@ -22,6 +26,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 ### Removed
 
 - The "Made with AI" note on the page. The readme still has it.
+- The line in the privacy note about the Discord message, since the counts it sends are on the start page now.
 
 ## [1.1.2] - 2026-10-26
 

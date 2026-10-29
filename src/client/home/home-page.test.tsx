@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, mock, test } from "bun:test";
 import { cleanup, fireEvent, render, waitFor } from "@solidjs/testing-library";
+import { Suspense } from "solid-js";
 import { HomePage } from "./home-page.tsx";
 
 const realFetch = globalThis.fetch;
@@ -42,7 +43,7 @@ function renderHome(
   const searched: string[] = [];
   const view = render(() => (
     <HomePage
-      loadRestart={async () => null}
+      loadStatus={async () => null}
       open={(slug) => opened.push(slug)}
       roomExists={async (slug) => {
         if (options.checkFails) {
@@ -441,10 +442,56 @@ describe("HomePage intro", () => {
   });
 });
 
+describe("HomePage server status", () => {
+  test("shows how many rooms are open and people are online", async () => {
+    globalThis.fetch = mock(async () =>
+      Response.json({ rooms: 3, people: 7, restartAt: null }),
+    ) as unknown as typeof fetch;
+    const view = render(() => <HomePage />);
+
+    expect((await view.findByText(/^7 online/)).textContent).toBe("7 online3 rooms open");
+    expect(view.getByRole("heading", { name: "server status" })).toBeTruthy();
+  });
+
+  test("keeps the page and focus up while the status polls again", async () => {
+    let polls = 0;
+    const loadStatus = () =>
+      new Promise<{ rooms: number; people: number; restartAt: null }>((resolve) => {
+        polls++;
+        setTimeout(() => resolve({ rooms: polls, people: 0, restartAt: null }), 20);
+      });
+    const view = render(() => (
+      <Suspense fallback={<p>loading</p>}>
+        <HomePage loadStatus={loadStatus} statusEveryMs={30} />
+      </Suspense>
+    ));
+    const field = await view.findByLabelText("goal or room code");
+    field.focus();
+
+    await waitFor(() => expect(polls).toBeGreaterThanOrEqual(3));
+    const card = view.getByRole("heading", { name: "server status" }).parentElement;
+    await waitFor(() => expect(card?.textContent).toMatch(/[3-9]\d* rooms open$/));
+
+    expect(view.getByLabelText("goal or room code")).toBe(field);
+    expect(document.activeElement).toBe(field);
+  });
+
+  test("counts 1 room in the singular", async () => {
+    globalThis.fetch = mock(async () =>
+      Response.json({ rooms: 1, people: 1, restartAt: null }),
+    ) as unknown as typeof fetch;
+    const view = render(() => <HomePage />);
+
+    expect((await view.findByText(/^1 online/)).textContent).toBe("1 online1 room open");
+  });
+});
+
 describe("HomePage restart notice", () => {
   test("tells about a queued server restart on the start page", async () => {
     const restartAt = Date.now() + (3 * 60 + 20) * 60_000 + 30_000;
-    globalThis.fetch = mock(async () => Response.json({ restartAt })) as unknown as typeof fetch;
+    globalThis.fetch = mock(async () =>
+      Response.json({ rooms: 2, people: 5, restartAt }),
+    ) as unknown as typeof fetch;
     const view = render(() => <HomePage />);
 
     const text = new Date(restartAt).toISOString().slice(11, 16);

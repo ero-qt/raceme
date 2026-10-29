@@ -59,8 +59,14 @@ export function createRouter(deps: RouteDeps): Router {
     if (checkSlug) {
       return request.method === "GET" ? checkRoom(deps, checkSlug, ip) : status(405);
     }
-    if (path === "/api/restart") {
-      return request.method === "GET" ? json({ restartAt: deps.rooms.restartAt }) : status(405);
+    if (path === "/api/status") {
+      return request.method === "GET"
+        ? json({
+            rooms: deps.rooms.size,
+            people: deps.rooms.peopleCount,
+            restartAt: deps.rooms.restartAt,
+          })
+        : status(405);
     }
     if (path === "/api/build") {
       return request.method === "GET"

@@ -1,5 +1,5 @@
 import { LoaderCircle, TriangleAlert } from "lucide-solid";
-import { type JSX, Show, createResource, createSignal } from "solid-js";
+import { type JSX, Show, createResource, createSignal, onCleanup } from "solid-js";
 import { solveChallenge } from "../../shared/proof-of-work.ts";
 import { Button } from "../primitives/button.tsx";
 import * as titleStyles from "../room/goal-title.css.ts";
@@ -11,6 +11,10 @@ import { HomeIntro } from "./home-intro.tsx";
 import * as homeStyles from "./home-page.css.ts";
 import { useRoomCheck } from "./room-check.ts";
 import { parseRoomCode } from "./room-code.ts";
+import { type ServerStatus, ServerStatusCard, loadStatusFromServer } from "./server-status.tsx";
+
+// The counts on the start page refresh this often, which is cheap and feels live enough.
+const statusEveryMs = 30_000;
 
 /**
  * Opens a new lobby from a goal or an existing room from a pasted code, in one field. Text shaped
@@ -28,14 +32,21 @@ export function HomePage(props: {
   searchGames?: (query: string) => Promise<CatalogEntry[] | null>;
   loadCategories?: (gameId: string) => Promise<CatalogEntry[]>;
   searchDelayMs?: number;
-  /** Asks the server when a queued restart happens, `null` when none is queued. */
-  loadRestart?: () => Promise<number | null>;
+  /** Asks the server for its open rooms, people online and queued restart. */
+  loadStatus?: () => Promise<ServerStatus | null>;
+  statusEveryMs?: number;
 }): JSX.Element {
   const [value, setValue] = createSignal("");
   const [notice, setNotice] = createSignal<string | null>(props.notice ?? null);
   const [creating, setCreating] = createSignal(false);
   const busy = () => creating() || props.busy === true;
-  const [restartAt] = createResource(props.loadRestart ?? loadRestartFromServer);
+  const [serverStatus, { refetch }] = createResource(props.loadStatus ?? loadStatusFromServer);
+  // `latest` keeps the last answer up during a poll. Reading the resource itself would count as
+  // loading for the page's Suspense and swap the whole page for its fallback on every poll.
+  const status = () => serverStatus.latest ?? null;
+  const restartAt = () => status()?.restartAt ?? null;
+  const statusTimer = setInterval(() => void refetch(), props.statusEveryMs ?? statusEveryMs);
+  onCleanup(() => clearInterval(statusTimer));
   document.title = "raceme";
 
   const roomCheck = useRoomCheck(value, {
@@ -171,17 +182,12 @@ export function HomePage(props: {
           )}
         </Show>
       </section>
-      <HomeIntro />
+      <aside class={homeStyles.side}>
+        <HomeIntro />
+        <ServerStatusCard status={status()} />
+      </aside>
     </main>
   );
-}
-
-async function loadRestartFromServer(): Promise<number | null> {
-  const response = await fetch(`${import.meta.env.BASE_URL}api/restart`).catch(() => null);
-  const body = response?.ok
-    ? ((await response.json().catch(() => ({}))) as { restartAt?: unknown })
-    : {};
-  return typeof body.restartAt === "number" ? body.restartAt : null;
 }
 
 /** Writes when a queued restart happens, like `Server restart queued for 10:00 UTC (in 3 h 20 min)`. */

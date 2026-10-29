@@ -86,7 +86,7 @@ export function HomePage(props: {
 
     const exists = await roomCheck.checkNow(slug);
     if (exists === null) {
-      setNotice("Couldn't check that room code. Try again.");
+      setNotice("couldn't check that room code. try again.");
     } else if (exists) {
       open(slug);
     } else {
@@ -100,7 +100,7 @@ export function HomePage(props: {
 
     // During a rush of new rooms the server asks for a proof of work first.
     if (response?.status === 428) {
-      setNotice("Lots of new rooms right now, checking this browser…");
+      setNotice("lots of new rooms right now, checking this browser…");
       const { challenge } = (await response.json()) as { challenge: Challenge };
       // Browsers only offer crypto.subtle on https pages, so solving can fail on plain http.
       const nonce = await solveChallenge(challenge.token, challenge.bits).catch(() => null);
@@ -136,7 +136,7 @@ export function HomePage(props: {
         >
           <GoalPicker
             picker={picker}
-            label="Goal or room code"
+            label="goal or room code"
             placeholder="set a goal or paste a room code"
             inputClass={`${titleStyles.input} ${homeStyles.field}`}
             kind={code() ? "code" : "goal"}
@@ -155,7 +155,7 @@ export function HomePage(props: {
             }
           >
             <Button type="submit" variant="ghost">
-              Join
+              join
             </Button>
           </Show>
         </form>
@@ -188,7 +188,7 @@ async function loadRestartFromServer(): Promise<number | null> {
 function restartText(at: number, now: number): string {
   const minutes = Math.max(0, Math.floor((at - now) / 60_000));
   const time = new Date(at).toISOString().slice(11, 16);
-  return `Server restart queued for ${time} UTC (in ${Math.floor(minutes / 60)} h ${minutes % 60} min). Rooms close then.`;
+  return `server restart queued for ${time} UTC (in ${Math.floor(minutes / 60)} h ${minutes % 60} min). rooms close then.`;
 }
 
 interface Challenge {
@@ -207,7 +207,7 @@ function requestRoom(goal: string, proof: { token: string; nonce: number } | nul
 /** Explains a failed room creation. Without a status the request never reached the server. */
 function failureText(status: number | null): string {
   if (status === 400) {
-    return "The goal needs 1 to 200 characters.";
+    return "the goal needs 1 to 200 characters.";
   }
-  return status === 429 ? "Too many new rooms. Try again in a minute." : "Couldn't open a room.";
+  return status === 429 ? "too many new rooms. try again in a minute." : "couldn't open a room.";
 }

@@ -88,11 +88,11 @@ const maxRequestBytes = 4096;
 /** Explains why a room closed, sent as the socket's close reason for the closed page. */
 function closeText(reason: CloseReason): string {
   const texts: Record<CloseReason, string> = {
-    ended: "Room closed: the race ended.",
-    expired: "Room closed: time limit reached.",
-    idle: "Room closed: no activity.",
-    empty: "Room closed: everyone left.",
-    restart: "Room closed: the server restarts for an update.",
+    ended: "room closed: the race ended.",
+    expired: "room closed: time limit reached.",
+    idle: "room closed: no activity.",
+    empty: "room closed: everyone left.",
+    restart: "room closed: the server restarts for an update.",
   };
   return texts[reason];
 }

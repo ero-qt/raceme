@@ -92,7 +92,7 @@ describe("RoomView goal", () => {
 
   test("the host edits the goal in place, which selects all on focus", () => {
     const host = renderRoom("a", true);
-    const input = host.getByLabelText("Goal") as HTMLInputElement;
+    const input = host.getByLabelText("goal") as HTMLInputElement;
     expect(host.getByRole("heading", { level: 1 }).textContent).toBe("any%");
     expect(input.value).toBe("any%");
 
@@ -106,7 +106,7 @@ describe("RoomView goal", () => {
 
   test("Tab from the goal reaches .setgoal instead of hiding it", () => {
     const host = renderRoom("a", true);
-    const input = host.getByLabelText("Goal");
+    const input = host.getByLabelText("goal");
     fireEvent.focus(input);
     fireEvent.input(input, { target: { value: "120 star" } });
     const setGoal = host.getByRole("button", { name: ".setgoal" });
@@ -120,14 +120,14 @@ describe("RoomView goal", () => {
   test("the goal can't be edited once the race runs, since the server would refuse it", () => {
     const running = { ...race, phase: "running" as const, startsAt: 0 };
 
-    expect(renderRoom("a", true, running).queryByLabelText("Goal")).toBeNull();
+    expect(renderRoom("a", true, running).queryByLabelText("goal")).toBeNull();
   });
 
   test(".setgoal shows only while the host edits the goal", () => {
     const host = renderRoom("a", true);
     expect(host.queryByRole("button", { name: ".setgoal" })).toBeNull();
 
-    const input = host.getByLabelText("Goal");
+    const input = host.getByLabelText("goal");
     fireEvent.focus(input);
     fireEvent.input(input, { target: { value: "120 star" } });
     fireEvent.click(host.getByRole("button", { name: ".setgoal" }));
@@ -136,7 +136,7 @@ describe("RoomView goal", () => {
 
   test("Escape closes the suggestions, then puts the goal back", () => {
     const host = renderRoom("a", true);
-    const input = host.getByLabelText("Goal") as HTMLInputElement;
+    const input = host.getByLabelText("goal") as HTMLInputElement;
     fireEvent.input(input, { target: { value: "oops" } });
     fireEvent.keyDown(input, { key: "Escape" });
     expect(input.getAttribute("aria-expanded")).toBe("false");
@@ -150,14 +150,14 @@ describe("RoomView goal", () => {
   test("the host picks a speedrun.com game and category for the goal and keeps it in their goals", async () => {
     localStorage.clear();
     const host = renderRoom("a", true);
-    const input = host.getByLabelText("Goal");
+    const input = host.getByLabelText("goal");
     fireEvent.focus(input);
     fireEvent.input(input, { target: { value: "mario" } });
     fireEvent.click(host.getByRole("option", { name: /^speedrun\.com/ }));
 
     fireEvent.click(await waitFor(() => host.getByRole("option", { name: "Super Mario 64" })));
     const category = (await waitFor(() =>
-      host.getByRole("combobox", { name: "Category" }),
+      host.getByRole("combobox", { name: "category" }),
     )) as HTMLSelectElement;
     fireEvent.change(category, { target: { value: "16 Star" } });
     fireEvent.click(host.getByRole("button", { name: ".setgoal" }));
@@ -170,7 +170,7 @@ describe("RoomView goal", () => {
   });
 
   test("guests get plain text", () => {
-    expect(renderRoom("a").queryByLabelText("Goal")).toBeNull();
+    expect(renderRoom("a").queryByLabelText("goal")).toBeNull();
   });
 });
 
@@ -184,26 +184,26 @@ describe("RoomView layout", () => {
   });
 
   test("the room status sits with the entrants heading", () => {
-    const heading = renderRoom("x").getByRole("heading", { name: /Entrants/ });
+    const heading = renderRoom("x").getByRole("heading", { name: /entrants/ });
 
-    expect(heading.parentElement?.textContent).toContain("Entry open");
+    expect(heading.parentElement?.textContent).toContain("entry open");
   });
 
   test("an empty room shows the empty table and 0 in the count", () => {
     const empty = raceAfter([{ type: "setGoal", goal: "any%" }]);
     const view = renderRoom("x", false, empty);
 
-    expect(view.getByRole("table", { name: "Entrants" })).toBeTruthy();
-    expect(view.getByRole("heading", { name: "Entrants" }).nextElementSibling?.textContent).toBe(
+    expect(view.getByRole("table", { name: "entrants" })).toBeTruthy();
+    expect(view.getByRole("heading", { name: "entrants" }).nextElementSibling?.textContent).toBe(
       "0/50",
     );
   });
 
   test("lists entrants with their status", () => {
-    const table = renderRoom("x").getByRole("table", { name: "Entrants" });
+    const table = renderRoom("x").getByRole("table", { name: "entrants" });
 
     expect(table.textContent).toContain("alice");
-    expect(table.textContent).toContain("Not ready");
+    expect(table.textContent).toContain("not ready");
   });
 
   test(".unenter sits in your own row", () => {
@@ -223,7 +223,7 @@ describe("RoomView layout", () => {
 
   test(".unenter is neutral like send, .remove is red because it acts on someone else", () => {
     const host = renderRoom("a", true);
-    const send = host.getByRole("button", { name: "Send" }).classList[0];
+    const send = host.getByRole("button", { name: "send" }).classList[0];
 
     expect(host.getByRole("button", { name: ".unenter" }).classList[0]).toBe(send);
     expect(host.getByRole("button", { name: ".remove bob" }).classList[0]).not.toBe(send);
@@ -263,40 +263,40 @@ describe("RoomView layout", () => {
   test("the host can mute and unmute others in any phase", () => {
     const running = { ...race, phase: "running" as const, startsAt: 0 };
     const host = renderRoom("a", true, running);
-    expect(host.queryByRole("button", { name: "Mute alice" })).toBeNull();
+    expect(host.queryByRole("button", { name: "mute alice" })).toBeNull();
 
-    fireEvent.click(host.getByRole("button", { name: "Mute bob" }));
+    fireEvent.click(host.getByRole("button", { name: "mute bob" }));
     expect(host.sent).toEqual([{ type: "mute", entrantId: "b" }]);
     cleanup();
 
     const muted = renderRoom("a", true, { ...running, muted: ["b"] });
-    fireEvent.click(muted.getByRole("button", { name: "Unmute bob" }));
+    fireEvent.click(muted.getByRole("button", { name: "unmute bob" }));
     expect(muted.sent).toEqual([{ type: "unmute", entrantId: "b" }]);
   });
 
   test("a muted entrant's chat box and send are off", () => {
     const view = renderRoom("b", false, { ...race, muted: ["b"] });
-    const message = view.getByLabelText("Message") as HTMLInputElement;
+    const message = view.getByLabelText("message") as HTMLInputElement;
 
     expect(message.disabled).toBe(true);
     expect(message.placeholder).toBe("you are muted");
-    expect((view.getByRole("button", { name: "Send" }) as HTMLButtonElement).disabled).toBe(true);
+    expect((view.getByRole("button", { name: "send" }) as HTMLButtonElement).disabled).toBe(true);
   });
 
   test("a race ended before it started keeps showing who was ready, not Racing", () => {
     const ended = raceAfter([...joinedBoth, { type: "ready", entrantId: "a" }, { type: "end" }]);
     const view = renderRoom("a", true, ended);
 
-    expect(rowOf(view, "alice").textContent).toContain("Ready");
-    expect(rowOf(view, "bob").textContent).toContain("Not ready");
-    expect(view.queryByText("Racing")).toBeNull();
+    expect(rowOf(view, "alice").textContent).toContain("ready");
+    expect(rowOf(view, "bob").textContent).toContain("not ready");
+    expect(view.queryByText("racing")).toBeNull();
   });
 
   test("the host locks entry from the status and caps the entrants in the header", () => {
     const host = renderRoom("a", true);
-    const limit = host.getByLabelText("Entrant limit") as HTMLInputElement;
+    const limit = host.getByLabelText("entrant limit") as HTMLInputElement;
 
-    fireEvent.click(host.getByRole("button", { name: "Close entry" }));
+    fireEvent.click(host.getByRole("button", { name: "close entry" }));
     fireEvent.change(limit, { target: { value: "1" } });
     expect(limit.value).toBe("50");
     fireEvent.change(limit, { target: { value: "8" } });
@@ -307,7 +307,7 @@ describe("RoomView layout", () => {
   test("visitors see the same lock button, turned off", () => {
     const view = renderRoom("v", false);
 
-    expect((view.getByRole("button", { name: "Close entry" }) as HTMLButtonElement).disabled).toBe(
+    expect((view.getByRole("button", { name: "close entry" }) as HTMLButtonElement).disabled).toBe(
       true,
     );
   });
@@ -315,20 +315,20 @@ describe("RoomView layout", () => {
   test("the lock shows closed and turns off once the race starts", () => {
     const view = renderRoom("a", true, { ...race, phase: "running", startsAt: 0 });
 
-    expect((view.getByRole("button", { name: "Open entry" }) as HTMLButtonElement).disabled).toBe(
+    expect((view.getByRole("button", { name: "open entry" }) as HTMLButtonElement).disabled).toBe(
       true,
     );
   });
 
   test("visitors see the count against the cap and that entry is closed", () => {
     const capped = { ...race, settings: { ...race.settings, entrantCap: 8 } };
-    const heading = renderRoom("v", false, capped).getByRole("heading", { name: "Entrants" });
+    const heading = renderRoom("v", false, capped).getByRole("heading", { name: "entrants" });
     expect(heading.nextElementSibling?.textContent).toBe("2/8");
     cleanup();
 
     const locked = renderRoom("v", false, { ...race, entryLocked: true });
-    expect(locked.getByText("Entry closed")).toBeTruthy();
-    const name = locked.getByLabelText("Your name") as HTMLInputElement;
+    expect(locked.getByText("entry closed")).toBeTruthy();
+    const name = locked.getByLabelText("your name") as HTMLInputElement;
     expect(name.disabled).toBe(true);
     expect(name.placeholder).toBe("entry is closed");
     expect((locked.getByRole("button", { name: ".enter" }) as HTMLButtonElement).disabled).toBe(
@@ -338,7 +338,7 @@ describe("RoomView layout", () => {
 
   test("a command typed in the chat box runs it instead of posting it", () => {
     const view = renderRoom("a");
-    const message = view.getByLabelText("Message");
+    const message = view.getByLabelText("message");
 
     fireEvent.input(message, { target: { value: ".ready" } });
     fireEvent.submit(message.closest("form") as HTMLFormElement);
@@ -353,18 +353,18 @@ describe("RoomView layout", () => {
 
     fireEvent.keyDown(document.body, { key: "Enter" });
 
-    expect(document.activeElement).toBe(view.getByLabelText("Message"));
+    expect(document.activeElement).toBe(view.getByLabelText("message"));
   });
 
   test("shows when the room closes, and a click hides it until the room opens again", () => {
     localStorage.clear();
     const view = renderRoom("a");
 
-    fireEvent.click(view.getByRole("button", { name: "Room closes in 00:10:05" }));
-    expect(view.getByRole("button", { name: "Show room timer" })).toBeTruthy();
+    fireEvent.click(view.getByRole("button", { name: "room closes in 00:10:05" }));
+    expect(view.getByRole("button", { name: "show room timer" })).toBeTruthy();
     cleanup();
 
-    expect(renderRoom("a").getByRole("button", { name: "Room closes in 00:10:05" })).toBeTruthy();
+    expect(renderRoom("a").getByRole("button", { name: "room closes in 00:10:05" })).toBeTruthy();
     localStorage.clear();
   });
 
@@ -385,9 +385,9 @@ describe("RoomView layout", () => {
     ));
 
     const timer = view.getByRole("button", {
-      name: "Room closes for a server restart in 03:00:00",
+      name: "room closes for a server restart in 03:00:00",
     });
-    expect(timer.title).toBe("Room closes for a server restart at 10:00 UTC, click to hide");
+    expect(timer.title).toBe("room closes for a server restart at 10:00 UTC, click to hide");
   });
 
   test("drops the watcher count once the room has closed", () => {
@@ -404,15 +404,15 @@ describe("RoomView layout", () => {
 
   test("entrants come after the chat box", () => {
     const view = renderRoom("a");
-    const message = view.getByLabelText("Message");
-    const table = view.getByRole("table", { name: "Entrants" });
+    const message = view.getByLabelText("message");
+    const table = view.getByRole("table", { name: "entrants" });
 
     expect(message.compareDocumentPosition(table) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   test(".ready sits right next to send", () => {
     const view = renderRoom("a");
-    const send = view.getByRole("button", { name: "Send" });
+    const send = view.getByRole("button", { name: "send" });
 
     expect(send.nextElementSibling).toBe(view.getByRole("button", { name: ".ready" }));
   });
@@ -458,7 +458,7 @@ describe("RoomView layout", () => {
     fireEvent.click(unenter);
     setState(raceAfter([...joinedBoth, { type: "leave", entrantId: "a" }]));
 
-    expect(document.activeElement).toBe(view.getByLabelText("Your name"));
+    expect(document.activeElement).toBe(view.getByLabelText("your name"));
   });
 
   test("entering moves focus to the message box", () => {
@@ -481,14 +481,14 @@ describe("RoomView layout", () => {
       ]),
     );
 
-    expect(document.activeElement).toBe(view.getByLabelText("Message"));
+    expect(document.activeElement).toBe(view.getByLabelText("message"));
   });
 });
 
 describe("RoomView precision", () => {
   test("the host's pick sets the room default", () => {
     const host = renderRoom("a", true);
-    fireEvent.change(host.getByRole("combobox", { name: "Time precision" }), {
+    fireEvent.change(host.getByRole("combobox", { name: "time precision" }), {
       target: { value: "2" },
     });
 
@@ -498,7 +498,7 @@ describe("RoomView precision", () => {
   test("the host's pick drops their own older guest pick so they see the room default", () => {
     localStorage.setItem("raceme.fractionDigits", "3");
     const host = renderRoom("a", true);
-    fireEvent.change(host.getByRole("combobox", { name: "Time precision" }), {
+    fireEvent.change(host.getByRole("combobox", { name: "time precision" }), {
       target: { value: "1" },
     });
 
@@ -518,7 +518,7 @@ describe("RoomView precision", () => {
   test("a guest's pick only changes their own view", () => {
     localStorage.clear();
     const guest = renderRoom("b");
-    fireEvent.change(guest.getByRole("combobox", { name: "Time precision" }), {
+    fireEvent.change(guest.getByRole("combobox", { name: "time precision" }), {
       target: { value: "3" },
     });
 
@@ -532,7 +532,7 @@ describe("RoomView precision", () => {
 describe("RoomView actions", () => {
   test("a visitor joins with a name", () => {
     const { getByLabelText, getByRole, sent } = renderRoom("x");
-    fireEvent.input(getByLabelText("Your name"), { target: { value: "carol" } });
+    fireEvent.input(getByLabelText("your name"), { target: { value: "carol" } });
     fireEvent.submit(getByRole("button", { name: ".enter" }).closest("form") as HTMLFormElement);
 
     expect(sent).toEqual([{ type: "join", name: "carol" }]);
@@ -543,7 +543,7 @@ describe("RoomView actions", () => {
     const view = renderRoom("a", false, state);
 
     expect(view.getByRole("button", { name: ".unready" }).classList[0]).toBe(
-      view.getByRole("button", { name: "Send" }).classList[0],
+      view.getByRole("button", { name: "send" }).classList[0],
     );
   });
 
@@ -573,30 +573,30 @@ describe("RoomView actions", () => {
       startsAt: 10_000,
       entrants: [{ id: "a", name: "alice", ready: true, result: null }],
     };
-    const table = renderRoom("x", false, state).getByRole("table", { name: "Entrants" });
+    const table = renderRoom("x", false, state).getByRole("table", { name: "entrants" });
 
-    expect(table.textContent).toContain("Ready");
-    expect(table.textContent).not.toContain("Racing");
+    expect(table.textContent).toContain("ready");
+    expect(table.textContent).not.toContain("racing");
   });
 
   test("results can be downloaded once the race is over, not before", () => {
-    expect(renderRoom("x").queryByRole("button", { name: "Download CSV" })).toBeNull();
+    expect(renderRoom("x").queryByRole("button", { name: "download CSV" })).toBeNull();
 
     const state: RaceState = { ...race, phase: "finished", startsAt: 0, endedAt: 1 };
     expect(
-      renderRoom("x", false, state).getByRole("button", { name: "Download CSV" }),
+      renderRoom("x", false, state).getByRole("button", { name: "download CSV" }),
     ).toBeTruthy();
   });
 
-  // SRL called a finished race "Complete".
+  // SRL called a finished race "complete".
   test("a finished race shows Complete", () => {
     const state: RaceState = { ...race, phase: "finished", startsAt: 0, endedAt: 1 };
 
-    expect(renderRoom("x", false, state).getByText("Complete")).toBeTruthy();
+    expect(renderRoom("x", false, state).getByText("complete")).toBeTruthy();
   });
 
   test("shows bot lines without a name and chat as name: text", () => {
-    const log = renderRoom("x").getByRole("log", { name: "Race chat" });
+    const log = renderRoom("x").getByRole("log", { name: "race chat" });
     const lines = [...log.querySelectorAll("p")].map((line) => line.textContent ?? "");
 
     const botLine = /^\d\d:\d\d:\d\d alice enters the race! 1 entrant\.$/;
@@ -606,7 +606,7 @@ describe("RoomView actions", () => {
 
   test("an entrant can chat", () => {
     const { getByLabelText, sent } = renderRoom("a");
-    const input = getByLabelText("Message");
+    const input = getByLabelText("message");
     fireEvent.input(input, { target: { value: "gl hf" } });
     fireEvent.submit(input.closest("form") as HTMLFormElement);
 
@@ -616,7 +616,7 @@ describe("RoomView actions", () => {
 
 describe("RoomView invite link", () => {
   test("a hidden link shows blurred text shaped like a link, with none of the real one", () => {
-    const field = renderRoom("x").getByRole("button", { name: "Show invite link" });
+    const field = renderRoom("x").getByRole("button", { name: "show invite link" });
 
     const decoy = field.parentElement?.textContent ?? "";
 
@@ -628,11 +628,11 @@ describe("RoomView invite link", () => {
 
   test("is never in the page until the field itself is clicked twice", () => {
     const view = renderRoom("x");
-    const field = view.getByRole("button", { name: "Show invite link" });
+    const field = view.getByRole("button", { name: "show invite link" });
     expect(document.body.innerHTML).not.toContain("abcdefghij");
 
     fireEvent.click(field);
-    expect(field.textContent).toContain("You are about to reveal the invite link!");
+    expect(field.textContent).toContain("you are about to reveal the invite link!");
     expect(field.querySelector(".lucide-triangle-alert")).not.toBeNull();
     expect(document.body.innerHTML).not.toContain("abcdefghij");
 
@@ -642,7 +642,7 @@ describe("RoomView invite link", () => {
 
   test("leaving the field hides it again", () => {
     const view = renderRoom("x");
-    const field = view.getByRole("button", { name: "Show invite link" });
+    const field = view.getByRole("button", { name: "show invite link" });
     fireEvent.click(field);
     fireEvent.click(field);
     fireEvent.mouseLeave(field);
@@ -655,7 +655,7 @@ describe("RoomView invite link", () => {
 
   test("the link icon is the copy button, no separate one", () => {
     const view = renderRoom("x");
-    const copy = view.getByRole("button", { name: "Copy invite link" });
+    const copy = view.getByRole("button", { name: "copy invite link" });
 
     expect(copy.querySelector(".lucide-link")).not.toBeNull();
     expect(view.getAllByRole("button", { name: /copy/i })).toHaveLength(1);
@@ -668,11 +668,11 @@ describe("RoomView invite link", () => {
       value: { writeText: async (text: string) => void copied.push(text) },
     });
     const view = renderRoom("x");
-    fireEvent.click(view.getByRole("button", { name: "Copy invite link" }));
-    await waitFor(() => expect(view.getByText("Copied")).toBeTruthy());
+    fireEvent.click(view.getByRole("button", { name: "copy invite link" }));
+    await waitFor(() => expect(view.getByText("copied")).toBeTruthy());
     expect(copied).toEqual([inviteUrl]);
 
-    const copy = view.getByRole("button", { name: "Copy invite link" });
+    const copy = view.getByRole("button", { name: "copy invite link" });
     expect(copy.querySelector(".lucide-clipboard-check")).not.toBeNull();
   });
 
@@ -683,16 +683,16 @@ describe("RoomView invite link", () => {
     });
     const view = renderRoom("x");
 
-    fireEvent.click(view.getByRole("button", { name: "Copy invite link" }));
+    fireEvent.click(view.getByRole("button", { name: "copy invite link" }));
 
-    await waitFor(() => expect(view.getByText("Couldn't copy")).toBeTruthy());
-    expect(view.queryByText("Copied")).toBeNull();
+    await waitFor(() => expect(view.getByText("couldn't copy")).toBeTruthy());
+    expect(view.queryByText("copied")).toBeNull();
   });
 
   test("the warning names the reveal button, as speech users will say what they see", () => {
     const view = renderRoom("x");
 
-    fireEvent.click(view.getByRole("button", { name: "Show invite link" }));
+    fireEvent.click(view.getByRole("button", { name: "show invite link" }));
 
     expect(view.getByRole("button", { name: /about to reveal the invite link/ })).toBeTruthy();
   });
@@ -707,12 +707,12 @@ describe("RoomView after the room closed", () => {
     ]);
     const view = renderRoom("a", true, { ...done, phase: "terminated", endedAt: 1 }, true);
 
-    expect(view.queryByLabelText("Message")).toBeNull();
-    expect(view.queryByRole("button", { name: "Show invite link" })).toBeNull();
+    expect(view.queryByLabelText("message")).toBeNull();
+    expect(view.queryByRole("button", { name: "show invite link" })).toBeNull();
     expect(view.queryByRole("button", { name: ".end" })).toBeNull();
-    expect(view.queryByLabelText("Goal")).toBeNull();
-    expect(view.getByRole("table", { name: "Entrants" })).toBeTruthy();
-    expect(view.getByRole("button", { name: "Download CSV" })).toBeTruthy();
+    expect(view.queryByLabelText("goal")).toBeNull();
+    expect(view.getByRole("table", { name: "entrants" })).toBeTruthy();
+    expect(view.getByRole("button", { name: "download CSV" })).toBeTruthy();
     expect(view.getByRole("status").textContent).toContain("gone once you close it");
   });
 });
@@ -730,7 +730,7 @@ describe("RoomView button colors", () => {
       [{ type: "forfeit", entrantId: "b" }, 20_000],
     ]);
     const view = renderRoom("a", false, afterBoth);
-    const send = view.getByRole("button", { name: "Send" }).classList[0];
+    const send = view.getByRole("button", { name: "send" }).classList[0];
 
     expect(view.getByRole("button", { name: ".undone" }).classList[0]).toBe(send);
     expect(view.getByRole("button", { name: ".rematch" }).classList[0]).not.toBe(send);

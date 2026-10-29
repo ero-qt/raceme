@@ -182,9 +182,9 @@ export function RoomView(props: RoomViewProps): JSX.Element {
           <p class={styles.closedBox}>
             <TriangleAlert class={styles.closedIcon} aria-hidden="true" />
             <span>
-              This page is only kept in this tab.
+              this page is only kept in this tab.
               <br />
-              Save the results now, they're gone once you close it.
+              save the results now, they're gone once you close it.
             </span>
           </p>
         </div>
@@ -222,7 +222,7 @@ export function RoomView(props: RoomViewProps): JSX.Element {
         </p>
       </Show>
       <Show when={!props.closed}>
-        <section class={styles.chat} aria-label="Chat" ref={chat}>
+        <section class={styles.chat} aria-label="chat" ref={chat}>
           <FeedLog entries={props.feed} />
           <Show
             when={entered()}

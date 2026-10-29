@@ -735,7 +735,7 @@ describe("server", () => {
 
     expect(await client.closed).toBe(4404);
     expect(running?.rooms.get(slug)).toBeUndefined();
-    expect(await client.closeReason).toBe("Room closed: the race ended.");
+    expect(await client.closeReason).toBe("room closed: the race ended.");
   });
 
   test("tells the room when it closes: 48 hours after opening, or 10 minutes after .end", async () => {

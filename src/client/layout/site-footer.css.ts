@@ -1,5 +1,5 @@
 import { style } from "@vanilla-extract/css";
-import { disclosureSummary, panel } from "../styles/controls.css.ts";
+import { panel } from "../styles/controls.css.ts";
 import { container } from "../styles/layout.css.ts";
 import { tokens } from "../styles/tokens.css.ts";
 
@@ -21,7 +21,18 @@ export const inner = style([
   },
 ]);
 
-export const summary = disclosureSummary;
+// Reads as a link, since the notes are small print and not actions.
+export const summary = style({
+  display: "inline-flex",
+  alignItems: "center",
+  minBlockSize: tokens.target.min,
+  fontSize: "0.875rem",
+  color: tokens.color.link,
+  textDecoration: "underline",
+  cursor: "pointer",
+  listStyle: "none",
+  selectors: { "&::-webkit-details-marker": { display: "none" } },
+});
 
 // Opens above the summaries, anchored to the footer, so no summary moves when a note opens.
 export const text = style([

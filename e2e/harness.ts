@@ -85,9 +85,9 @@ export async function startHarness(overrides: Partial<ServerConfig> = {}): Promi
 /** Opens a lobby from the start page and enters it under `name`. */
 export async function openLobbyAndEnter(page: Page, origin: string, name: string): Promise<void> {
   await page.goto(`${origin}/`);
-  await page.getByLabel("Goal or room code").fill("sm64 16 star");
+  await page.getByLabel("goal or room code").fill("sm64 16 star");
   await page.getByRole("button", { name: ".startrace" }).click();
-  await page.getByLabel("Your name").fill(name);
+  await page.getByLabel("your name").fill(name);
   await page.getByRole("button", { name: ".enter" }).click();
   await page.getByRole("button", { name: ".ready" }).waitFor();
 }

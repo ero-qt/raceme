@@ -12,55 +12,43 @@ interface Note {
 
 const notes: Note[] = [
   {
-    summary: "Privacy",
+    summary: "privacy",
     body: () => (
       <>
         <p>
-          The server keeps nothing on disk. Rooms live only in its memory and are gone when they
+          the server keeps nothing on disk. rooms live only in its memory and are gone when they
           close.
         </p>
         <ul>
           <li>
-            Your browser gets a random cookie so the room knows you after a reload. A host also gets
-            a host cookie, whose name contains the room code. Both expire after {sessionCookieDays}{" "}
+            your browser gets a random cookie so the room knows you after a reload. a host also gets
+            a host cookie, whose name contains the room code. both expire after {sessionCookieDays}{" "}
             days and contain no name or other info about you.
           </li>
           <li>
-            The server uses your IP address only in memory, to limit rooms, chat, room checks, game
-            searches and connections per address or network. It isn't logged or saved.
+            the server uses your IP address only in memory, to limit rooms, chat, room checks, game
+            searches and connections per address or network. it isn't logged or saved.
           </li>
           <li>
-            Game searches go through the server to speedrun.com, so speedrun.com sees the server and
-            never your browser. The server keeps the answers in memory for up to {catalogCacheHours}{" "}
-            hours and then drops them.
+            game searches go through the server to speedrun.com, so speedrun.com sees the server and
+            never your browser. the server caches the search results in memory for up to{" "}
+            {catalogCacheHours} hours.
           </li>
           <li>
-            Your time digits and recent goals stay in your browser's local storage. After a room
-            closes, its results stay in that tab until you close it. None of this reaches the
+            your time digits and recent goals stay in your browser's local storage. after a room
+            closes, its results stay in that tab until you close it. none of this reaches the
             server.
           </li>
         </ul>
         <p>
-          The server tells its owner on Discord when the number of open rooms or people online
-          passes 5, 10, 25, 50 and so on. That message contains only the number.
+          the server tells its owner on Discord when the number of open rooms or people online
+          passes 5, 10, 25, 50 and so on. that message contains only the number.
         </p>
-        <p>There are no accounts, usage stats, ads or trackers.</p>
+        <p>there are no accounts, usage stats, ads or trackers.</p>
       </>
     ),
   },
-  {
-    summary: "Made with AI",
-    body: () => (
-      <p>
-        raceme was made with a lot of help from AI.
-        <br />
-        reproducing, rewriting, rehosting encouraged.
-        <br />
-        i'm not proud, but i think it's useful.
-      </p>
-    ),
-  },
-  { summary: "Build", body: () => <BuildInfoText />, loadsOnOpen: true },
+  { summary: "build", body: () => <BuildInfoText />, loadsOnOpen: true },
 ];
 
 /** Shows short notes about raceme folded away in a bar at the foot of every page. */

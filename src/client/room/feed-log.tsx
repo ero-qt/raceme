@@ -17,7 +17,7 @@ export function FeedLog(props: { entries: FeedEntry[] }): JSX.Element {
       class={styles.log}
       ref={log}
       role="log"
-      aria-label="Race chat"
+      aria-label="race chat"
       aria-live="polite"
       // biome-ignore lint/a11y/noNoninteractiveTabindex: scrollable log needs keyboard focus
       tabIndex={0}

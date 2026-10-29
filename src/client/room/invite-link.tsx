@@ -6,10 +6,10 @@ import * as styles from "./invite-link.css.ts";
 // scheme is all x too, so the built page contains no outside host.
 const decoy = "xxxxx://xxxxxxxxx/xxxx/xxxxxx/x/xxxxxxxxxx";
 const copiedForMs = 2_000;
-const revealWarning = "You are about to reveal the invite link!";
+const revealWarning = "you are about to reveal the invite link!";
 
 type Visibility = "hidden" | "warned" | "shown";
-type CopyResult = "Copied" | "Couldn't copy";
+type CopyResult = "copied" | "couldn't copy";
 
 /**
  * Keeps the invite link hidden until the field is clicked twice, the first click warning about it.
@@ -34,8 +34,8 @@ export function InviteLink(props: { url: string }): JSX.Element {
   const copy = async () => {
     // A browser can refuse the clipboard, for example when the page doesn't have focus.
     const result = await copyText(props.url).then(
-      (): CopyResult => "Copied",
-      (): CopyResult => "Couldn't copy",
+      (): CopyResult => "copied",
+      (): CopyResult => "couldn't copy",
     );
 
     setCopyResult(result);
@@ -48,11 +48,11 @@ export function InviteLink(props: { url: string }): JSX.Element {
       <button
         type="button"
         class={styles.copy}
-        aria-label="Copy invite link"
-        title="Copy invite link"
+        aria-label="copy invite link"
+        title="copy invite link"
         onClick={copy}
       >
-        {copyResult() === "Copied" ? (
+        {copyResult() === "copied" ? (
           <ClipboardCheck class={styles.icon} aria-hidden="true" />
         ) : (
           <Link class={styles.icon} aria-hidden="true" />
@@ -69,7 +69,7 @@ export function InviteLink(props: { url: string }): JSX.Element {
           type="button"
           class={styles.reveal}
           // Once the warning or the link shows, the visible text becomes the button's label.
-          aria-label={visibility() === "hidden" ? "Show invite link" : undefined}
+          aria-label={visibility() === "hidden" ? "show invite link" : undefined}
           onClick={advance}
           onMouseLeave={hide}
           onBlur={hide}

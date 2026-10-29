@@ -92,7 +92,7 @@ export function SuggestionBox(props: {
   };
   const remove = (row: OptionRow) => {
     props.onRemove(row.option, row.group);
-    setAnnouncement(`Removed ${row.option.label}.`);
+    setAnnouncement(`removed ${row.option.label}.`);
     setActiveIndex((current) => Math.min(current, rows().length - 1));
   };
 
@@ -154,7 +154,7 @@ export function SuggestionBox(props: {
         onBlur={close}
       />
       <Show when={expanded()}>
-        <div id={listId} class={styles.list} role="listbox" aria-label="Suggestions">
+        <div id={listId} class={styles.list} role="listbox" aria-label="suggestions">
           <For each={visibleGroups()}>
             {(group) => (
               // biome-ignore lint/a11y/useSemanticElements: a fieldset can't sit inside a listbox
@@ -181,7 +181,7 @@ export function SuggestionBox(props: {
         </div>
       </Show>
       <span id={hintId} class={visuallyHidden}>
-        Press Delete to remove this goal.
+        press Delete to remove this goal.
       </span>
       <span class={visuallyHidden} aria-live="polite">
         {announcement()}
@@ -261,7 +261,7 @@ function SuggestionRow(props: {
       <Show when={row.option.removable}>
         <span
           class={styles.remove}
-          title="Remove from your goals"
+          title="remove from your goals"
           aria-hidden="true"
           onClick={(event) => {
             event.stopPropagation();

@@ -15,8 +15,8 @@ const roomStatus: Record<RaceState["phase"], Status> = {
 };
 
 const roomStatusLabel: Partial<Record<RaceState["phase"], string>> = {
-  finished: "Complete",
-  terminated: "Terminated",
+  finished: "complete",
+  terminated: "terminated",
 };
 
 /**
@@ -43,14 +43,14 @@ export function EntrantsHeader(props: {
 
   return (
     <div class={styles.entrantsHeader}>
-      <h2 class={styles.entrantsTitle}>Entrants</h2>
+      <h2 class={styles.entrantsTitle}>entrants</h2>
       <span class={styles.entrantCount}>
         <span class={styles.countDigits}>{props.race.entrants.length}</span>/
         <Show when={editable()} fallback={<span class={styles.capDigits}>{cap()}</span>}>
           <input
             class={styles.capField}
             type="number"
-            aria-label="Entrant limit"
+            aria-label="entrant limit"
             min={minEntrantCap}
             max={maxEntrants}
             value={cap()}
@@ -82,14 +82,14 @@ export function EntrantsHeader(props: {
       <span class={styles.headerSpacer} />
       <span class={styles.headerStatus}>
         <Show when={props.race.entryLocked && beforeStart()} fallback={statusBadge(props.race)}>
-          <StatusBadge status="forfeit" label="Entry closed" />
+          <StatusBadge status="forfeit" label="entry closed" />
         </Show>
       </span>
       {/* One button for everyone, so the same state always looks the same. */}
       <Button
         variant="plain"
         disabled={!editable()}
-        aria-label={locked() ? "Open entry" : "Close entry"}
+        aria-label={locked() ? "open entry" : "close entry"}
         onClick={() => props.send({ type: locked() ? "unlock" : "lock" })}
       >
         {lockIcon()}

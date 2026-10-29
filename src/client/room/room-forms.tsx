@@ -20,7 +20,7 @@ export function JoinForm(props: {
       }}
     >
       <TextField
-        label="Your name"
+        label="your name"
         hideLabel
         placeholder={props.closedBecause ?? "your name"}
         disabled={Boolean(props.closedBecause)}
@@ -83,7 +83,7 @@ export function ChatForm(
       }}
     >
       <TextField
-        label="Message"
+        label="message"
         hideLabel
         placeholder={props.muted ? "you are muted" : "chat"}
         disabled={props.muted}
@@ -105,7 +105,7 @@ export function ChatForm(
         variant="ghost"
         class={styles.sendButton}
         disabled={waiting() || props.muted}
-        aria-label="Send"
+        aria-label="send"
       >
         <span class={styles.sendLabel} data-waiting={waiting()}>
           send

@@ -13,19 +13,11 @@ describe("SiteFooter", () => {
   test("explains what the server keeps, with the real cookie and cache lifetimes", () => {
     const view = render(() => <SiteFooter />);
 
-    const notice = view.getByText("Privacy", { selector: "summary" }).parentElement;
-    expect(notice?.textContent).toContain("The server keeps nothing on disk.");
+    const notice = view.getByText("privacy", { selector: "summary" }).parentElement;
+    expect(notice?.textContent).toContain("the server keeps nothing on disk.");
     expect(notice?.textContent).toContain(`expire after ${sessionCookieDays} days`);
     expect(notice?.textContent).toContain(`for up to ${catalogCacheHours} hours`);
     expect(notice?.textContent).toContain("no accounts, usage stats, ads or trackers");
-  });
-
-  test("tells that raceme was made with AI", () => {
-    const view = render(() => <SiteFooter />);
-
-    const notice = view.getByText("Made with AI", { selector: "summary" }).parentElement;
-    expect(notice?.textContent).toContain("reproducing, rewriting, rehosting encouraged.");
-    expect(notice?.textContent).toContain("i'm not proud, but i think it's useful.");
   });
 
   test("shows the release commit once the build note opens", async () => {
@@ -40,7 +32,7 @@ describe("SiteFooter", () => {
     ) as unknown as typeof fetch;
     const view = render(() => <SiteFooter />);
 
-    const details = view.getByText("Build", { selector: "summary" })
+    const details = view.getByText("build", { selector: "summary" })
       .parentElement as HTMLDetailsElement;
     details.open = true;
     fireEvent(details, new Event("toggle"));
@@ -64,7 +56,7 @@ describe("SiteFooter", () => {
     globalThis.fetch = mock(async () => new Response("<html>")) as unknown as typeof fetch;
     const view = render(() => <SiteFooter />);
 
-    const details = view.getByText("Build", { selector: "summary" })
+    const details = view.getByText("build", { selector: "summary" })
       .parentElement as HTMLDetailsElement;
     details.open = true;
     fireEvent(details, new Event("toggle"));
@@ -78,7 +70,7 @@ describe("SiteFooter", () => {
     ) as unknown as typeof fetch;
     const view = render(() => <SiteFooter />);
 
-    const details = view.getByText("Build", { selector: "summary" })
+    const details = view.getByText("build", { selector: "summary" })
       .parentElement as HTMLDetailsElement;
     details.open = true;
     fireEvent(details, new Event("toggle"));

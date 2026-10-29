@@ -40,7 +40,7 @@ describe("pickImageRows", () => {
   });
 
   test("highlights only placed rows, never a forfeit", () => {
-    const two = [...rows(["ero", "veract"]), { place: "", name: "kirby", time: "Forfeit" }];
+    const two = [...rows(["ero", "veract"]), { place: "", name: "kirby", time: "forfeit" }];
     expect(pickImageRows(two, 10)).toEqual({ rows: two, podium: 2 });
   });
 });

@@ -37,7 +37,7 @@ export async function resultsImage(race: RaceState, shown: number): Promise<Blob
   const time = started.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   const entrants = `${all.length} ${all.length === 1 ? "entrant" : "entrants"}`;
   const footer = { left: `${entrants} · ${started.toLocaleDateString()} ${time}`, right: "raceme" };
-  const title = race.goal ?? "Race";
+  const title = race.goal ?? "race";
   const measure = (text: string, style: TextStyle) => {
     context.font = fonts[style];
     return context.measureText(text).width;

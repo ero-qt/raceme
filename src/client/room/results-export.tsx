@@ -50,9 +50,9 @@ export function ResultsExport(props: { race: RaceState }): JSX.Element {
   const image = () => resultsImage(props.race, shown());
 
   return (
-    <section class={styles.exportSection} aria-label="Results">
-      <ExportRow name="Text">
-        <TextPreview name="Text" text={resultsText(props.race, chatHeading(props.race))} />
+    <section class={styles.exportSection} aria-label="results">
+      <ExportRow name="text">
+        <TextPreview name="text" text={resultsText(props.race, chatHeading(props.race))} />
       </ExportRow>
       <ExportRow name="CSV" download={async () => saveText(resultsCsv, "text/csv", "csv")}>
         <TextPreview name="CSV" text={resultsCsv(props.race)} />
@@ -64,15 +64,15 @@ export function ResultsExport(props: { race: RaceState }): JSX.Element {
         <TextPreview name="JSON" text={resultsJson(props.race)} />
       </ExportRow>
       <ExportRow
-        name="Image"
+        name="image"
         copy={() => navigator.clipboard.write([new ClipboardItem({ "image/png": image() })])}
         download={async () => save(await image(), exportFileName(props.race, "png"))}
         setting={
           <input
             class={numberField}
             type="number"
-            aria-label="Places to show"
-            title="Places to show"
+            aria-label="places to show"
+            title="places to show"
             min={1}
             max={total()}
             value={shown()}
@@ -116,7 +116,7 @@ function ExportRow(props: {
     setCopied(ok ? "copied" : "failed");
     setTimeout(() => setCopied(null), copiedForMs);
   };
-  const copyLabel = () => (copied() ? `${props.name} ${copied()}` : `Copy ${inPhrase(props.name)}`);
+  const copyLabel = () => (copied() ? `${props.name} ${copied()}` : `copy ${inPhrase(props.name)}`);
 
   return (
     <>
@@ -148,8 +148,8 @@ function ExportRow(props: {
         {(download) => (
           <Button
             variant="icon"
-            aria-label={`Download ${inPhrase(props.name)}`}
-            title={`Download ${inPhrase(props.name)}`}
+            aria-label={`download ${inPhrase(props.name)}`}
+            title={`download ${inPhrase(props.name)}`}
             onClick={download()}
           >
             <Download class={styles.rowIcon} aria-hidden="true" />
@@ -170,7 +170,7 @@ function TextPreview(props: { name: string; text: string }): JSX.Element {
     <textarea
       ref={(area) => queueMicrotask(() => area.focus())}
       class={styles.exportText}
-      aria-label={`Results as ${inPhrase(props.name)}`}
+      aria-label={`results as ${inPhrase(props.name)}`}
       readOnly
       rows={Math.min(12, props.text.split("\n").length)}
       value={props.text}
@@ -202,7 +202,7 @@ function ImagePreview(props: { image: () => Promise<Blob>; shown: number }): JSX
         <img
           class={styles.exportImage}
           src={src()}
-          alt="Race results with the podium highlighted"
+          alt="race results with the podium highlighted"
         />
       )}
     </Show>

@@ -165,11 +165,11 @@ export function GoalPicker(props: {
       <Show when={props.picker.categories().length > 0}>
         <select
           class={styles.category}
-          aria-label="Category"
+          aria-label="category"
           value={props.picker.category()}
           onChange={(event) => props.picker.setCategory(event.currentTarget.value)}
         >
-          <option value="">No category</option>
+          <option value="">no category</option>
           <For each={props.picker.categories()}>
             {(category) => <option value={category.name}>{category.name}</option>}
           </For>

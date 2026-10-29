@@ -27,7 +27,7 @@ function renderBox(initial: SuggestionGroup[] = groups) {
   const [shown, setShown] = createSignal(initial);
   const view = render(() => (
     <SuggestionBox
-      label="Goal or room code"
+      label="goal or room code"
       groups={shown()}
       onInput={() => {}}
       onPick={(option) => picked.push(option.id)}
@@ -37,7 +37,7 @@ function renderBox(initial: SuggestionGroup[] = groups) {
       }}
     />
   ));
-  const input = view.getByRole("combobox", { name: "Goal or room code" }) as HTMLInputElement;
+  const input = view.getByRole("combobox", { name: "goal or room code" }) as HTMLInputElement;
   const key = (name: string) => fireEvent.keyDown(input, { key: name });
   const active = () => {
     const id = input.getAttribute("aria-activedescendant");
@@ -125,14 +125,14 @@ describe("SuggestionBox", () => {
     box.key("Delete");
 
     expect(box.removed).toEqual(["h1"]);
-    expect(box.getByText("Removed Super Mario 64 - 16 Star.")).toBeTruthy();
+    expect(box.getByText("removed Super Mario 64 - 16 Star.")).toBeTruthy();
   });
 
   test("the × next to a history goal removes it without picking it", () => {
     const box = renderBox();
     box.key("ArrowDown");
 
-    fireEvent.click(box.getAllByTitle("Remove from your goals")[0] as HTMLElement);
+    fireEvent.click(box.getAllByTitle("remove from your goals")[0] as HTMLElement);
 
     expect(box.removed).toEqual(["h1"]);
     expect(box.picked).toEqual([]);
@@ -198,14 +198,14 @@ describe("SuggestionBox", () => {
     const box = renderBox();
     box.key("ArrowDown");
 
-    expect(box.getByRole("listbox").getAttribute("aria-label")).toBe("Suggestions");
+    expect(box.getByRole("listbox").getAttribute("aria-label")).toBe("suggestions");
   });
 
   test("a group can start folded, even with nothing in it yet, and says when it unfolds", () => {
     const changes: [string, boolean][] = [];
     const view = render(() => (
       <SuggestionBox
-        label="Goal or room code"
+        label="goal or room code"
         groups={[{ id: "speedrun", label: "speedrun.com", options: [], startsFolded: true }]}
         onInput={() => {}}
         onPick={() => {}}
@@ -213,7 +213,7 @@ describe("SuggestionBox", () => {
         onFoldChange={(id, folded) => changes.push([id, folded])}
       />
     ));
-    const input = view.getByRole("combobox", { name: "Goal or room code" });
+    const input = view.getByRole("combobox", { name: "goal or room code" });
     fireEvent.keyDown(input, { key: "ArrowDown" });
 
     expect(view.getByRole("option", { name: /speedrun\.com\s*, folded/ })).toBeTruthy();

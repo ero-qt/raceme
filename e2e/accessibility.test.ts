@@ -47,7 +47,7 @@ describe("axe-core WCAG 2.2 AA", () => {
     const { context, page } = await newPage(harness, { bypassCSP: true });
     await page.goto(`${harness.origin}/`);
     // axe can't rate the contrast of an empty field, so it gets a goal typed in first.
-    await page.getByLabel("Goal or room code").fill("sm64 16 star");
+    await page.getByLabel("goal or room code").fill("sm64 16 star");
 
     expect(await violations(page)).toEqual([]);
 
@@ -57,13 +57,10 @@ describe("axe-core WCAG 2.2 AA", () => {
   test("start page with each corner note open", async () => {
     const { context, page } = await newPage(harness, { bypassCSP: true });
     await page.goto(`${harness.origin}/`);
-    await page.getByText("Privacy", { exact: true }).click();
-    await page.getByText("The server keeps nothing on disk.").waitFor();
+    await page.getByText("privacy", { exact: true }).click();
+    await page.getByText("the server keeps nothing on disk.").waitFor();
 
     expect(await violations(page)).toEqual([]);
-
-    await page.getByText("Made with AI", { exact: true }).click();
-    await page.getByText("i'm not proud, but i think it's useful.").waitFor();
 
     expect(await violations(page)).toEqual([]);
 
@@ -73,14 +70,14 @@ describe("axe-core WCAG 2.2 AA", () => {
   test("start page with suggestions and a category picked", async () => {
     const { context, page } = await newPage(harness, { bypassCSP: true });
     await page.goto(`${harness.origin}/`);
-    await page.getByLabel("Goal or room code").fill("mario 64");
+    await page.getByLabel("goal or room code").fill("mario 64");
     await page.getByRole("option", { name: /^speedrun\.com/ }).click();
     await page.getByRole("option", { name: "Super Mario 64", exact: true }).waitFor();
 
     expect(await violations(page)).toEqual([]);
 
     await page.getByRole("option", { name: "Super Mario 64", exact: true }).click();
-    await page.getByRole("combobox", { name: "Category" }).selectOption("16 Star");
+    await page.getByRole("combobox", { name: "category" }).selectOption("16 Star");
 
     expect(await violations(page)).toEqual([]);
 
@@ -90,9 +87,9 @@ describe("axe-core WCAG 2.2 AA", () => {
   test("room nobody has entered yet", async () => {
     const { context, page } = await newPage(harness, { bypassCSP: true });
     await page.goto(`${harness.origin}/`);
-    await page.getByLabel("Goal or room code").fill("sm64 16 star");
+    await page.getByLabel("goal or room code").fill("sm64 16 star");
     await page.getByRole("button", { name: ".startrace" }).click();
-    await page.getByLabel("Your name").waitFor();
+    await page.getByLabel("your name").waitFor();
 
     expect(await violations(page)).toEqual([]);
 
@@ -112,7 +109,7 @@ describe("axe-core WCAG 2.2 AA", () => {
 
     await page.waitForTimeout(5_200);
     await page.getByRole("button", { name: ".done" }).click();
-    await page.getByText("Complete").waitFor();
+    await page.getByText("complete").waitFor();
 
     expect(await violations(page)).toEqual([]);
 

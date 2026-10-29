@@ -14,13 +14,13 @@ describe("game picker", () => {
     const { context, page } = await newPage(harness);
     await page.goto(`${harness.origin}/`);
 
-    await page.getByLabel("Goal or room code").fill("mario 64");
+    await page.getByLabel("goal or room code").fill("mario 64");
     await page.getByRole("option", { name: /^speedrun\.com/ }).click();
     await page.getByRole("option", { name: "Super Mario 64", exact: true }).click();
-    await page.getByRole("combobox", { name: "Category" }).selectOption("16 Star");
+    await page.getByRole("combobox", { name: "category" }).selectOption("16 Star");
     await page.getByRole("button", { name: ".startrace" }).click();
 
-    await page.getByLabel("Your name").waitFor();
+    await page.getByLabel("your name").waitFor();
     expect(await page.title()).toBe("Super Mario 64 - 16 Star · raceme");
 
     await context.close();
@@ -29,12 +29,12 @@ describe("game picker", () => {
   test("an opened goal comes back under your goals", async () => {
     const { context, page } = await newPage(harness);
     await page.goto(`${harness.origin}/`);
-    await page.getByLabel("Goal or room code").fill("bingo blackout");
+    await page.getByLabel("goal or room code").fill("bingo blackout");
     await page.getByRole("button", { name: ".startrace" }).click();
-    await page.getByLabel("Your name").waitFor();
+    await page.getByLabel("your name").waitFor();
 
     await page.goto(`${harness.origin}/`);
-    await page.getByLabel("Goal or room code").fill("bingo");
+    await page.getByLabel("goal or room code").fill("bingo");
 
     const pastGoal = page
       .getByRole("group", { name: "your goals" })

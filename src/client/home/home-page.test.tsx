@@ -63,7 +63,7 @@ function renderHome(
       searchDelayMs={0}
     />
   ));
-  const field = view.getByLabelText("Goal or room code") as HTMLInputElement;
+  const field = view.getByLabelText("goal or room code") as HTMLInputElement;
   const type = (value: string) => fireEvent.input(field, { target: { value } });
   const submit = () => fireEvent.submit(field.closest("form") as HTMLFormElement);
   // speedrun.com starts folded, so its header has to be opened before it searches.
@@ -74,10 +74,10 @@ function renderHome(
 
 describe("HomePage", () => {
   test("can open with a notice, like a room that closed", () => {
-    const view = render(() => <HomePage notice="This room has closed." />);
+    const view = render(() => <HomePage notice="this room has closed." />);
 
-    expect(view.getByRole("status").textContent).toBe("This room has closed.");
-    expect(view.getByLabelText("Goal or room code")).toBeTruthy();
+    expect(view.getByRole("status").textContent).toBe("this room has closed.");
+    expect(view.getByLabelText("goal or room code")).toBeTruthy();
   });
 
   test("one field at the top, .startrace greyed out while empty", () => {
@@ -104,7 +104,7 @@ describe("HomePage", () => {
   test("a pasted code of a live room is recognized, masked and joins", async () => {
     const home = renderHome();
     home.type("DUXANAGXDS");
-    await waitFor(() => expect(home.getByRole("button", { name: "Join" })).toBeTruthy());
+    await waitFor(() => expect(home.getByRole("button", { name: "join" })).toBeTruthy());
     expect(home.queryByRole("button", { name: ".startrace" })).toBeNull();
     expect(home.field.dataset.kind).toBe("code");
 
@@ -115,7 +115,7 @@ describe("HomePage", () => {
   test("a pasted invite link joins too", async () => {
     const home = renderHome();
     home.type("https://ero-qt.eu/apps/raceme/duxanagxds");
-    await waitFor(() => expect(home.getByRole("button", { name: "Join" })).toBeTruthy());
+    await waitFor(() => expect(home.getByRole("button", { name: "join" })).toBeTruthy());
     home.submit();
 
     expect(home.opened).toEqual(["duxanagxds"]);
@@ -161,7 +161,7 @@ describe("HomePage", () => {
     home.submit();
     await waitFor(() =>
       expect(home.getByRole("status").textContent).toBe(
-        "Couldn't check that room code. Try again.",
+        "couldn't check that room code. try again.",
       ),
     );
 
@@ -175,7 +175,7 @@ describe("HomePage", () => {
     home.type("x");
     home.submit();
     await waitFor(() =>
-      expect(home.getByRole("status").textContent).toBe("The goal needs 1 to 200 characters."),
+      expect(home.getByRole("status").textContent).toBe("the goal needs 1 to 200 characters."),
     );
   });
 
@@ -188,7 +188,7 @@ describe("HomePage", () => {
 
     home.submit();
 
-    await waitFor(() => expect(home.getByRole("status").textContent).toBe("Couldn't open a room."));
+    await waitFor(() => expect(home.getByRole("status").textContent).toBe("couldn't open a room."));
     expect((home.getByRole("button", { name: ".startrace" }) as HTMLButtonElement).disabled).toBe(
       false,
     );
@@ -229,7 +229,7 @@ describe("HomePage busy server, no WebCrypto", () => {
 
     home.submit();
 
-    await waitFor(() => expect(home.getByRole("status").textContent).toBe("Couldn't open a room."));
+    await waitFor(() => expect(home.getByRole("status").textContent).toBe("couldn't open a room."));
     expect((home.getByRole("button", { name: ".startrace" }) as HTMLButtonElement).disabled).toBe(
       false,
     );
@@ -256,7 +256,7 @@ describe("HomePage suggestions", () => {
 
     fireEvent.click(home.getByRole("option", { name: "Super Mario 64" }));
     const category = (await waitFor(() =>
-      home.getByRole("combobox", { name: "Category" }),
+      home.getByRole("combobox", { name: "category" }),
     )) as HTMLSelectElement;
     fireEvent.change(category, { target: { value: "16 Star" } });
     home.submit();
@@ -272,11 +272,11 @@ describe("HomePage suggestions", () => {
     home.unfoldSpeedrun();
     await waitFor(() => home.getByRole("option", { name: "Super Mario 64" }));
     fireEvent.click(home.getByRole("option", { name: "Super Mario 64" }));
-    await waitFor(() => home.getByRole("combobox", { name: "Category" }));
+    await waitFor(() => home.getByRole("combobox", { name: "category" }));
 
     home.type("Super Mario 64 any%");
 
-    expect(home.queryByRole("combobox", { name: "Category" })).toBeNull();
+    expect(home.queryByRole("combobox", { name: "category" })).toBeNull();
   });
 
   test("an opened room's goal shows under your goals next time", async () => {
@@ -301,7 +301,7 @@ describe("HomePage suggestions", () => {
     home.type("sm64");
     await waitFor(() => home.getByRole("option", { name: "sm64 70 star" }));
 
-    fireEvent.click(home.getByTitle("Remove from your goals"));
+    fireEvent.click(home.getByTitle("remove from your goals"));
 
     expect(home.queryByRole("option", { name: "sm64 70 star" })).toBeNull();
     expect(localStorage.getItem("raceme.goalHistory")).toBeNull();
@@ -371,7 +371,7 @@ describe("HomePage suggestions", () => {
     home.unfoldSpeedrun();
     fireEvent.click(await waitFor(() => home.getByRole("option", { name: long.name })));
     const category = (await waitFor(() =>
-      home.getByRole("combobox", { name: "Category" }),
+      home.getByRole("combobox", { name: "category" }),
     )) as HTMLSelectElement;
     fireEvent.change(category, { target: { value: "C".repeat(100) } });
 
@@ -431,10 +431,10 @@ describe("HomePage intro", () => {
   test("tells what raceme is beside the start form, with a note that rooms get deleted", () => {
     const home = renderHome();
 
-    expect(home.getByRole("heading", { name: "Welcome" })).toBeTruthy();
+    expect(home.getByRole("heading", { name: "welcome" })).toBeTruthy();
     const intro = home.getByRole("complementary").textContent;
     expect(intro).toContain("without accounts and without moderation");
-    expect(intro).toContain("A room is deleted from the server once it closes.");
+    expect(intro).toContain("a room is deleted from the server once it closes.");
     expect(home.getByRole("link", { name: "SRL" }).getAttribute("href")).toBe(
       "https://speedrunslive.com",
     );
@@ -448,9 +448,9 @@ describe("HomePage restart notice", () => {
     const view = render(() => <HomePage />);
 
     const text = new Date(restartAt).toISOString().slice(11, 16);
-    const notice = (await view.findByText(/^Server restart queued for/)).closest("p");
+    const notice = (await view.findByText(/^server restart queued for/)).closest("p");
     expect(notice?.textContent).toBe(
-      `Server restart queued for ${text} UTC (in 3 h 20 min). Rooms close then.`,
+      `server restart queued for ${text} UTC (in 3 h 20 min). rooms close then.`,
     );
     // Uses the red of the other notices and the warning sign of the closed room.
     expect(notice?.className).toContain(view.getByRole("status").className);

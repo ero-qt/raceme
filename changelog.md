@@ -14,9 +14,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - Buttons, fields and the footer notes are smaller.
 - Panels like the chat log and the intro have a shadow and a lighter surface.
 - The site meets WCAG 2.2 AA instead of AAA, which allows richer status colors.
-
+- Everything on the page is lowercase, apart from names like SRL and RaceBot.
+- The footer notes read as links.
 - Bot lines in the room chat show without a name.
 - Chat lines in the room chat show as `name: text`.
+
+### Removed
+
+- The "Made with AI" note on the page. The readme still has it.
 
 ## [1.1.2] - 2026-10-26
 

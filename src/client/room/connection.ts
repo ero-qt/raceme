@@ -108,7 +108,7 @@ export function connectRoom(slug: string): RoomConnection {
         return;
       }
 
-      setNotice("Connection lost. Reconnecting…");
+      setNotice("connection lost. reconnecting…");
       retryTimer = setTimeout(open, retryMs);
       retryMs = Math.min(retryMs * 2, maxRetryMs);
     };
@@ -117,7 +117,7 @@ export function connectRoom(slug: string): RoomConnection {
   /** Shows the room as closed and keeps it for this tab. An earlier load's copy fills in after a reload. */
   function closeRoom(reason: string | undefined): void {
     const saved = loadClosedRoom(slug);
-    const notice = reason?.startsWith("Room closed:") ? reason : refusalText.roomGone;
+    const notice = reason?.startsWith("room closed:") ? reason : refusalText.roomGone;
     const currentRace = race();
     const currentMe = me();
     if (currentRace && currentMe) {
@@ -211,7 +211,7 @@ export function connectRoom(slug: string): RoomConnection {
         return;
       }
       if (socket?.readyState !== WebSocket.OPEN) {
-        setNotice("Not connected. Try again in a moment.");
+        setNotice("not connected. try again in a moment.");
         return;
       }
 

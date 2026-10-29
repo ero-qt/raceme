@@ -32,7 +32,7 @@ export function RoomPage(props: { slug: string; openRoom?: (slug: string) => voi
     const blink = lastMinute && Math.floor(now / 1000) % 2 === 0 ? "⚠ " : "";
     const warning =
       closesAt === null ? "" : `${blink}(${timeLeft(closesAt, now)}) still racing? · `;
-    document.title = `${warning}${room.race()?.goal ?? "Race"} · raceme`;
+    document.title = `${warning}${room.race()?.goal ?? "race"} · raceme`;
   });
   onCleanup(() => {
     document.title = "raceme";
@@ -40,7 +40,7 @@ export function RoomPage(props: { slug: string; openRoom?: (slug: string) => voi
 
   const connecting = (
     <main>
-      <p role="status">{room.notice() ?? "Connecting…"}</p>
+      <p role="status">{room.notice() ?? "connecting…"}</p>
     </main>
   );
 

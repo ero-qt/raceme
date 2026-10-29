@@ -27,13 +27,13 @@ async function positions(page: Page): Promise<Record<string, number[]>> {
     title: await box("title", "h2"),
     count: await box("count", "h2 + span"),
     watchers: await box("watchers", "[title$=' watching']"),
-    status: await box("status", "h2 ~ span", /^(Entry|Starting|In progress|Complete|Terminated)/),
+    status: await box("status", "h2 ~ span", /^(entry|starting|in progress|complete|terminated)/),
     nameColumn: await box("nameColumn", "th >> text=Name"),
     statusColumn: await box("statusColumn", "th >> text=Status"),
     timeColumn: await box("timeColumn", "th >> text=Time"),
-    chat: await box("chat", "[aria-label='Chat']"),
+    chat: await box("chat", "[aria-label='chat']"),
     clock: await box("clock", "[role='timer']"),
-    roomTimer: await box("roomTimer", "button[aria-label^='Room closes']"),
+    roomTimer: await box("roomTimer", "button[aria-label^='room closes']"),
   };
 }
 
@@ -43,7 +43,7 @@ describe("room layout", () => {
     await openLobbyAndEnter(host.page, harness.origin, "ero");
     const guest = await newPage(harness);
     await guest.page.goto(host.page.url());
-    await guest.page.getByLabel("Your name").fill("guest");
+    await guest.page.getByLabel("your name").fill("guest");
     await guest.page.getByRole("button", { name: ".enter" }).click();
     await host.page.getByText("2/").waitFor();
     const before = await positions(host.page);
@@ -55,13 +55,13 @@ describe("room layout", () => {
     expect(await positions(host.page)).toEqual(before);
     await watcher.context.close();
 
-    const limit = host.page.getByLabel("Entrant limit");
+    const limit = host.page.getByLabel("entrant limit");
     const setCap = async (cap: string) => {
       await limit.fill(cap);
       await limit.blur();
       await host.page.waitForFunction(
         (want) =>
-          (document.querySelector("[aria-label='Entrant limit']") as HTMLInputElement).value ===
+          (document.querySelector("[aria-label='entrant limit']") as HTMLInputElement).value ===
           want,
         cap,
       );
@@ -75,10 +75,10 @@ describe("room layout", () => {
 
     await host.page.getByRole("button", { name: ".ready" }).click();
     await guest.page.getByRole("button", { name: ".ready" }).click();
-    await host.page.getByText("Starting").waitFor();
+    await host.page.getByText("starting").waitFor();
     expect(await positions(host.page)).toEqual(before);
 
-    await host.page.getByText("In progress").waitFor();
+    await host.page.getByText("in progress").waitFor();
     expect(await positions(host.page)).toEqual(before);
 
     await host.context.close();
@@ -143,12 +143,12 @@ describe("entrant table on phones", () => {
 
     for (const width of [412, 360]) {
       await page.setViewportSize({ width, height: 800 });
-      await page.getByRole("columnheader", { name: "Time" }).waitFor({ state: "detached" });
+      await page.getByRole("columnheader", { name: "time" }).waitFor({ state: "detached" });
       await page.waitForFunction(
         () => getComputedStyle(document.querySelector("#app") as Element).minHeight === "800px",
       );
       const sizes = await page.evaluate(() => {
-        const name = [...document.querySelectorAll("th")].find((th) => th.textContent === "Name");
+        const name = [...document.querySelectorAll("th")].find((th) => th.textContent === "name");
         return {
           name: Math.round(name?.getBoundingClientRect().width ?? 0),
           overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
@@ -215,7 +215,7 @@ describe("control size", () => {
     await page.goto(`${harness.origin}/`);
 
     const heights = await Promise.all(
-      [page.getByRole("button", { name: ".startrace" }), page.getByLabel("Goal or room code")].map(
+      [page.getByRole("button", { name: ".startrace" }), page.getByLabel("goal or room code")].map(
         async (control) => Math.round((await control.boundingBox())?.height ?? 0),
       ),
     );
@@ -229,7 +229,7 @@ describe("home layout", () => {
   test("the start form takes the wide left column, the intro the right, stacked on phones", async () => {
     const { context, page } = await newPage(harness);
     await page.goto(`${harness.origin}/`);
-    const form = page.getByLabel("Goal or room code");
+    const form = page.getByLabel("goal or room code");
     const intro = page.getByRole("complementary");
 
     await page.setViewportSize({ width: 1280, height: 800 });
@@ -251,15 +251,13 @@ describe("home layout", () => {
   test("the start form stays put when a footer note opens", async () => {
     const { context, page } = await newPage(harness);
     await page.goto(`${harness.origin}/`);
-    const form = page.getByLabel("Goal or room code");
+    const form = page.getByLabel("goal or room code");
     const before = await form.boundingBox();
 
-    await page.getByText("Privacy", { exact: true }).click();
-    await page.getByText("The server keeps nothing on disk.").waitFor();
+    await page.getByText("privacy", { exact: true }).click();
+    await page.getByText("the server keeps nothing on disk.").waitFor();
     expect(await form.boundingBox()).toEqual(before);
 
-    await page.getByText("Made with AI", { exact: true }).click();
-    await page.getByText("i'm not proud, but i think it's useful.").waitFor();
     expect(await form.boundingBox()).toEqual(before);
 
     await context.close();
@@ -273,15 +271,15 @@ describe("home layout", () => {
       Promise.all((await summaries.all()).map(async (summary) => await summary.boundingBox()));
     const before = await boxes();
 
-    await page.getByText("Privacy", { exact: true }).click();
-    const notice = page.getByText("The server keeps nothing on disk.");
+    await page.getByText("privacy", { exact: true }).click();
+    const notice = page.getByText("the server keeps nothing on disk.");
     await notice.waitFor();
     expect(await boxes()).toEqual(before);
     expect(((await notice.boundingBox())?.y ?? 0) < (before[0]?.y ?? 0)).toBe(true);
 
     // Opening the other note closes this one, so 2 notes never cover each other.
-    await page.getByText("Made with AI", { exact: true }).click();
-    await page.getByText("i'm not proud, but i think it's useful.").waitFor();
+    await page.getByText("build", { exact: true }).click();
+    await page.getByText(/unverified build/).waitFor();
     expect(await notice.isVisible()).toBe(false);
     expect(await boxes()).toEqual(before);
 
@@ -292,8 +290,8 @@ describe("home layout", () => {
     const { context, page } = await newPage(harness);
     await page.setViewportSize({ width: 1280, height: 700 });
     await page.goto(`${harness.origin}/`);
-    await page.getByText("Privacy", { exact: true }).click();
-    await page.getByText("The server keeps nothing on disk.").waitFor();
+    await page.getByText("privacy", { exact: true }).click();
+    await page.getByText("the server keeps nothing on disk.").waitFor();
 
     const hiddenPixels = await page.evaluate(() => {
       const body = document.querySelector("details[open] > div") as HTMLElement;
@@ -307,14 +305,14 @@ describe("home layout", () => {
   test("a click outside the note or Escape closes it", async () => {
     const { context, page } = await newPage(harness);
     await page.goto(`${harness.origin}/`);
-    const notice = page.getByText("The server keeps nothing on disk.");
+    const notice = page.getByText("the server keeps nothing on disk.");
 
-    await page.getByText("Privacy", { exact: true }).click();
+    await page.getByText("privacy", { exact: true }).click();
     await notice.waitFor();
     await page.mouse.click(640, 100);
     expect(await notice.isVisible()).toBe(false);
 
-    await page.getByText("Privacy", { exact: true }).click();
+    await page.getByText("privacy", { exact: true }).click();
     await notice.waitFor();
     await page.keyboard.press("Escape");
     expect(await notice.isVisible()).toBe(false);

@@ -7,6 +7,7 @@ import * as styles from "../room/room.css.ts";
 import { type CatalogEntry, loadCategoriesFromServer, searchGamesOnServer } from "./game-search.ts";
 import { rememberGoal } from "./goal-history.ts";
 import { GoalPicker, useGamePicker } from "./goal-picker.tsx";
+import { HomeIntro } from "./home-intro.tsx";
 import * as homeStyles from "./home-page.css.ts";
 import { useRoomCheck } from "./room-check.ts";
 import { parseRoomCode } from "./room-code.ts";
@@ -120,54 +121,57 @@ export function HomePage(props: {
   }
 
   return (
-    <main class={styles.page}>
-      <h1 class={homeStyles.visuallyHidden}>raceme</h1>
-      <form
-        class={titleStyles.form}
-        onPaste={() => {
-          pasting = true;
-        }}
-        onSubmit={(event) => {
-          event.preventDefault();
-          void submit();
-        }}
-      >
-        <GoalPicker
-          picker={picker}
-          label="Goal or room code"
-          placeholder="set a goal or paste a room code"
-          inputClass={`${titleStyles.input} ${homeStyles.field}`}
-          kind={code() ? "code" : "goal"}
-          value={value()}
-          onInput={changeValue}
-        />
-        <Show
-          when={code()}
-          fallback={
-            <Button type="submit" disabled={busy() || value().trim() === ""} aria-busy={busy()}>
-              <Show when={busy()}>
-                <LoaderCircle class={homeStyles.spinner} aria-hidden="true" />
-              </Show>
-              .startrace
-            </Button>
-          }
+    <main class={homeStyles.page}>
+      <section class={homeStyles.start}>
+        <h1 class={homeStyles.visuallyHidden}>raceme</h1>
+        <form
+          class={titleStyles.form}
+          onPaste={() => {
+            pasting = true;
+          }}
+          onSubmit={(event) => {
+            event.preventDefault();
+            void submit();
+          }}
         >
-          <Button type="submit" variant="ghost">
-            Join
-          </Button>
+          <GoalPicker
+            picker={picker}
+            label="Goal or room code"
+            placeholder="set a goal or paste a room code"
+            inputClass={`${titleStyles.input} ${homeStyles.field}`}
+            kind={code() ? "code" : "goal"}
+            value={value()}
+            onInput={changeValue}
+          />
+          <Show
+            when={code()}
+            fallback={
+              <Button type="submit" disabled={busy() || value().trim() === ""} aria-busy={busy()}>
+                <Show when={busy()}>
+                  <LoaderCircle class={homeStyles.spinner} aria-hidden="true" />
+                </Show>
+                .startrace
+              </Button>
+            }
+          >
+            <Button type="submit" variant="ghost">
+              Join
+            </Button>
+          </Show>
+        </form>
+        <p class={styles.notice} role="status">
+          {notice()}
+        </p>
+        <Show when={restartAt()}>
+          {(at) => (
+            <p class={`${styles.notice} ${homeStyles.warning}`}>
+              <TriangleAlert class={styles.closedIcon} aria-hidden="true" />
+              {restartText(at(), Date.now())}
+            </p>
+          )}
         </Show>
-      </form>
-      <p class={styles.notice} role="status">
-        {notice()}
-      </p>
-      <Show when={restartAt()}>
-        {(at) => (
-          <p class={`${styles.notice} ${homeStyles.warning}`}>
-            <TriangleAlert class={styles.closedIcon} aria-hidden="true" />
-            {restartText(at(), Date.now())}
-          </p>
-        )}
-      </Show>
+      </section>
+      <HomeIntro />
     </main>
   );
 }

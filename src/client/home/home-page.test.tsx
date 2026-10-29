@@ -427,6 +427,20 @@ describe("HomePage suggestions", () => {
   });
 });
 
+describe("HomePage intro", () => {
+  test("tells what raceme is beside the start form, with a note that rooms get deleted", () => {
+    const home = renderHome();
+
+    expect(home.getByRole("heading", { name: "Welcome" })).toBeTruthy();
+    const intro = home.getByRole("complementary").textContent;
+    expect(intro).toContain("without accounts and without moderation");
+    expect(intro).toContain("A room is deleted from the server once it closes.");
+    expect(home.getByRole("link", { name: "SRL" }).getAttribute("href")).toBe(
+      "https://speedrunslive.com",
+    );
+  });
+});
+
 describe("HomePage restart notice", () => {
   test("tells about a queued server restart on the start page", async () => {
     const restartAt = Date.now() + (3 * 60 + 20) * 60_000 + 30_000;

@@ -18,10 +18,12 @@ describe("built page", () => {
     expect(html).toContain('<meta name="robots" content="noindex, nofollow" />');
   });
 
-  test("names no outside host, apart from XML namespace ids that are never fetched", () => {
+  // XML namespace ids are never fetched. The SRL link on the start page only opens on a click.
+  test("names no outside host, apart from XML namespace ids and the SRL link", () => {
     const hosts = new Set(Array.from(bundle.matchAll(/https?:\/\/([a-z0-9.-]+)/gi), (m) => m[1]));
+    const allowed = new Set(["www.w3.org", "speedrunslive.com"]);
 
-    expect([...hosts].filter((host) => host !== "www.w3.org")).toEqual([]);
+    expect([...hosts].filter((host) => !allowed.has(host ?? ""))).toEqual([]);
   });
 
   test("uses no tracking or beacon APIs", () => {

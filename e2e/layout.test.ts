@@ -209,7 +209,29 @@ describe("page shell", () => {
 });
 
 describe("home layout", () => {
-  test("the start form stays put when the corner notes open", async () => {
+  test("the start form takes the wide left column, the intro the right, stacked on phones", async () => {
+    const { context, page } = await newPage(harness);
+    await page.goto(`${harness.origin}/`);
+    const form = page.getByLabel("Goal or room code");
+    const intro = page.getByRole("complementary");
+
+    await page.setViewportSize({ width: 1280, height: 800 });
+    const wideForm = await form.boundingBox();
+    const wideIntro = await intro.boundingBox();
+    expect({
+      sideBySide: (wideIntro?.x ?? 0) >= (wideForm?.x ?? 0) + (wideForm?.width ?? 0),
+      formWider: (wideForm?.width ?? 0) > (wideIntro?.width ?? 0),
+    }).toEqual({ sideBySide: true, formWider: true });
+
+    await page.setViewportSize({ width: 390, height: 800 });
+    const phoneForm = await form.boundingBox();
+    const phoneIntro = await intro.boundingBox();
+    expect((phoneIntro?.y ?? 0) >= (phoneForm?.y ?? 0) + (phoneForm?.height ?? 0)).toBe(true);
+
+    await context.close();
+  });
+
+  test("the start form stays put when a footer note opens", async () => {
     const { context, page } = await newPage(harness);
     await page.goto(`${harness.origin}/`);
     const form = page.getByLabel("Goal or room code");

@@ -649,6 +649,31 @@ describe("RoomView layout", () => {
     expect(document.activeElement).not.toBe(view.getByRole("combobox", { name: "goal" }));
   });
 
+  test("a phone's race tab reads the newest log line aloud, since the log is on the chat tab", () => {
+    const realMatchMedia = globalThis.matchMedia;
+    globalThis.matchMedia = (() => ({
+      matches: true,
+      addEventListener() {},
+      removeEventListener() {},
+    })) as unknown as typeof matchMedia;
+    try {
+      const view = renderRoom("a");
+      const raceCard = view.getByRole("region", { name: "race" });
+
+      const mirror = view.getByRole("status", { name: "latest chat line", hidden: true });
+      expect(raceCard.contains(mirror)).toBe(true);
+      expect(mirror.textContent).toBe("alice: gl hf");
+    } finally {
+      globalThis.matchMedia = realMatchMedia;
+    }
+  });
+
+  test("a wide screen has no second copy of the log line", () => {
+    const view = renderRoom("a");
+
+    expect(view.queryByRole("status", { name: "latest chat line", hidden: true })).toBeNull();
+  });
+
   test("entering moves focus to the message box", () => {
     const [state, setState] = createSignal(race);
     const view = render(() => (

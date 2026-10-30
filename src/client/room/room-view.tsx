@@ -20,7 +20,7 @@ import {
 } from "../../shared/race/race.ts";
 import type { GoalCatalog } from "../goal/goal-picker.tsx";
 import { Button } from "../primitives/button.tsx";
-import { icon, warningIcon } from "../styles/controls.css.ts";
+import { icon, visuallyHidden, warningIcon } from "../styles/controls.css.ts";
 import { actionLabel, refusalText } from "./action-labels.ts";
 import { type ActionType, availableActions } from "./available-actions.ts";
 import { chatCommand } from "./chat-command.ts";
@@ -181,6 +181,10 @@ export function RoomView(props: RoomViewProps): JSX.Element {
   );
   const logLines = () =>
     [...props.feed, ...notices()].sort((a, b) => a.at - b.at || Number(a.kind === "notice"));
+  const latestLine = () => {
+    const line = logLines().at(-1);
+    return line?.kind === "chat" ? `${line.name}: ${line.text}` : (line?.text ?? "");
+  };
 
   let messageBox: HTMLInputElement | undefined;
   let race: HTMLElement | undefined;
@@ -256,6 +260,13 @@ export function RoomView(props: RoomViewProps): JSX.Element {
   return (
     <main class={styles.page} data-closed={props.closed === true}>
       <section class={styles.raceCard} data-active={tab() === "race"} aria-label="race" ref={race}>
+        {/* A phone hides the chat card and its live log on the race tab, so the newest line is
+            read from here instead. */}
+        <Show when={phoneScreen()}>
+          <p class={visuallyHidden} role="status" aria-label="latest chat line">
+            {latestLine()}
+          </p>
+        </Show>
         <Show when={props.closed}>
           <div class={styles.closedNotice} role="status">
             <p class={styles.closedReason}>{props.notice}</p>

@@ -49,6 +49,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - Screen readers read the closing warning once instead of every second.
 - After a race button, focus stays on the page, off `.end` and out of the goal field.
 - The closing warning no longer dims the room behind it.
+- On phones, screen readers hear new chat and RaceBot lines on the race tab too.
 
 ### Security
 

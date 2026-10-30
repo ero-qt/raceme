@@ -40,6 +40,11 @@ function start(overrides: Partial<ServerConfig> = {}) {
   return `http://127.0.0.1:${running.server.port}/apps/raceme`;
 }
 
+/** Builds a session cookie shaped like the server's own: 43 base64url characters. */
+function session(label: string): string {
+  return `raceme_session=${label.padEnd(43, "x")}`;
+}
+
 function cookieValue(response: Response, prefix: string): string {
   const cookie = response.headers.getSetCookie().find((c) => c.startsWith(prefix));
   if (!cookie) {
@@ -155,10 +160,7 @@ describe("server", () => {
     const base = start();
     const { slug } = await createRoom(base, "sm64 16 star");
 
-    const client = new Client(
-      socketUrl(base, slug),
-      "raceme_session=guest-secret-guest-secret-guest",
-    );
+    const client = new Client(socketUrl(base, slug), session("guest-secret-guest-secret-guest"));
 
     const state = await client.waitFor((m) => m.type === "state");
     expect(state.type === "state" && state.race.goal).toBe("sm64 16 star");
@@ -265,10 +267,28 @@ describe("server", () => {
     expect((await upgrade(base, slug)).status).toBe(429);
   });
 
+  test("replaces a session cookie that isn't shaped like its own", async () => {
+    const base = start();
+    const { slug } = await createRoom(base);
+    const entrantIdFor = async (cookie: string) => {
+      const client = new Client(socketUrl(base, slug), cookie);
+      const welcome = await client.waitFor((m) => m.type === "welcome");
+      return welcome.type === "welcome" ? welcome.entrantId : null;
+    };
+
+    for (const cookie of [
+      `raceme_session=${"a".repeat(8_000)}`,
+      "raceme_session=a.b/c=".padEnd(43, "x"),
+    ]) {
+      expect(await entrantIdFor(cookie)).not.toBe(await entrantIdFor(cookie));
+    }
+    expect(await entrantIdFor(session("kept"))).toBe(await entrantIdFor(session("kept")));
+  });
+
   test("caps open sockets per IP", async () => {
     const base = start({ maxSocketsPerIp: 2 });
     const { slug } = await createRoom(base);
-    const cookie = "raceme_session=cap-secret-cap-secret-cap-secret-cap";
+    const cookie = session("cap-secret-cap-secret-cap-secret-cap");
 
     const first = new Client(socketUrl(base, slug), cookie);
     const second = new Client(socketUrl(base, slug), cookie);
@@ -280,8 +300,8 @@ describe("server", () => {
   test("limits messages per IP across all its sockets", async () => {
     const base = start();
     const { slug } = await createRoom(base);
-    const a = new Client(socketUrl(base, slug), "raceme_session=flood-a-flood-a-flood-a-flood-a");
-    const b = new Client(socketUrl(base, slug), "raceme_session=flood-b-flood-b-flood-b-flood-b");
+    const a = new Client(socketUrl(base, slug), session("flood-a-flood-a-flood-a-flood-a"));
+    const b = new Client(socketUrl(base, slug), session("flood-b-flood-b-flood-b-flood-b"));
     await Promise.all([a.opened, b.opened]);
 
     for (let i = 0; i < 20; i++) {
@@ -296,8 +316,8 @@ describe("server", () => {
   test("a socket over its own limit leaves the IP's shared limit to its neighbours", async () => {
     const base = start();
     const { slug } = await createRoom(base);
-    const a = new Client(socketUrl(base, slug), "raceme_session=spam-a-spam-a-spam-a-spam-a-spam");
-    const b = new Client(socketUrl(base, slug), "raceme_session=calm-b-calm-b-calm-b-calm-b-calm");
+    const a = new Client(socketUrl(base, slug), session("spam-a-spam-a-spam-a-spam-a-spam"));
+    const b = new Client(socketUrl(base, slug), session("calm-b-calm-b-calm-b-calm-b-calm"));
     await Promise.all([a.opened, b.opened]);
 
     for (let i = 0; i < 40; i++) {
@@ -349,10 +369,7 @@ describe("server", () => {
       restartAt: null,
     });
     const { slug } = await createRoom(base);
-    const client = new Client(
-      socketUrl(base, slug),
-      "raceme_session=count-secret-count-secret-count",
-    );
+    const client = new Client(socketUrl(base, slug), session("count-secret-count-secret-count"));
     await client.waitFor((m) => m.type === "state");
 
     expect(await (await fetch(`${base}/api/status`)).json()).toEqual({
@@ -377,10 +394,7 @@ describe("server", () => {
       socketUrl(base, slug),
       `${host}; raceme_session=alice-secret-alice-secret-alice`,
     );
-    const bob = new Client(
-      socketUrl(base, slug),
-      "raceme_session=bob-secret-bob-secret-bob-secret",
-    );
+    const bob = new Client(socketUrl(base, slug), session("bob-secret-bob-secret-bob-secret"));
     await Promise.all([alice.opened, bob.opened]);
 
     const welcome = await alice.waitFor((m) => m.type === "welcome");
@@ -447,7 +461,7 @@ describe("server", () => {
   test("an entrant reconnecting with the same cookies keeps their id and host rights", async () => {
     const base = start();
     const { slug, host } = await createRoom(base);
-    const cookies = `${host}; raceme_session=back-secret-back-secret-back-secret`;
+    const cookies = `${host}; ${session("back-secret")}`;
     const first = new Client(socketUrl(base, slug), cookies);
     const welcome = await first.waitFor((m) => m.type === "welcome");
     first.send({ type: "join", name: "back" });
@@ -501,8 +515,7 @@ describe("server", () => {
 
     const clients = Array.from(
       { length: 5 },
-      (_, i) =>
-        new Client(socketUrl(base, slug), `raceme_session=${`person-${i}-`.padEnd(32, "x")}`),
+      (_, i) => new Client(socketUrl(base, slug), session(`person-${i}`)),
     );
     await Promise.all(clients.map((client) => client.waitFor((m) => m.type === "state")));
     for (let i = 0; i < 50 && posts.length === 0; i++) {
@@ -522,7 +535,7 @@ describe("server", () => {
       const { slug } = await createRoom(base);
       const client = new Client(
         socketUrl(base, slug),
-        "raceme_session=queue-secret-queue-secret-queue-se",
+        session("queue-secret-queue-secret-queue-se"),
       );
       await client.waitFor((m) => m.type === "state");
 
@@ -549,7 +562,7 @@ describe("server", () => {
       await fetch(adminUrl(), { method: "POST" });
       const client = new Client(
         socketUrl(base, slug),
-        "raceme_session=mark-secret-mark-secret-mark-secr",
+        session("mark-secret-mark-secret-mark-secr"),
       );
 
       await client.waitFor((m) => m.type === "state" && m.closesFor === "restart");
@@ -564,7 +577,7 @@ describe("server", () => {
       const { slug } = await createRoom(base);
       const client = new Client(
         socketUrl(base, slug),
-        "raceme_session=warn-secret-warn-secret-warn-secr",
+        session("warn-secret-warn-secret-warn-secr"),
       );
       await client.waitFor((m) => m.type === "state");
 
@@ -675,7 +688,7 @@ describe("server", () => {
     const { slug } = await createRoom(base);
     const client = new Client(
       socketUrl(base, slug),
-      "raceme_session=old-secret-old-secret-old-secret-old",
+      session("old-secret-old-secret-old-secret-old"),
     );
     await client.opened;
 
@@ -694,7 +707,7 @@ describe("server", () => {
     const { slug } = await createRoom(base);
     const client = new Client(
       socketUrl(base, slug),
-      "raceme_session=idle-secret-idle-secret-idle-secret",
+      session("idle-secret-idle-secret-idle-secret"),
     );
     await client.opened;
 
@@ -715,18 +728,12 @@ describe("server", () => {
   test("someone opening an idle room counts as activity and clears the warning", async () => {
     const base = start({ idleMs: 100 * 60 * 60_000 });
     const { slug } = await createRoom(base);
-    const first = new Client(
-      socketUrl(base, slug),
-      "raceme_session=one-secret-one-secret-one-secret-o",
-    );
+    const first = new Client(socketUrl(base, slug), session("one-secret-one-secret-one-secret-o"));
     await first.opened;
     clockOffsetMs += 2 * 60 * 60_000;
     await first.waitFor((m) => m.type === "idleWarning");
 
-    const late = new Client(
-      socketUrl(base, slug),
-      "raceme_session=two-secret-two-secret-two-secret-t",
-    );
+    const late = new Client(socketUrl(base, slug), session("two-secret-two-secret-two-secret-t"));
     await late.opened;
 
     expect(await first.waitFor((m) => m.type === "idleCleared")).toBeTruthy();
@@ -737,7 +744,7 @@ describe("server", () => {
 
     const client = new Client(
       socketUrl(base, "aaaaaaaaaa"),
-      "raceme_session=gone-secret-gone-secret-gone-secret",
+      session("gone-secret-gone-secret-gone-secret"),
     );
 
     expect(await client.closed).toBe(4404);
@@ -789,15 +796,9 @@ describe("server", () => {
   test("tells everyone in a room how many people watch it without entering", async () => {
     const base = start();
     const { slug } = await createRoom(base);
-    const first = new Client(
-      socketUrl(base, slug),
-      "raceme_session=see-secret-see-secret-see-secret-se",
-    );
+    const first = new Client(socketUrl(base, slug), session("see-secret-see-secret-see-secret-se"));
     await first.opened;
-    const watcher = new Client(
-      socketUrl(base, slug),
-      "raceme_session=two-watch-two-watch-two-watch-tw",
-    );
+    const watcher = new Client(socketUrl(base, slug), session("two-watch-two-watch-two-watch-tw"));
     await watcher.opened;
 
     const latestWatchers = () => {
@@ -815,7 +816,7 @@ describe("server", () => {
   test("sends a second tab of the same session its state without telling the room", async () => {
     const base = start();
     const { slug } = await createRoom(base);
-    const cookie = "raceme_session=tab-secret-tab-secret-tab-secret-ta";
+    const cookie = session("tab-secret-tab-secret-tab-secret-ta");
     const first = new Client(socketUrl(base, slug), cookie);
     await first.waitFor((m) => m.type === "state");
     const statesBefore = first.messages.filter((m) => m.type === "state").length;
@@ -831,14 +832,8 @@ describe("server", () => {
   test("announces actions as RaceBot lines and relays chat", async () => {
     const base = start();
     const { slug } = await createRoom(base);
-    const alice = new Client(
-      socketUrl(base, slug),
-      "raceme_session=alice-secret-alice-secret-alice",
-    );
-    const bob = new Client(
-      socketUrl(base, slug),
-      "raceme_session=bob-secret-bob-secret-bob-secret",
-    );
+    const alice = new Client(socketUrl(base, slug), session("alice-secret-alice-secret-alice"));
+    const bob = new Client(socketUrl(base, slug), session("bob-secret-bob-secret-bob-secret"));
     await Promise.all([alice.opened, bob.opened]);
 
     alice.send({ type: "join", name: "alice" });
@@ -860,10 +855,7 @@ describe("server", () => {
   test("refuses chat before entering", async () => {
     const base = start();
     const { slug } = await createRoom(base);
-    const guest = new Client(
-      socketUrl(base, slug),
-      "raceme_session=guest-secret-guest-secret-guest",
-    );
+    const guest = new Client(socketUrl(base, slug), session("guest-secret-guest-secret-guest"));
     await guest.opened;
 
     guest.send({ type: "say", text: "hi" });
@@ -875,10 +867,7 @@ describe("server", () => {
   test("refuses setGoal from a guest", async () => {
     const base = start();
     const { slug } = await createRoom(base);
-    const guest = new Client(
-      socketUrl(base, slug),
-      "raceme_session=guest-secret-guest-secret-guest",
-    );
+    const guest = new Client(socketUrl(base, slug), session("guest-secret-guest-secret-guest"));
     await guest.opened;
 
     guest.send({ type: "setGoal", goal: "any%" });

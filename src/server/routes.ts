@@ -33,6 +33,8 @@ interface RouteDeps {
 type Router = (request: Request, server: Server<SocketData>) => Promise<Response | undefined>;
 
 const sessionCookie = "raceme_session";
+// Matches what `randomSecret` emits, so no other text can become a session key.
+const sessionSecretShape = /^[A-Za-z0-9_-]{43}$/;
 const sessionMaxAgeSeconds = sessionCookieDays * 24 * 60 * 60;
 const roomSocketPath = /^\/api\/rooms\/([a-z2-7]{10})\/ws$/;
 const roomCheckPath = /^\/api\/rooms\/([a-z2-7]{10})$/;
@@ -270,7 +272,7 @@ function upgradeIntoRoom(
   room: Room,
 ): Response | undefined {
   const existing = readCookie(request, sessionCookie);
-  const secret = existing && existing.length >= 32 ? existing : randomSecret();
+  const secret = existing && sessionSecretShape.test(existing) ? existing : randomSecret();
   const entrantId = room.entrantIdFor(secret);
   if (entrantId === null) {
     return status(503);

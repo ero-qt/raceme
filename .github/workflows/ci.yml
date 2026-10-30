@@ -30,11 +30,8 @@ jobs:
         with:
           path: ~/.bun/install/cache
           key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
-      # Skips the Chrome that puppeteer downloads for pa11y and the evidence collector, which CI never runs.
       - name: Install packages
         run: bun install --frozen-lockfile
-        env:
-          PUPPETEER_SKIP_DOWNLOAD: "true"
       - name: Install Chromium
         run: bunx playwright install --with-deps chromium
       - name: Lint and type check
@@ -43,3 +40,5 @@ jobs:
         run: bun run test
       - name: Browser tests
         run: bun run test:e2e
+      - name: Build the server bundle
+        run: bun run release:server

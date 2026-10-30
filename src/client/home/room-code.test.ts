@@ -25,7 +25,7 @@ describe("parseRoomCode", () => {
     expect(parseRoomCode("duxanagxd")).toBeNull();
     expect(parseRoomCode("duxanagxd1")).toBeNull();
     expect(parseRoomCode("")).toBeNull();
-    expect(parseRoomCode("https://ero-qt.eu/apps/raceme/catalog")).toBeNull();
+    expect(parseRoomCode("https://ero-qt.eu/apps/raceme/missing")).toBeNull();
   });
 
   test("takes the code from the last part of a link's path", () => {

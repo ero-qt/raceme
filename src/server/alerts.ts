@@ -3,7 +3,7 @@ const levels = [5, 10, 25, 50, 100, 250, 500, 1000];
 
 const labels = { rooms: "rooms open", people: "people online" } as const;
 
-export type AlertKind = keyof typeof labels;
+type AlertKind = keyof typeof labels;
 
 /** Tells the owner when the number of open rooms or people online climbs past a level. */
 export class SpikeAlerts {

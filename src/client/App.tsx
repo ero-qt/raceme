@@ -4,7 +4,6 @@ import {
   Suspense,
   Switch,
   createSignal,
-  lazy,
   onCleanup,
   useTransition,
 } from "solid-js";
@@ -13,8 +12,6 @@ import { SiteFooter } from "./layout/site-footer.tsx";
 import { SiteHeader } from "./layout/site-header.tsx";
 import { homePath, pagePath } from "./page-path.ts";
 import { RoomPage } from "./room/room-page.tsx";
-
-const Catalog = lazy(() => import("./catalog/catalog.tsx").then((m) => ({ default: m.Catalog })));
 
 const roomPath = /^\/([a-z2-7]{10})$/;
 
@@ -50,9 +47,6 @@ export function App(): JSX.Element {
       <SiteHeader onHome={goHome} />
       <Suspense fallback={<main aria-busy="true" />}>
         <Switch fallback={<HomePage open={openRoom} busy={pending()} />}>
-          <Match when={path() === "/catalog"}>
-            <Catalog />
-          </Match>
           <Match when={roomSlug()} keyed>
             {(slug) => <RoomPage slug={slug} openRoom={openRoom} />}
           </Match>

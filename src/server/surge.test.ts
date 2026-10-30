@@ -3,7 +3,7 @@ import { proofHolds, solveChallenge } from "../shared/proof-of-work.ts";
 import { SurgeGuard } from "./surge.ts";
 
 function guard(now: () => number, roomsPerMinute = 3) {
-  return new SurgeGuard({ roomsPerMinute, bits: 8, secret: "test-secret", clock: now });
+  return new SurgeGuard({ roomsPerMinute, bits: 8, clock: now });
 }
 
 describe("SurgeGuard", () => {

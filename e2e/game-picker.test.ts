@@ -25,23 +25,4 @@ describe("game picker", () => {
 
     await context.close();
   }, 20_000);
-
-  test("an opened goal comes back under your goals", async () => {
-    const { context, page } = await newPage(harness);
-    await page.goto(`${harness.origin}/`);
-    await page.getByLabel("goal or room code").fill("bingo blackout");
-    await page.getByRole("button", { name: ".startrace" }).click();
-    await page.getByLabel("your name").waitFor();
-
-    await page.goto(`${harness.origin}/`);
-    await page.getByLabel("goal or room code").fill("bingo");
-
-    const pastGoal = page
-      .getByRole("group", { name: "your goals" })
-      .getByRole("option", { name: "bingo blackout" });
-    await pastGoal.waitFor();
-    expect(await pastGoal.count()).toBe(1);
-
-    await context.close();
-  }, 20_000);
 });

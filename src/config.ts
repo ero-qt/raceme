@@ -4,7 +4,7 @@ import { normalizeBasePath } from "./shared/base-path.ts";
 
 type Env = Record<string, string | undefined>;
 
-/** Reads the server settings from environment variables, see the configuration table in readme.md. */
+/** Reads the server settings from environment variables, see the table in hosting.md. */
 export function loadConfig(env: Env): ServerConfig {
   const count = (name: string, fallback: number) => positiveInteger(env, name, fallback);
 

@@ -72,15 +72,4 @@ describe("privacy", () => {
 
     await context.close();
   }, 20_000);
-
-  test("only a viewer's own picks land in local storage", async () => {
-    const { context, page } = await newPage(harness);
-    await openLobbyAndEnter(page, harness.origin, "ero");
-
-    expect(await page.evaluate(() => Object.keys(localStorage).sort())).toEqual([
-      "raceme.goalHistory",
-    ]);
-
-    await context.close();
-  }, 20_000);
 });

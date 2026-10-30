@@ -7,9 +7,7 @@ import type { RoomConnection } from "./connection.ts";
  * second for the room timer and the idle countdown, which shows in the tab title too, since
  * animation frames stop in background tabs.
  */
-export function useServerClock(
-  room: Pick<RoomConnection, "race" | "idleClosesAt" | "clockOffset">,
-): () => number {
+export function useServerClock(room: Pick<RoomConnection, "race" | "clockOffset">): () => number {
   const [frame, setFrame] = createSignal(0);
   const tick = () => setFrame((count) => count + 1);
 

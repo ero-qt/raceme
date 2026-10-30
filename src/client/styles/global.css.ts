@@ -13,7 +13,7 @@ const scale = {
   font: { body: "monospace, monospace", mono: "monospace, monospace" },
   radius: { s: "0.2rem" },
   target: { min: "32px" },
-  overlay: { scrim: "rgb(0 0 0 / 0.45)", shadow: "0 4px 16px rgb(0 0 0 / 0.4)" },
+  overlay: { shadow: "0 4px 16px rgb(0 0 0 / 0.4)" },
 };
 
 globalStyle(":root", {

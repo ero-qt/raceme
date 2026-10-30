@@ -10,7 +10,6 @@ export const placement = style({
   justifyItems: "center",
   alignItems: "start",
   paddingBlockStart: tokens.space.l,
-  background: tokens.overlay.scrim,
   pointerEvents: "none",
 });
 

@@ -40,3 +40,5 @@ jobs:
         run: bun run test
       - name: Browser tests
         run: bun run test:e2e
+      - name: Build the server bundle
+        run: bun run release:server

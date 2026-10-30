@@ -46,6 +46,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - `.startrace` works again after the server replies with an error page instead of a room.
 - Focus stays put when another entrant acts after one of your race buttons was refused.
 - Messages a tab sends past its own limit no longer count against the limit it shares with other tabs on the same address.
+- Screen readers read the closing warning once instead of every second.
 
 ### Security
 

@@ -2,7 +2,7 @@
 
 raceme runs from attested GitHub releases. A timer on the server runs 2 scripts every 10 minutes:
 
-1. `deploy.sh` runs as the `raceme` user. When a new release shows up, it downloads it, checks its attestation with `gh attestation verify`, unpacks it into `/srv/raceme/releases/<tag>` next to the running one and asks the server to queue a restart for the next 10:00 UTC. Every open room then closes at that time and gets told so. After that it checks the open room count on each run and asks for the switch once no room is open or 10:00 UTC has come.
+1. `deploy.sh` runs as the `raceme` user. When a new release shows up, it downloads it, checks its attestation with `gh attestation verify`, unpacks it into `/srv/raceme/releases/<tag>` next to the running one and asks the server to queue a restart for the next 10:00 UTC. All open rooms then close at that time and get a warning in their chat. After that it checks the open room count on each run and asks for the switch once all rooms are closed or 10:00 UTC has come.
 2. `swap.sh` runs as root. When asked, it stops raceme, points `/srv/raceme/current` at the new release and starts raceme again. If the new release doesn't answer on `/api/build` with its commit within 30 seconds, it switches back and marks the release as failed, so it's never tried again.
 
 ## one-time setup

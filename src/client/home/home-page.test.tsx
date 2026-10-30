@@ -1,10 +1,11 @@
-import { afterEach, describe, expect, mock, test } from "bun:test";
+import { afterEach, describe, expect, mock, setSystemTime, test } from "bun:test";
 import { cleanup, fireEvent, render, waitFor } from "@solidjs/testing-library";
 import { Suspense } from "solid-js";
 import { HomePage } from "./home-page.tsx";
 
 const realFetch = globalThis.fetch;
 afterEach(() => {
+  setSystemTime();
   globalThis.fetch = realFetch;
   localStorage.clear();
   cleanup();
@@ -510,12 +511,25 @@ describe("HomePage restart notice", () => {
     const view = render(() => <HomePage />);
 
     const text = new Date(restartAt).toISOString().slice(11, 16);
-    const notice = (await view.findByText(/^server restart queued for/)).closest("p");
+    const notice = (await view.findByText(/^all rooms will be closed/)).closest("p");
     expect(notice?.textContent).toBe(
-      `server restart queued for ${text} UTC (in 3 h 20 min). rooms close then.`,
+      `all rooms will be closed for a server restart at ${text} UTC (in 3 h 20 min)!`,
     );
     // Uses the red of the other notices and the warning sign of the closed room.
     expect(notice?.className).toContain(view.getByRole("status").className);
     expect(notice?.querySelector("svg[aria-hidden='true']")).not.toBeNull();
+  });
+
+  test("counts down while the page stays open", async () => {
+    const start = Date.now();
+    const restartAt = start + (3 * 60 + 20) * 60_000 + 30_000;
+    const view = render(() => (
+      <HomePage loadStatus={async () => ({ rooms: 1, people: 1, restartAt })} statusEveryMs={10} />
+    ));
+    await view.findByText(/in 3 h 20 min/);
+
+    setSystemTime(new Date(start + 10 * 60_000));
+
+    expect(await view.findByText(/in 3 h 10 min/)).toBeTruthy();
   });
 });

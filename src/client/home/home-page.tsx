@@ -43,7 +43,11 @@ export function HomePage(props: {
   const busy = () => creating() || props.busy === true;
   const [status, setStatus] = createSignal<ServerStatus | null | undefined>(undefined);
   const loadStatus = props.loadStatus ?? loadStatusFromServer;
-  const pollStatus = () => void loadStatus().then(setStatus);
+  const [now, setNow] = createSignal(Date.now());
+  const pollStatus = () => {
+    setNow(Date.now());
+    void loadStatus().then(setStatus);
+  };
   pollStatus();
   const statusTimer = setInterval(pollStatus, props.statusEveryMs ?? statusEveryMs);
   onCleanup(() => clearInterval(statusTimer));
@@ -178,7 +182,7 @@ export function HomePage(props: {
           {(at) => (
             <p class={`${styles.notice} ${homeStyles.warning}`}>
               <TriangleAlert class={styles.closedIcon} aria-hidden="true" />
-              {restartText(at(), Date.now())}
+              {restartText(at(), now())}
             </p>
           )}
         </Show>
@@ -191,11 +195,11 @@ export function HomePage(props: {
   );
 }
 
-/** Writes when a queued restart happens, like `server restart queued for 10:00 UTC (in 3 h 20 min)`. */
+/** Writes the notice for a queued restart, like `... at 10:00 UTC (in 3 h 20 min)!`. */
 function restartText(at: number, now: number): string {
   const minutes = Math.max(0, Math.floor((at - now) / 60_000));
   const time = new Date(at).toISOString().slice(11, 16);
-  return `server restart queued for ${time} UTC (in ${Math.floor(minutes / 60)} h ${minutes % 60} min). rooms close then.`;
+  return `all rooms will be closed for a server restart at ${time} UTC (in ${Math.floor(minutes / 60)} h ${minutes % 60} min)!`;
 }
 
 interface Challenge {

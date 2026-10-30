@@ -1,5 +1,5 @@
 [Unit]
-Description=Prepare the newest attested raceme release and switch to it when no room is open
+Description=Prepare the newest attested raceme release and switch to it when all rooms are closed
 After=network-online.target raceme.service
 Wants=network-online.target
 

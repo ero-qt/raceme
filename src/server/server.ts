@@ -60,7 +60,7 @@ export interface ServerConfig {
   alertWebhook: string | null;
   /** Listens on 127.0.0.1 at this port for the deploy script, `null` to leave it off. */
   adminPort: number | null;
-  /** Restarts for a new release at this hour in UTC, unless no room is open before then. */
+  /** Restarts for a new release at this hour in UTC, unless all rooms are closed before then. */
   restartHourUtc: number;
   /** Points at the release this server runs, `null` for a build that didn't come from a release. */
   build: BuildInfo | null;

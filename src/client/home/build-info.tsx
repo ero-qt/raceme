@@ -1,5 +1,5 @@
 import { type JSX, Show, createResource } from "solid-js";
-import * as styles from "./corner-notes.css.ts";
+import * as styles from "../layout/site-footer.css.ts";
 
 interface Release {
   release: string;
@@ -20,10 +20,10 @@ export function BuildInfoText(): JSX.Element {
   const [release] = createResource(loadRelease);
 
   return (
-    <Show when={!release.loading} fallback={<p aria-busy="true">Loading…</p>}>
+    <Show when={!release.loading} fallback={<p aria-busy="true">loading…</p>}>
       <Show
         when={release()}
-        fallback={<p>This server runs an unverified build that didn't come from a release.</p>}
+        fallback={<p>this server runs an unverified build that didn't come from a release.</p>}
       >
         {(release) => {
           const repo = () => new URL(release().repository).pathname.slice(1);
@@ -33,7 +33,7 @@ export function BuildInfoText(): JSX.Element {
                 Source: <a href={release().repository}>{repo()}</a>
               </p>
               <p>
-                This server runs{" "}
+                this server runs{" "}
                 <a href={`${release().repository}/releases/tag/${release().release}`}>
                   release {release().release}
                 </a>{" "}
@@ -41,13 +41,13 @@ export function BuildInfoText(): JSX.Element {
                 <a href={`${release().repository}/commit/${release().commit}`}>
                   {release().commit.slice(0, 7)}
                 </a>
-                , built and attested by GitHub Actions. The release tarball's digest is:
+                , built and attested by GitHub Actions. the release tarball's digest is:
               </p>
               <p>
                 <code class={styles.digest}>{release().digest}</code>
               </p>
               <p>
-                To check it, download <code>raceme.tar.gz</code> from that release, compare the
+                to check it, download <code>raceme.tar.gz</code> from that release, compare the
                 output of <code>sha256sum raceme.tar.gz</code> with the digest and run{" "}
                 <code class={styles.digest}>
                   gh attestation verify raceme.tar.gz --repo {repo()} --signer-workflow {repo()}

@@ -46,10 +46,13 @@ describe("joining", () => {
     expect(refusal(twoJoined(), { type: "join", entrantId: "c", name: "ALICE" })).toBe("nameTaken");
   });
 
-  test("refuses an empty or too long name", () => {
+  test("refuses an empty or too long name, and takes one of 24 characters", () => {
     expect(refusal(twoJoined(), { type: "join", entrantId: "c", name: "  " })).toBe("badName");
     expect(refusal(twoJoined(), { type: "join", entrantId: "c", name: "x".repeat(25) })).toBe(
       "badName",
+    );
+    expect(refusal(twoJoined(), { type: "join", entrantId: "c", name: "x".repeat(24) })).toBe(
+      undefined,
     );
   });
 

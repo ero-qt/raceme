@@ -44,7 +44,7 @@ export function RaceClock(props: {
       <select
         ref={select}
         class={styles.fraction}
-        aria-label="Time precision"
+        aria-label="time precision"
         value={String(props.digits)}
         onChange={(event) => {
           props.onPick(Number(event.currentTarget.value) as FractionDigits);

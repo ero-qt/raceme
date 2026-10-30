@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, mock, test } from "bun:test";
 import { cleanup, fireEvent, render, waitFor } from "@solidjs/testing-library";
-import { catalogCacheHours, sessionCookieDays } from "../../shared/retention.ts";
+import { Suspense } from "solid-js";
 import { HomePage } from "./home-page.tsx";
 
 const realFetch = globalThis.fetch;
@@ -43,7 +43,7 @@ function renderHome(
   const searched: string[] = [];
   const view = render(() => (
     <HomePage
-      loadRestart={async () => null}
+      loadStatus={async () => null}
       open={(slug) => opened.push(slug)}
       roomExists={async (slug) => {
         if (options.checkFails) {
@@ -64,7 +64,7 @@ function renderHome(
       searchDelayMs={0}
     />
   ));
-  const field = view.getByLabelText("Goal or room code") as HTMLInputElement;
+  const field = view.getByLabelText("goal or room code") as HTMLInputElement;
   const type = (value: string) => fireEvent.input(field, { target: { value } });
   const submit = () => fireEvent.submit(field.closest("form") as HTMLFormElement);
   // speedrun.com starts folded, so its header has to be opened before it searches.
@@ -75,10 +75,10 @@ function renderHome(
 
 describe("HomePage", () => {
   test("can open with a notice, like a room that closed", () => {
-    const view = render(() => <HomePage notice="This room has closed." />);
+    const view = render(() => <HomePage notice="this room has closed." />);
 
-    expect(view.getByRole("status").textContent).toBe("This room has closed.");
-    expect(view.getByLabelText("Goal or room code")).toBeTruthy();
+    expect(view.getByRole("status").textContent).toBe("this room has closed.");
+    expect(view.getByLabelText("goal or room code")).toBeTruthy();
   });
 
   test("one field at the top, .startrace greyed out while empty", () => {
@@ -105,7 +105,7 @@ describe("HomePage", () => {
   test("a pasted code of a live room is recognized, masked and joins", async () => {
     const home = renderHome();
     home.type("DUXANAGXDS");
-    await waitFor(() => expect(home.getByRole("button", { name: "Join" })).toBeTruthy());
+    await waitFor(() => expect(home.getByRole("button", { name: "join" })).toBeTruthy());
     expect(home.queryByRole("button", { name: ".startrace" })).toBeNull();
     expect(home.field.dataset.kind).toBe("code");
 
@@ -116,7 +116,7 @@ describe("HomePage", () => {
   test("a pasted invite link joins too", async () => {
     const home = renderHome();
     home.type("https://ero-qt.eu/apps/raceme/duxanagxds");
-    await waitFor(() => expect(home.getByRole("button", { name: "Join" })).toBeTruthy());
+    await waitFor(() => expect(home.getByRole("button", { name: "join" })).toBeTruthy());
     home.submit();
 
     expect(home.opened).toEqual(["duxanagxds"]);
@@ -162,7 +162,7 @@ describe("HomePage", () => {
     home.submit();
     await waitFor(() =>
       expect(home.getByRole("status").textContent).toBe(
-        "Couldn't check that room code. Try again.",
+        "couldn't check that room code. try again.",
       ),
     );
 
@@ -176,7 +176,9 @@ describe("HomePage", () => {
     home.type("x");
     home.submit();
     await waitFor(() =>
-      expect(home.getByRole("status").textContent).toBe("The goal needs 1 to 200 characters."),
+      expect(home.getByRole("status").textContent).toBe(
+        "the goal needs to be 1-200 characters long.",
+      ),
     );
   });
 
@@ -189,7 +191,7 @@ describe("HomePage", () => {
 
     home.submit();
 
-    await waitFor(() => expect(home.getByRole("status").textContent).toBe("Couldn't open a room."));
+    await waitFor(() => expect(home.getByRole("status").textContent).toBe("couldn't open a room."));
     expect((home.getByRole("button", { name: ".startrace" }) as HTMLButtonElement).disabled).toBe(
       false,
     );
@@ -230,7 +232,7 @@ describe("HomePage busy server, no WebCrypto", () => {
 
     home.submit();
 
-    await waitFor(() => expect(home.getByRole("status").textContent).toBe("Couldn't open a room."));
+    await waitFor(() => expect(home.getByRole("status").textContent).toBe("couldn't open a room."));
     expect((home.getByRole("button", { name: ".startrace" }) as HTMLButtonElement).disabled).toBe(
       false,
     );
@@ -257,7 +259,7 @@ describe("HomePage suggestions", () => {
 
     fireEvent.click(home.getByRole("option", { name: "Super Mario 64" }));
     const category = (await waitFor(() =>
-      home.getByRole("combobox", { name: "Category" }),
+      home.getByRole("combobox", { name: "category" }),
     )) as HTMLSelectElement;
     fireEvent.change(category, { target: { value: "16 Star" } });
     home.submit();
@@ -273,11 +275,11 @@ describe("HomePage suggestions", () => {
     home.unfoldSpeedrun();
     await waitFor(() => home.getByRole("option", { name: "Super Mario 64" }));
     fireEvent.click(home.getByRole("option", { name: "Super Mario 64" }));
-    await waitFor(() => home.getByRole("combobox", { name: "Category" }));
+    await waitFor(() => home.getByRole("combobox", { name: "category" }));
 
     home.type("Super Mario 64 any%");
 
-    expect(home.queryByRole("combobox", { name: "Category" })).toBeNull();
+    expect(home.queryByRole("combobox", { name: "category" })).toBeNull();
   });
 
   test("an opened room's goal shows under your goals next time", async () => {
@@ -302,7 +304,7 @@ describe("HomePage suggestions", () => {
     home.type("sm64");
     await waitFor(() => home.getByRole("option", { name: "sm64 70 star" }));
 
-    fireEvent.click(home.getByTitle("Remove from your goals"));
+    fireEvent.click(home.getByTitle("remove from your goals"));
 
     expect(home.queryByRole("option", { name: "sm64 70 star" })).toBeNull();
     expect(localStorage.getItem("raceme.goalHistory")).toBeNull();
@@ -372,7 +374,7 @@ describe("HomePage suggestions", () => {
     home.unfoldSpeedrun();
     fireEvent.click(await waitFor(() => home.getByRole("option", { name: long.name })));
     const category = (await waitFor(() =>
-      home.getByRole("combobox", { name: "Category" }),
+      home.getByRole("combobox", { name: "category" }),
     )) as HTMLSelectElement;
     fireEvent.change(category, { target: { value: "C".repeat(100) } });
 
@@ -428,94 +430,76 @@ describe("HomePage suggestions", () => {
   });
 });
 
-describe("HomePage corner notes", () => {
-  test("explains what the server keeps, with the real cookie and cache lifetimes", () => {
+describe("HomePage intro", () => {
+  test("tells what raceme is beside the start form, with a note that rooms get deleted", () => {
     const home = renderHome();
 
-    const notice = home.getByText("Privacy", { selector: "summary" }).parentElement;
-    expect(notice?.textContent).toContain("The server keeps nothing on disk.");
-    expect(notice?.textContent).toContain(`expire after ${sessionCookieDays} days`);
-    expect(notice?.textContent).toContain(`for up to ${catalogCacheHours} hours`);
-    expect(notice?.textContent).toContain("no accounts, usage stats, ads or trackers");
+    expect(home.getByRole("heading", { name: "welcome" })).toBeTruthy();
+    const intro = home.getByRole("complementary").textContent;
+    expect(intro).toContain("without accounts and without moderation");
+    expect(intro).toContain("a room is deleted from the server once it closes.");
+    expect(home.getByRole("link", { name: "SRL" }).getAttribute("href")).toBe(
+      "https://speedrunslive.com",
+    );
   });
+});
 
-  test("tells that raceme was made with AI", () => {
-    const home = renderHome();
-
-    const notice = home.getByText("Made with AI", { selector: "summary" }).parentElement;
-    expect(notice?.textContent).toContain("reproducing, rewriting, rehosting encouraged.");
-    expect(notice?.textContent).toContain("i'm not proud, but i think it's useful.");
-  });
-
-  test("shows the release commit once the build note opens", async () => {
-    const commit = "0123456789abcdef0123456789abcdef01234567";
+describe("HomePage server status", () => {
+  test("shows how many rooms are open and people are online", async () => {
     globalThis.fetch = mock(async () =>
-      Response.json({
-        release: "1.2.0",
-        repository: "https://github.com/ero-qt/raceme",
-        commit,
-        digest: `sha256:${"b".repeat(64)}`,
-      }),
+      Response.json({ rooms: 3, people: 7, restartAt: null }),
     ) as unknown as typeof fetch;
-    const home = renderHome();
+    const view = render(() => <HomePage />);
 
-    const details = home.getByText("Build", { selector: "summary" })
-      .parentElement as HTMLDetailsElement;
-    details.open = true;
-    fireEvent(details, new Event("toggle"));
-
-    const link = await home.findByRole("link", { name: "0123456" });
-    expect(link.getAttribute("href")).toBe(`https://github.com/ero-qt/raceme/commit/${commit}`);
-    expect(details.textContent).toContain(`sha256:${"b".repeat(64)}`);
-    expect(home.getByRole("link", { name: "ero-qt/raceme" }).getAttribute("href")).toBe(
-      "https://github.com/ero-qt/raceme",
-    );
-    expect(home.getByRole("link", { name: "release 1.2.0" }).getAttribute("href")).toBe(
-      "https://github.com/ero-qt/raceme/releases/tag/1.2.0",
-    );
-    expect(details.textContent).toContain("sha256sum raceme.tar.gz");
-    expect(details.textContent).toContain(
-      "gh attestation verify raceme.tar.gz --repo ero-qt/raceme --signer-workflow ero-qt/raceme/.github/workflows/release.yml",
-    );
+    expect((await view.findByText(/^7 online/)).textContent).toBe("7 online3 rooms open");
+    expect(view.getByRole("heading", { name: "server status" })).toBeTruthy();
   });
 
-  test("calls a build unverified when the server answers with something other than JSON", async () => {
-    globalThis.fetch = mock(async () => new Response("<html>")) as unknown as typeof fetch;
-    const home = renderHome();
+  test("keeps the page and focus up while the status polls again", async () => {
+    let polls = 0;
+    const loadStatus = () =>
+      new Promise<{ rooms: number; people: number; restartAt: null }>((resolve) => {
+        polls++;
+        setTimeout(() => resolve({ rooms: polls, people: 0, restartAt: null }), 20);
+      });
+    const view = render(() => (
+      <Suspense fallback={<p>loading</p>}>
+        <HomePage loadStatus={loadStatus} statusEveryMs={30} />
+      </Suspense>
+    ));
+    const field = await view.findByLabelText("goal or room code");
+    field.focus();
 
-    const details = home.getByText("Build", { selector: "summary" })
-      .parentElement as HTMLDetailsElement;
-    details.open = true;
-    fireEvent(details, new Event("toggle"));
+    await waitFor(() => expect(polls).toBeGreaterThanOrEqual(3));
+    const card = view.getByRole("heading", { name: "server status" }).parentElement;
+    await waitFor(() => expect(card?.textContent).toMatch(/[3-9]\d* rooms open$/));
 
-    expect(await home.findByText(/unverified build/)).toBeTruthy();
+    expect(view.getByLabelText("goal or room code")).toBe(field);
+    expect(document.activeElement).toBe(field);
   });
 
-  test("calls a build without a release unverified", async () => {
+  test("counts 1 room in the singular", async () => {
     globalThis.fetch = mock(async () =>
-      Response.json({ release: null, repository: null, commit: null, digest: null }),
+      Response.json({ rooms: 1, people: 1, restartAt: null }),
     ) as unknown as typeof fetch;
-    const home = renderHome();
+    const view = render(() => <HomePage />);
 
-    const details = home.getByText("Build", { selector: "summary" })
-      .parentElement as HTMLDetailsElement;
-    details.open = true;
-    fireEvent(details, new Event("toggle"));
-
-    expect(await home.findByText(/unverified build/)).toBeTruthy();
+    expect((await view.findByText(/^1 online/)).textContent).toBe("1 online1 room open");
   });
 });
 
 describe("HomePage restart notice", () => {
   test("tells about a queued server restart on the start page", async () => {
     const restartAt = Date.now() + (3 * 60 + 20) * 60_000 + 30_000;
-    globalThis.fetch = mock(async () => Response.json({ restartAt })) as unknown as typeof fetch;
+    globalThis.fetch = mock(async () =>
+      Response.json({ rooms: 2, people: 5, restartAt }),
+    ) as unknown as typeof fetch;
     const view = render(() => <HomePage />);
 
     const text = new Date(restartAt).toISOString().slice(11, 16);
-    const notice = (await view.findByText(/^Server restart queued for/)).closest("p");
+    const notice = (await view.findByText(/^server restart queued for/)).closest("p");
     expect(notice?.textContent).toBe(
-      `Server restart queued for ${text} UTC (in 3 h 20 min). Rooms close then.`,
+      `server restart queued for ${text} UTC (in 3 h 20 min). rooms close then.`,
     );
     // Uses the red of the other notices and the warning sign of the closed room.
     expect(notice?.className).toContain(view.getByRole("status").className);

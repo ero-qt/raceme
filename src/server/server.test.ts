@@ -338,6 +338,27 @@ describe("server", () => {
     rmSync(staticDir, { recursive: true });
   });
 
+  test("tells how many rooms are open and people are online", async () => {
+    const base = start();
+    expect(await (await fetch(`${base}/api/status`)).json()).toEqual({
+      rooms: 0,
+      people: 0,
+      restartAt: null,
+    });
+    const { slug } = await createRoom(base);
+    const client = new Client(
+      socketUrl(base, slug),
+      "raceme_session=count-secret-count-secret-count",
+    );
+    await client.waitFor((m) => m.type === "state");
+
+    expect(await (await fetch(`${base}/api/status`)).json()).toEqual({
+      rooms: 1,
+      people: 1,
+      restartAt: null,
+    });
+  });
+
   test("asks search engines to leave every page out", async () => {
     const base = start();
 
@@ -520,7 +541,7 @@ describe("server", () => {
       clockOffsetMs = Date.UTC(2026, 9, 25, 7) - Date.now();
       const base = start({ adminPort: 0 });
       const { slug } = await createRoom(base);
-      expect(await (await fetch(`${base}/api/restart`)).json()).toEqual({ restartAt: null });
+      expect(await (await fetch(`${base}/api/status`)).json()).toMatchObject({ restartAt: null });
 
       await fetch(adminUrl(), { method: "POST" });
       const client = new Client(
@@ -529,7 +550,7 @@ describe("server", () => {
       );
 
       await client.waitFor((m) => m.type === "state" && m.closesFor === "restart");
-      expect(await (await fetch(`${base}/api/restart`)).json()).toEqual({
+      expect(await (await fetch(`${base}/api/status`)).json()).toMatchObject({
         restartAt: Date.UTC(2026, 9, 25, 10),
       });
     });
@@ -735,7 +756,7 @@ describe("server", () => {
 
     expect(await client.closed).toBe(4404);
     expect(running?.rooms.get(slug)).toBeUndefined();
-    expect(await client.closeReason).toBe("Room closed: the race ended.");
+    expect(await client.closeReason).toBe("room closed: the race ended.");
   });
 
   test("tells the room when it closes: 48 hours after opening, or 10 minutes after .end", async () => {

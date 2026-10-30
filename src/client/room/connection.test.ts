@@ -59,7 +59,7 @@ describe("connectRoom", () => {
       const room = connectRoom("abcdefghij");
 
       expect(() => room.send({ type: "done" })).not.toThrow();
-      expect(room.notice()).toBe("Not connected. Try again in a moment.");
+      expect(room.notice()).toBe("not connected. try again in a moment.");
 
       dispose();
     });
@@ -72,7 +72,7 @@ describe("connectRoom", () => {
     createRoot((dispose) => {
       const room = connectRoom("abcdefghij");
       StuckSocket.opened[0]?.onclose?.({ code: 1006 });
-      expect(room.notice()).toBe("Connection lost. Reconnecting…");
+      expect(room.notice()).toBe("connection lost. reconnecting…");
 
       timers.shift()?.();
       expect(StuckSocket.opened).toHaveLength(2);
@@ -172,11 +172,11 @@ describe("connectRoom", () => {
       const room = connectRoom("abcdefghij");
       (StuckSocket.opened[0]?.onclose as unknown as (e: object) => void)?.({
         code: 4404,
-        reason: "Room closed: time limit reached.",
+        reason: "room closed: time limit reached.",
       });
 
       expect(room.gone()).toBe(true);
-      expect(room.notice()).toBe("Room closed: time limit reached.");
+      expect(room.notice()).toBe("room closed: time limit reached.");
 
       dispose();
     });
@@ -189,12 +189,12 @@ describe("connectRoom", () => {
       const room = connectRoom("abcdefghij");
       (StuckSocket.opened[0]?.onclose as unknown as (e: object) => void)?.({
         code: 4404,
-        reason: "Room closed: no activity.",
+        reason: "room closed: no activity.",
       });
 
       room.send({ type: "active" });
 
-      expect(room.notice()).toBe("Room closed: no activity.");
+      expect(room.notice()).toBe("room closed: no activity.");
       dispose();
     });
   });
@@ -214,7 +214,7 @@ describe("connectRoom", () => {
       socket?.onmessage?.({ data: JSON.stringify({ type: "state", serverNow: 5_000, race }) });
       (socket?.onclose as unknown as (e: object) => void)?.({
         code: 4404,
-        reason: "Room closed: the race ended.",
+        reason: "room closed: the race ended.",
       });
       dispose();
     });
@@ -228,7 +228,7 @@ describe("connectRoom", () => {
 
       expect(room.race()).toEqual(race as never);
       expect(room.me()).toEqual({ entrantId: "e1", isHost: true });
-      expect(room.notice()).toBe("Room closed: the race ended.");
+      expect(room.notice()).toBe("room closed: the race ended.");
       expect(room.closedAt()).not.toBeNull();
 
       dispose();

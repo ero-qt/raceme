@@ -16,13 +16,13 @@ export function timeLeft(closesAt: number, now: number): string {
 // Lists what each warning says, and whether input from anyone clears it or a click outside hides it.
 const reasons = {
   idle: {
-    title: "Room closes soon due to inactivity!",
-    hint: "Move the mouse, tap or type to keep the room open.",
+    title: "room closes soon due to inactivity!",
+    hint: "move the mouse, tap or type to keep the room open.",
     hidesOnClickOutside: false,
   },
   restart: {
-    title: "Room closes soon for a server restart!",
-    hint: "Click anywhere outside this card to hide it.",
+    title: "room closes soon for a server restart!",
+    hint: "click anywhere outside this card to hide it.",
     hidesOnClickOutside: true,
   },
 } as const;

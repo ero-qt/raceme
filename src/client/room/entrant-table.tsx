@@ -16,7 +16,7 @@ export function EntrantTable(props: {
   const wide = wideScreen();
 
   return (
-    <table class={styles.table} aria-label="Entrants">
+    <table class={styles.table} aria-label="entrants">
       {/* Fixed widths keep the columns still when statuses change length. */}
       <colgroup>
         <Show when={props.muteButton}>
@@ -34,24 +34,24 @@ export function EntrantTable(props: {
         <tr>
           <Show when={props.muteButton}>
             <th class={styles.headCell} scope="col">
-              <span class={styles.visuallyHidden}>Chat</span>
+              <span class={styles.visuallyHidden}>chat</span>
             </th>
           </Show>
           <th class={styles.headCell} scope="col">
             #
           </th>
           <th class={styles.headCell} scope="col">
-            Name
+            name
           </th>
           <th class={styles.headCell} scope="col">
-            Status
+            status
           </th>
           <Show when={wide()}>
             <th class={styles.headCell} scope="col">
-              Time
+              time
             </th>
             <th class={styles.headCell} scope="col">
-              <span class={styles.visuallyHidden}>Actions</span>
+              <span class={styles.visuallyHidden}>actions</span>
             </th>
           </Show>
         </tr>
@@ -97,11 +97,11 @@ function EntrantStatus(props: { row: Standing; started: boolean }): JSX.Element 
       when={result()}
       fallback={
         props.started ? (
-          <StatusBadge status="running" label="Racing" />
+          <StatusBadge status="running" label="racing" />
         ) : (
           <StatusBadge
             status={props.row.ready ? "open" : "countdown"}
-            label={props.row.ready ? "Ready" : "Not ready"}
+            label={props.row.ready ? "ready" : "not ready"}
           />
         )
       }
@@ -120,7 +120,7 @@ function doneTime(row: Standing, digits: FractionDigits): string {
  * entrant's time shows in the Status column and the row buttons sit under the name.
  */
 function wideScreen(): () => boolean {
-  const query = globalThis.matchMedia?.("(min-width: 40rem)");
+  const query = globalThis.matchMedia?.("(min-width: 64rem)");
   const [wide, setWide] = createSignal(query?.matches ?? true);
   const onChange = (event: MediaQueryListEvent) => setWide(event.matches);
   query?.addEventListener("change", onChange);

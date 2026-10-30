@@ -20,7 +20,7 @@ describe("leaving a room", () => {
     expect(await page.title()).toBe("sm64 16 star · raceme");
 
     await page.getByRole("link", { name: "raceme" }).click();
-    await page.getByLabel("Goal or room code").waitFor();
+    await page.getByLabel("goal or room code").waitFor();
     await socketClosed;
 
     expect(await page.title()).toBe("raceme");

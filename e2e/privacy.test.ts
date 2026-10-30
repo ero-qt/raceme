@@ -25,8 +25,8 @@ describe("privacy", () => {
     );
 
     await openLobbyAndEnter(page, harness.origin, "ero");
-    await page.getByLabel("Message").fill("gl hf");
-    await page.getByRole("button", { name: "Send" }).click();
+    await page.getByLabel("message").fill("gl hf");
+    await page.getByRole("button", { name: "send" }).click();
     await page.getByRole("button", { name: ".ready" }).click();
     await page.getByRole("button", { name: ".done" }).waitFor({ timeout: 10_000 });
     await page.waitForTimeout(5_200);
@@ -34,7 +34,7 @@ describe("privacy", () => {
 
     const [download] = await Promise.all([
       page.waitForEvent("download"),
-      page.getByRole("button", { name: "Download CSV" }).click(),
+      page.getByRole("button", { name: "download CSV" }).click(),
     ]);
     await download.path();
 
@@ -76,11 +76,9 @@ describe("privacy", () => {
   test("only a viewer's own picks land in local storage", async () => {
     const { context, page } = await newPage(harness);
     await openLobbyAndEnter(page, harness.origin, "ero");
-    await page.getByRole("button", { name: "Theme: system" }).click();
 
     expect(await page.evaluate(() => Object.keys(localStorage).sort())).toEqual([
       "raceme.goalHistory",
-      "raceme.theme",
     ]);
 
     await context.close();

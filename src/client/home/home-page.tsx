@@ -1,16 +1,21 @@
 import { LoaderCircle, TriangleAlert } from "lucide-solid";
-import { type JSX, Show, createResource, createSignal } from "solid-js";
+import { type JSX, Show, createResource, createSignal, onCleanup } from "solid-js";
 import { solveChallenge } from "../../shared/proof-of-work.ts";
 import { Button } from "../primitives/button.tsx";
+import { refusalText } from "../room/action-labels.ts";
 import * as titleStyles from "../room/goal-title.css.ts";
 import * as styles from "../room/room.css.ts";
-import { CornerNotes } from "./corner-notes.tsx";
 import { type CatalogEntry, loadCategoriesFromServer, searchGamesOnServer } from "./game-search.ts";
 import { rememberGoal } from "./goal-history.ts";
 import { GoalPicker, useGamePicker } from "./goal-picker.tsx";
+import { HomeIntro } from "./home-intro.tsx";
 import * as homeStyles from "./home-page.css.ts";
 import { useRoomCheck } from "./room-check.ts";
 import { parseRoomCode } from "./room-code.ts";
+import { type ServerStatus, ServerStatusCard, loadStatusFromServer } from "./server-status.tsx";
+
+// The counts on the start page refresh this often, which is cheap and feels live enough.
+const statusEveryMs = 30_000;
 
 /**
  * Opens a new lobby from a goal or an existing room from a pasted code, in one field. Text shaped
@@ -28,14 +33,21 @@ export function HomePage(props: {
   searchGames?: (query: string) => Promise<CatalogEntry[] | null>;
   loadCategories?: (gameId: string) => Promise<CatalogEntry[]>;
   searchDelayMs?: number;
-  /** Asks the server when a queued restart happens, `null` when none is queued. */
-  loadRestart?: () => Promise<number | null>;
+  /** Asks the server for its open rooms, people online and queued restart. */
+  loadStatus?: () => Promise<ServerStatus | null>;
+  statusEveryMs?: number;
 }): JSX.Element {
   const [value, setValue] = createSignal("");
   const [notice, setNotice] = createSignal<string | null>(props.notice ?? null);
   const [creating, setCreating] = createSignal(false);
   const busy = () => creating() || props.busy === true;
-  const [restartAt] = createResource(props.loadRestart ?? loadRestartFromServer);
+  const [serverStatus, { refetch }] = createResource(props.loadStatus ?? loadStatusFromServer);
+  // `latest` keeps the last answer up during a poll. Reading the resource itself would count as
+  // loading for the page's Suspense and swap the whole page for its fallback on every poll.
+  const status = () => serverStatus.latest ?? null;
+  const restartAt = () => status()?.restartAt ?? null;
+  const statusTimer = setInterval(() => void refetch(), props.statusEveryMs ?? statusEveryMs);
+  onCleanup(() => clearInterval(statusTimer));
   document.title = "raceme";
 
   const roomCheck = useRoomCheck(value, {
@@ -86,7 +98,7 @@ export function HomePage(props: {
 
     const exists = await roomCheck.checkNow(slug);
     if (exists === null) {
-      setNotice("Couldn't check that room code. Try again.");
+      setNotice("couldn't check that room code. try again.");
     } else if (exists) {
       open(slug);
     } else {
@@ -100,7 +112,7 @@ export function HomePage(props: {
 
     // During a rush of new rooms the server asks for a proof of work first.
     if (response?.status === 428) {
-      setNotice("Lots of new rooms right now, checking this browser…");
+      setNotice("lots of new rooms right now, checking this browser…");
       const { challenge } = (await response.json()) as { challenge: Challenge };
       // Browsers only offer crypto.subtle on https pages, so solving can fail on plain http.
       const nonce = await solveChallenge(challenge.token, challenge.bits).catch(() => null);
@@ -121,72 +133,69 @@ export function HomePage(props: {
   }
 
   return (
-    <main class={styles.page}>
-      <h1 class={homeStyles.visuallyHidden}>raceme</h1>
-      <form
-        class={titleStyles.form}
-        onPaste={() => {
-          pasting = true;
-        }}
-        onSubmit={(event) => {
-          event.preventDefault();
-          void submit();
-        }}
-      >
-        <GoalPicker
-          picker={picker}
-          label="Goal or room code"
-          placeholder="set a goal or paste a room code"
-          inputClass={`${titleStyles.input} ${homeStyles.field}`}
-          kind={code() ? "code" : "goal"}
-          value={value()}
-          onInput={changeValue}
-        />
-        <Show
-          when={code()}
-          fallback={
-            <Button type="submit" disabled={busy() || value().trim() === ""} aria-busy={busy()}>
-              <Show when={busy()}>
-                <LoaderCircle class={homeStyles.spinner} aria-hidden="true" />
-              </Show>
-              .startrace
-            </Button>
-          }
+    <main class={homeStyles.page}>
+      <section class={homeStyles.start}>
+        <h1 class={homeStyles.visuallyHidden}>raceme</h1>
+        <form
+          class={titleStyles.form}
+          onPaste={() => {
+            pasting = true;
+          }}
+          onSubmit={(event) => {
+            event.preventDefault();
+            void submit();
+          }}
         >
-          <Button type="submit" variant="ghost">
-            Join
-          </Button>
+          <GoalPicker
+            picker={picker}
+            label="goal or room code"
+            placeholder="set a goal or paste a room code"
+            inputClass={`${titleStyles.input} ${homeStyles.field}`}
+            kind={code() ? "code" : "goal"}
+            value={value()}
+            onInput={changeValue}
+          />
+          <Show
+            when={code()}
+            fallback={
+              <Button type="submit" disabled={busy() || value().trim() === ""} aria-busy={busy()}>
+                <Show when={busy()}>
+                  <LoaderCircle class={homeStyles.spinner} aria-hidden="true" />
+                </Show>
+                .startrace
+              </Button>
+            }
+          >
+            <Button type="submit" variant="ghost">
+              join
+            </Button>
+          </Show>
+        </form>
+        <p class={styles.notice} role="status">
+          {notice()}
+        </p>
+        <Show when={restartAt()}>
+          {(at) => (
+            <p class={`${styles.notice} ${homeStyles.warning}`}>
+              <TriangleAlert class={styles.closedIcon} aria-hidden="true" />
+              {restartText(at(), Date.now())}
+            </p>
+          )}
         </Show>
-      </form>
-      <p class={styles.notice} role="status">
-        {notice()}
-      </p>
-      <Show when={restartAt()}>
-        {(at) => (
-          <p class={`${styles.notice} ${homeStyles.warning}`}>
-            <TriangleAlert class={styles.closedIcon} aria-hidden="true" />
-            {restartText(at(), Date.now())}
-          </p>
-        )}
-      </Show>
-      <CornerNotes />
+      </section>
+      <aside class={homeStyles.side}>
+        <HomeIntro />
+        <ServerStatusCard status={status()} />
+      </aside>
     </main>
   );
 }
 
-async function loadRestartFromServer(): Promise<number | null> {
-  const response = await fetch(`${import.meta.env.BASE_URL}api/restart`).catch(() => null);
-  const body = response?.ok
-    ? ((await response.json().catch(() => ({}))) as { restartAt?: unknown })
-    : {};
-  return typeof body.restartAt === "number" ? body.restartAt : null;
-}
-
-/** Writes when a queued restart happens, like `Server restart queued for 10:00 UTC (in 3 h 20 min)`. */
+/** Writes when a queued restart happens, like `server restart queued for 10:00 UTC (in 3 h 20 min)`. */
 function restartText(at: number, now: number): string {
   const minutes = Math.max(0, Math.floor((at - now) / 60_000));
   const time = new Date(at).toISOString().slice(11, 16);
-  return `Server restart queued for ${time} UTC (in ${Math.floor(minutes / 60)} h ${minutes % 60} min). Rooms close then.`;
+  return `server restart queued for ${time} UTC (in ${Math.floor(minutes / 60)} h ${minutes % 60} min). rooms close then.`;
 }
 
 interface Challenge {
@@ -205,7 +214,7 @@ function requestRoom(goal: string, proof: { token: string; nonce: number } | nul
 /** Explains a failed room creation. Without a status the request never reached the server. */
 function failureText(status: number | null): string {
   if (status === 400) {
-    return "The goal needs 1 to 200 characters.";
+    return refusalText.badGoal;
   }
-  return status === 429 ? "Too many new rooms. Try again in a minute." : "Couldn't open a room.";
+  return status === 429 ? "too many new rooms. try again in a minute." : "couldn't open a room.";
 }

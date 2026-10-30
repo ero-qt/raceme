@@ -1,12 +1,10 @@
 import { assignVars, globalStyle } from "@vanilla-extract/css";
-import { darkTheme } from "./themes/dark.ts";
-import { lightTheme } from "./themes/light.ts";
+import { palette } from "./palette.ts";
 import { tokens } from "./tokens.css.ts";
 
-// Measured against each theme's text and page colors: 0.5 gives 4.8:1 in dark, light needs 0.62
-// for 4.9:1.
-const darkDim = { opacity: "0.5" };
-const lightDim = { opacity: "0.62" };
+// Measured against the palette: 0.58 keeps faded main text at 4.5:1 or better on the page, the
+// cards and the table heads.
+const dim = { opacity: "0.58" };
 
 const scale = {
   space: { xs: "0.25rem", s: "0.5rem", m: "0.75rem", l: "1rem", xl: "1.5rem" },
@@ -14,30 +12,14 @@ const scale = {
   // `monospace` to 13px.
   font: { body: "monospace, monospace", mono: "monospace, monospace" },
   radius: { s: "0.2rem" },
-  target: { min: "44px" },
+  target: { min: "32px" },
   overlay: { scrim: "rgb(0 0 0 / 0.45)", shadow: "0 4px 16px rgb(0 0 0 / 0.4)" },
 };
 
 globalStyle(":root", {
-  // Lets native controls like select popups and scrollbars follow the dark or light theme.
-  colorScheme: "light dark",
-  vars: assignVars(tokens, { ...scale, color: darkTheme, dim: darkDim }),
-  "@media": {
-    "(prefers-color-scheme: light)": {
-      vars: assignVars(tokens, { ...scale, color: lightTheme, dim: lightDim }),
-    },
-  },
-});
-
-// A theme picked in the header wins over the system setting.
-globalStyle(':root[data-theme="dark"]', {
+  // Keeps native controls like select popups and scrollbars dark too.
   colorScheme: "dark",
-  vars: { ...assignVars(tokens.color, darkTheme), ...assignVars(tokens.dim, darkDim) },
-});
-
-globalStyle(':root[data-theme="light"]', {
-  colorScheme: "light",
-  vars: { ...assignVars(tokens.color, lightTheme), ...assignVars(tokens.dim, lightDim) },
+  vars: assignVars(tokens, { ...scale, color: palette, dim }),
 });
 
 globalStyle("*, *::before, *::after", { boxSizing: "border-box" });
@@ -50,6 +32,13 @@ globalStyle("body", {
   fontSize: "0.9375rem",
   lineHeight: 1.5,
 });
+
+// Lets the footer push itself to the foot of the window on short pages.
+globalStyle("#app", { display: "flex", flexDirection: "column", minBlockSize: "100dvh" });
+
+// Keeps a page at the window's width, because a flex item with auto side margins would take its
+// content's width instead, and lets it fill the page down to the footer.
+globalStyle("#app > main", { flex: "1 0 auto", inlineSize: "100%" });
 
 globalStyle("a", { color: tokens.color.link });
 
@@ -67,7 +56,7 @@ globalStyle("*", {
   },
 });
 
-// Browsers fade placeholders below the 7:1 contrast WCAG AAA asks for.
+// Browsers fade placeholders below the 4.5:1 contrast WCAG AA asks for.
 globalStyle("::placeholder", {
   color: tokens.color.placeholder,
   fontStyle: "italic",

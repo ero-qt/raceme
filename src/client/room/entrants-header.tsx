@@ -3,25 +3,11 @@ import { type JSX, Show } from "solid-js";
 import type { ClientAction } from "../../shared/protocol.ts";
 import { type RaceState, maxEntrants, minEntrantCap } from "../../shared/race/race.ts";
 import { Button } from "../primitives/button.tsx";
-import { type Status, StatusBadge } from "../primitives/status-badge.tsx";
 import * as styles from "./room.css.ts";
 
-const roomStatus: Record<RaceState["phase"], Status> = {
-  open: "open",
-  countdown: "countdown",
-  running: "running",
-  finished: "done",
-  terminated: "forfeit",
-};
-
-const roomStatusLabel: Partial<Record<RaceState["phase"], string>> = {
-  finished: "Complete",
-  terminated: "Terminated",
-};
-
 /**
- * Shows the Entrants heading, the count against the cap, the room status and whether entry is
- * closed. Before the start the host edits the cap in place and opens or closes entry here.
+ * Shows the Entrants heading, the count against the cap and whether entry is closed. Before the
+ * start the host edits the cap in place and opens or closes entry here.
  */
 export function EntrantsHeader(props: {
   race: RaceState;
@@ -43,14 +29,14 @@ export function EntrantsHeader(props: {
 
   return (
     <div class={styles.entrantsHeader}>
-      <h2 class={styles.entrantsTitle}>Entrants</h2>
+      <h2 class={styles.entrantsTitle}>entrants</h2>
       <span class={styles.entrantCount}>
         <span class={styles.countDigits}>{props.race.entrants.length}</span>/
         <Show when={editable()} fallback={<span class={styles.capDigits}>{cap()}</span>}>
           <input
             class={styles.capField}
             type="number"
-            aria-label="Entrant limit"
+            aria-label="entrant limit"
             min={minEntrantCap}
             max={maxEntrants}
             value={cap()}
@@ -80,25 +66,15 @@ export function EntrantsHeader(props: {
         </span>
       </Show>
       <span class={styles.headerSpacer} />
-      <span class={styles.headerStatus}>
-        <Show when={props.race.entryLocked && beforeStart()} fallback={statusBadge(props.race)}>
-          <StatusBadge status="forfeit" label="Entry closed" />
-        </Show>
-      </span>
       {/* One button for everyone, so the same state always looks the same. */}
       <Button
         variant="plain"
         disabled={!editable()}
-        aria-label={locked() ? "Open entry" : "Close entry"}
+        aria-label={locked() ? "open entry" : "close entry"}
         onClick={() => props.send({ type: locked() ? "unlock" : "lock" })}
       >
         {lockIcon()}
       </Button>
     </div>
   );
-}
-
-function statusBadge(race: RaceState): JSX.Element {
-  const label = roomStatusLabel[race.phase];
-  return <StatusBadge status={roomStatus[race.phase]} {...(label ? { label } : {})} />;
 }

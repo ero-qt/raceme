@@ -9,6 +9,7 @@ import {
   useTransition,
 } from "solid-js";
 import { HomePage } from "./home/home-page.tsx";
+import { SiteFooter } from "./layout/site-footer.tsx";
 import { SiteHeader } from "./layout/site-header.tsx";
 import { homePath, pagePath } from "./page-path.ts";
 import { RoomPage } from "./room/room-page.tsx";
@@ -57,6 +58,7 @@ export function App(): JSX.Element {
           </Match>
         </Switch>
       </Suspense>
+      <SiteFooter />
     </>
   );
 }

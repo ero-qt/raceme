@@ -10,11 +10,11 @@ function renderClock(digits: FractionDigits, elapsed = 65_439) {
   const view = render(() => (
     <RaceClock elapsed={elapsed} digits={digits} onPick={(d) => picked.push(d)} />
   ));
-  const select = view.getByRole("combobox", { name: "Time precision" }) as HTMLSelectElement;
+  const select = view.getByRole("combobox", { name: "time precision" }) as HTMLSelectElement;
   return { ...view, picked, select };
 }
 
-describe("RaceClock", () => {
+describe("raceClock", () => {
   test("names the full time for screen readers", () => {
     expect(renderClock(2).getByRole("timer").getAttribute("aria-label")).toBe("00:01:05.43");
   });

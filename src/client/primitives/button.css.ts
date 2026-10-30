@@ -12,7 +12,7 @@ const base = style([
     gap: tokens.space.s,
     minBlockSize: tokens.target.min,
     minInlineSize: tokens.target.min,
-    paddingInline: tokens.space.l,
+    paddingInline: tokens.space.m,
     font: "inherit",
     fontFamily: tokens.font.mono,
     fontWeight: 700,
@@ -30,7 +30,7 @@ export const buttonVariant = styleVariants({
       selectors: {
         "&:hover:not(:disabled)": {
           // Lightens instead of darkening because orange mixed toward its dark text drops below
-          // 7:1 contrast.
+          // 4.5:1 contrast.
           background: `color-mix(in srgb, ${tokens.color.accent} 75%, white)`,
         },
       },

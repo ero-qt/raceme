@@ -71,7 +71,7 @@ function EditableGoal(props: {
       <h1 class={visuallyHidden}>{props.goal}</h1>
       <GoalPicker
         picker={picker}
-        label="Goal"
+        label="goal"
         inputClass={styles.input}
         value={draft()}
         onInput={setDraft}

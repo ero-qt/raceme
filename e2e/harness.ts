@@ -85,21 +85,20 @@ export async function startHarness(overrides: Partial<ServerConfig> = {}): Promi
 /** Opens a lobby from the start page and enters it under `name`. */
 export async function openLobbyAndEnter(page: Page, origin: string, name: string): Promise<void> {
   await page.goto(`${origin}/`);
-  await page.getByLabel("Goal or room code").fill("sm64 16 star");
+  await page.getByLabel("goal or room code").fill("sm64 16 star");
   await page.getByRole("button", { name: ".startrace" }).click();
-  await page.getByLabel("Your name").fill(name);
+  await page.getByLabel("your name").fill(name);
   await page.getByRole("button", { name: ".enter" }).click();
   await page.getByRole("button", { name: ".ready" }).waitFor();
 }
 
 export async function newPage(
   harness: Harness,
-  options: { colorScheme?: "dark" | "light"; bypassCSP?: boolean } = {},
+  options: { bypassCSP?: boolean } = {},
 ): Promise<{ context: BrowserContext; page: Page }> {
   const context = await harness.browser.newContext({
     // Wide enough for the desktop layout, where the header sits beside the page column.
     viewport: { width: 1280, height: 900 },
-    colorScheme: options.colorScheme ?? "dark",
     // Turns the page's transitions off, so axe never measures a color halfway through a fade.
     reducedMotion: "reduce",
     bypassCSP: options.bypassCSP ?? false,

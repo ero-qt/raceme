@@ -1,4 +1,5 @@
 import { For, type JSX, Show, createSignal } from "solid-js";
+import { maxGoalLength } from "../../shared/race/race.ts";
 import * as titleStyles from "../room/goal-title.css.ts";
 import {
   type CatalogEntry,
@@ -24,8 +25,6 @@ export const serverCatalog: GoalCatalog = {
 };
 
 const maxHistoryShown = 5;
-// Same limit the race rules set for a goal.
-const maxGoalLength = 200;
 const typedOptionId = "typed";
 
 /**
@@ -165,11 +164,11 @@ export function GoalPicker(props: {
       <Show when={props.picker.categories().length > 0}>
         <select
           class={styles.category}
-          aria-label="Category"
+          aria-label="category"
           value={props.picker.category()}
           onChange={(event) => props.picker.setCategory(event.currentTarget.value)}
         >
-          <option value="">No category</option>
+          <option value="">no category</option>
           <For each={props.picker.categories()}>
             {(category) => <option value={category.name}>{category.name}</option>}
           </For>

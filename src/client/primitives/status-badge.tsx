@@ -4,11 +4,11 @@ import { statusColor } from "./status-badge.css.ts";
 export type Status = keyof typeof statusColor;
 
 const statusLabel: Record<Status, string> = {
-  open: "Entry open",
-  countdown: "Starting",
-  running: "In progress",
-  done: "Done",
-  forfeit: "Forfeit",
+  open: "entry open",
+  countdown: "starting",
+  running: "in progress",
+  done: "done",
+  forfeit: "forfeit",
 };
 
 /** Shows a room or entrant status as colored text. `label` replaces the room wording. */

@@ -37,7 +37,7 @@ export async function resultsImage(race: RaceState, shown: number): Promise<Blob
   const time = started.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   const entrants = `${all.length} ${all.length === 1 ? "entrant" : "entrants"}`;
   const footer = { left: `${entrants} · ${started.toLocaleDateString()} ${time}`, right: "raceme" };
-  const title = race.goal ?? "Race";
+  const title = race.goal ?? "race";
   const measure = (text: string, style: TextStyle) => {
     context.font = fonts[style];
     return context.measureText(text).width;
@@ -109,7 +109,7 @@ interface TextOptions {
   color?: string;
 }
 
-/** Reads the color the page gives an element, like a link's orange in the current theme. */
+/** Reads the color the page gives an element, like a link's orange. */
 function themeColor(tag: string): string {
   const probe = document.body.appendChild(document.createElement(tag));
   const color = getComputedStyle(probe).color;

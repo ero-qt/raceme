@@ -4,8 +4,6 @@ import { tokens } from "../styles/tokens.css.ts";
 const base = style({
   display: "inline-block",
   fontWeight: 700,
-  textTransform: "uppercase",
-  letterSpacing: "0.04em",
   fontSize: "0.8125rem",
 });
 

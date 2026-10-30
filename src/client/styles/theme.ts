@@ -1,4 +1,4 @@
-/** Lists the colors every raceme theme provides, all as `#rrggbb` so contrast can be tested. */
+/** Lists the colors raceme uses, all as `#rrggbb` so contrast can be tested. */
 export interface Theme {
   /** Page background. */
   bg0: string;

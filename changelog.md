@@ -6,10 +6,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 
 ## [Unreleased]
 
+### Added
+
+- A server status card on the start page with the open rooms and people online.
+- A line in the chat log when a typed name first reaches the 24-character limit.
+- A bar at the bottom of a room on phones to switch between the race and the chat.
+
 ### Changed
 
+- One mid-gray look on every page.
+- A header bar across the top of every page.
+- A footer bar at the bottom of every page with the privacy and build notes as links.
+- A column next to the start form that tells what raceme is.
+- Smaller buttons and fields.
+- Panels like the chat log and the intro have a shadow.
+- The site meets WCAG 2.2 AA instead of AAA.
+- Everything on the page is lowercase, apart from names like SRL and RaceBot.
+- The room has 2 columns, with the goal, invite link and entrants on the left and the clock and chat on the right.
 - Bot lines in the room chat show without a name.
 - Chat lines in the room chat show as `name: text`.
+- Refused commands show as red lines in the chat log.
+- The name field keeps your name after `.unenter`.
+- Length messages read like "a name needs to be 1-24 characters long."
+
+### Removed
+
+- The theme button and the light theme.
+- The "Made with AI" note on the page.
+- The line about the Discord message in the privacy note.
 
 ## [1.1.2] - 2026-10-26
 

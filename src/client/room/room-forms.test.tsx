@@ -4,12 +4,12 @@ import { ChatForm } from "./room-forms.tsx";
 
 afterEach(cleanup);
 
-describe("ChatForm", () => {
+describe("chatForm", () => {
   test("turns send off after a line until the slow mode wait is over", async () => {
     const said: string[] = [];
     const view = render(() => <ChatForm onSay={(text) => said.push(text)} waitMs={50} />);
-    const input = view.getByLabelText("Message") as HTMLInputElement;
-    const send = view.getByRole("button", { name: "Send" }) as HTMLButtonElement;
+    const input = view.getByLabelText("message") as HTMLInputElement;
+    const send = view.getByRole("button", { name: "send" }) as HTMLButtonElement;
 
     fireEvent.input(input, { target: { value: "gl" } });
     fireEvent.submit(input.form as HTMLFormElement);
@@ -34,7 +34,7 @@ describe("ChatForm", () => {
         waitMs={10_000}
       />
     ));
-    const input = view.getByLabelText("Message") as HTMLInputElement;
+    const input = view.getByLabelText("message") as HTMLInputElement;
 
     fireEvent.input(input, { target: { value: "gl" } });
     fireEvent.keyDown(input, { key: "Enter" });

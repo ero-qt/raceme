@@ -272,7 +272,7 @@ describe("control size", () => {
 });
 
 describe("home layout", () => {
-  test("the start form takes the wide left column, the intro the right, stacked on phones", async () => {
+  test("the start form takes the wide left column, the intro the right, right below it on phones", async () => {
     const { context, page } = await newPage(harness);
     await page.goto(`${harness.origin}/`);
     const form = page.getByLabel("goal or room code");
@@ -289,7 +289,11 @@ describe("home layout", () => {
     await page.setViewportSize({ width: 390, height: 800 });
     const phoneForm = await form.boundingBox();
     const phoneIntro = await intro.boundingBox();
-    expect((phoneIntro?.y ?? 0) >= (phoneForm?.y ?? 0) + (phoneForm?.height ?? 0)).toBe(true);
+    if (!phoneForm || !phoneIntro) {
+      throw new Error("the start field or the intro is missing");
+    }
+    const below = phoneIntro.y - phoneForm.y - phoneForm.height;
+    expect(below >= 0 && below <= 48).toBe(true);
 
     await context.close();
   });

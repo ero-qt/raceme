@@ -28,12 +28,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - Refused commands show as red lines in the chat log.
 - The name field keeps your name after `.unenter`.
 - Length messages read like "a name needs to be 1-24 characters long."
+- The restart notice on the start page reads "all rooms will be closed for a server restart at 10:00 UTC (in 3 h 20 min)!".
+- The restart notice on the start page sits in the server status card.
+- The notice during a rush of new rooms reads "lots of rooms are being opened right now. please wait a few seconds…".
 
 ### Removed
 
 - The theme button and the light theme.
 - The "Made with AI" note on the page.
 - The line about the Discord message in the privacy note.
+
+### Fixed
+
+- Emoji made of several emoji, like a family, stay whole in names, goals and chat.
+- The restart notice on the start page counts down while the page stays open.
+- `.startrace` works again after the server replies with an error page instead of a room.
+- Focus stays put when another entrant acts after one of your race buttons was refused.
+- Messages a tab sends past its own limit no longer count against the limit it shares with other tabs on the same address.
 
 ## [1.1.2] - 2026-10-26
 

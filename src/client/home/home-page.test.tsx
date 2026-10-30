@@ -1,10 +1,11 @@
-import { afterEach, describe, expect, mock, test } from "bun:test";
+import { afterEach, describe, expect, mock, setSystemTime, test } from "bun:test";
 import { cleanup, fireEvent, render, waitFor } from "@solidjs/testing-library";
 import { Suspense } from "solid-js";
 import { HomePage } from "./home-page.tsx";
 
 const realFetch = globalThis.fetch;
 afterEach(() => {
+  setSystemTime();
   globalThis.fetch = realFetch;
   localStorage.clear();
   cleanup();
@@ -198,6 +199,27 @@ describe("HomePage", () => {
   });
 });
 
+describe("HomePage odd replies", () => {
+  for (const status of [201, 428]) {
+    test(`a ${status} reply that isn't JSON frees .startrace again`, async () => {
+      globalThis.fetch = (async () =>
+        new Response("<html>bad gateway</html>", { status })) as unknown as typeof fetch;
+      const home = renderHome();
+      home.type("any%");
+
+      home.submit();
+
+      await waitFor(() =>
+        expect(home.getByRole("status").textContent).toBe("couldn't open a room."),
+      );
+      expect((home.getByRole("button", { name: ".startrace" }) as HTMLButtonElement).disabled).toBe(
+        false,
+      );
+      expect(localStorage.getItem("raceme.goalHistory")).toBeNull();
+    });
+  }
+});
+
 describe("HomePage busy server", () => {
   test("solves the proof of work the server asks for during a rush, then opens the room", async () => {
     const bodies: unknown[] = [];
@@ -214,6 +236,31 @@ describe("HomePage busy server", () => {
 
     await waitFor(() => expect(home.opened).toEqual(["duxanagxds"]));
     expect(bodies[1]).toMatchObject({ goal: "any%", proof: { token: "abc.1.sig" } });
+  });
+
+  test("tells the visitor the rush makes opening a room slower", async () => {
+    globalThis.fetch = (async () =>
+      Response.json(
+        { challenge: { token: "abc.1.sig", bits: 4 } },
+        { status: 428 },
+      )) as unknown as typeof fetch;
+    // Hashing that never finishes holds the page in the middle of solving.
+    const realSubtle = crypto.subtle;
+    Object.defineProperty(crypto, "subtle", {
+      value: { digest: () => new Promise(() => {}) },
+      configurable: true,
+    });
+    const home = renderHome();
+    home.type("any%");
+
+    home.submit();
+
+    await waitFor(() =>
+      expect(home.getByRole("status").textContent).toBe(
+        "lots of rooms are being opened right now. please wait a few seconds…",
+      ),
+    );
+    Object.defineProperty(crypto, "subtle", { value: realSubtle, configurable: true });
   });
 });
 
@@ -478,6 +525,19 @@ describe("HomePage server status", () => {
     expect(document.activeElement).toBe(field);
   });
 
+  test("shows the start field while the server status is still on its way", () => {
+    const view = render(() => (
+      <Suspense fallback={<p>loading</p>}>
+        <HomePage loadStatus={() => new Promise(() => {})} />
+      </Suspense>
+    ));
+
+    expect(view.getByLabelText("goal or room code")).toBeTruthy();
+    const card = view.getByRole("heading", { name: "server status" }).parentElement;
+    expect(card?.textContent).toBe("server status loading");
+    expect(card?.querySelector("svg[aria-hidden='true']")).not.toBeNull();
+  });
+
   test("counts 1 room in the singular", async () => {
     globalThis.fetch = mock(async () =>
       Response.json({ rooms: 1, people: 1, restartAt: null }),
@@ -489,7 +549,7 @@ describe("HomePage server status", () => {
 });
 
 describe("HomePage restart notice", () => {
-  test("tells about a queued server restart on the start page", async () => {
+  test("shows a queued server restart in the server status card", async () => {
     const restartAt = Date.now() + (3 * 60 + 20) * 60_000 + 30_000;
     globalThis.fetch = mock(async () =>
       Response.json({ rooms: 2, people: 5, restartAt }),
@@ -497,12 +557,28 @@ describe("HomePage restart notice", () => {
     const view = render(() => <HomePage />);
 
     const text = new Date(restartAt).toISOString().slice(11, 16);
-    const notice = (await view.findByText(/^server restart queued for/)).closest("p");
+    const notice = (await view.findByText(/^all rooms will be closed/)).closest("p");
     expect(notice?.textContent).toBe(
-      `server restart queued for ${text} UTC (in 3 h 20 min). rooms close then.`,
+      `all rooms will be closed for a server restart at ${text} UTC (in 3 h 20 min)!`,
     );
     // Uses the red of the other notices and the warning sign of the closed room.
     expect(notice?.className).toContain(view.getByRole("status").className);
     expect(notice?.querySelector("svg[aria-hidden='true']")).not.toBeNull();
+    expect(notice?.parentElement).toBe(
+      view.getByRole("heading", { name: "server status" }).parentElement,
+    );
+  });
+
+  test("counts down while the page stays open", async () => {
+    const start = Date.now();
+    const restartAt = start + (3 * 60 + 20) * 60_000 + 30_000;
+    const view = render(() => (
+      <HomePage loadStatus={async () => ({ rooms: 1, people: 1, restartAt })} statusEveryMs={10} />
+    ));
+    await view.findByText(/in 3 h 20 min/);
+
+    setSystemTime(new Date(start + 10 * 60_000));
+
+    expect(await view.findByText(/in 3 h 10 min/)).toBeTruthy();
   });
 });

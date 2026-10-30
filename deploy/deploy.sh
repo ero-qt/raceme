@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Runs as the raceme user every 10 minutes. It prepares the newest attested release next to the
-# running one and queues a restart for it, then asks swap.sh to switch once no room is open or the
-# queued restart time has come.
+# running one and queues a restart for it, then asks swap.sh to switch once all rooms are closed or
+# the queued restart time has come.
 set -euo pipefail
 
 repo="${RACEME_REPO:-ero-qt/raceme}"

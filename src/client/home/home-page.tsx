@@ -1,5 +1,5 @@
 import { LoaderCircle, TriangleAlert } from "lucide-solid";
-import { type JSX, Show, createResource, createSignal, onCleanup } from "solid-js";
+import { type JSX, Show, createSignal, onCleanup } from "solid-js";
 import { solveChallenge } from "../../shared/proof-of-work.ts";
 import { Button } from "../primitives/button.tsx";
 import { refusalText } from "../room/action-labels.ts";
@@ -41,13 +41,17 @@ export function HomePage(props: {
   const [notice, setNotice] = createSignal<string | null>(props.notice ?? null);
   const [creating, setCreating] = createSignal(false);
   const busy = () => creating() || props.busy === true;
-  const [serverStatus, { refetch }] = createResource(props.loadStatus ?? loadStatusFromServer);
-  // `latest` keeps the last answer up during a poll. Reading the resource itself would count as
-  // loading for the page's Suspense and swap the whole page for its fallback on every poll.
-  const status = () => serverStatus.latest ?? null;
-  const restartAt = () => status()?.restartAt ?? null;
-  const statusTimer = setInterval(() => void refetch(), props.statusEveryMs ?? statusEveryMs);
+  const [status, setStatus] = createSignal<ServerStatus | null | undefined>(undefined);
+  const loadStatus = props.loadStatus ?? loadStatusFromServer;
+  const [now, setNow] = createSignal(Date.now());
+  const pollStatus = () => {
+    setNow(Date.now());
+    void loadStatus().then(setStatus);
+  };
+  pollStatus();
+  const statusTimer = setInterval(pollStatus, props.statusEveryMs ?? statusEveryMs);
   onCleanup(() => clearInterval(statusTimer));
+  const restartAt = () => status()?.restartAt ?? null;
   document.title = "raceme";
 
   const roomCheck = useRoomCheck(value, {
@@ -108,11 +112,19 @@ export function HomePage(props: {
 
   async function startRace(): Promise<void> {
     setCreating(true);
+    // A proxy error page in place of the JSON reply makes `json()` throw.
+    await createRoom().catch(() => {
+      setCreating(false);
+      setNotice(failureText(null));
+    });
+  }
+
+  async function createRoom(): Promise<void> {
     let response = await requestRoom(picker.goal(), null);
 
     // During a rush of new rooms the server asks for a proof of work first.
     if (response?.status === 428) {
-      setNotice("lots of new rooms right now, checking this browser…");
+      setNotice("lots of rooms are being opened right now. please wait a few seconds…");
       const { challenge } = (await response.json()) as { challenge: Challenge };
       // Browsers only offer crypto.subtle on https pages, so solving can fail on plain http.
       const nonce = await solveChallenge(challenge.token, challenge.bits).catch(() => null);
@@ -127,8 +139,8 @@ export function HomePage(props: {
       return;
     }
 
-    rememberGoal(picker.goal());
     const { slug } = (await response.json()) as { slug: string };
+    rememberGoal(picker.goal());
     open(slug);
   }
 
@@ -174,28 +186,29 @@ export function HomePage(props: {
         <p class={styles.notice} role="status">
           {notice()}
         </p>
-        <Show when={restartAt()}>
-          {(at) => (
-            <p class={`${styles.notice} ${homeStyles.warning}`}>
-              <TriangleAlert class={styles.closedIcon} aria-hidden="true" />
-              {restartText(at(), Date.now())}
-            </p>
-          )}
-        </Show>
       </section>
       <aside class={homeStyles.side}>
         <HomeIntro />
-        <ServerStatusCard status={status()} />
+        <ServerStatusCard status={status()}>
+          <Show when={restartAt()}>
+            {(at) => (
+              <p class={`${styles.notice} ${homeStyles.warning}`}>
+                <TriangleAlert class={styles.closedIcon} aria-hidden="true" />
+                {restartText(at(), now())}
+              </p>
+            )}
+          </Show>
+        </ServerStatusCard>
       </aside>
     </main>
   );
 }
 
-/** Writes when a queued restart happens, like `server restart queued for 10:00 UTC (in 3 h 20 min)`. */
+/** Writes the notice for a queued restart, like `... at 10:00 UTC (in 3 h 20 min)!`. */
 function restartText(at: number, now: number): string {
   const minutes = Math.max(0, Math.floor((at - now) / 60_000));
   const time = new Date(at).toISOString().slice(11, 16);
-  return `server restart queued for ${time} UTC (in ${Math.floor(minutes / 60)} h ${minutes % 60} min). rooms close then.`;
+  return `all rooms will be closed for a server restart at ${time} UTC (in ${Math.floor(minutes / 60)} h ${minutes % 60} min)!`;
 }
 
 interface Challenge {

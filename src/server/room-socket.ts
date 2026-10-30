@@ -86,8 +86,7 @@ export function roomSocketHandlers(deps: {
 
   function message(socket: Socket, raw: string | Buffer): void {
     const now = clock();
-    const ipAllowed = limits.sendMessage(socket.data.ip);
-    if (!socket.data.bucket.take(now) || !ipAllowed) {
+    if (!socket.data.bucket.take(now) || !limits.sendMessage(socket.data.ip)) {
       send(socket, { type: "refused", refusal: "rateLimited" });
       return;
     }

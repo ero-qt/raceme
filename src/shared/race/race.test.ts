@@ -384,6 +384,23 @@ describe("text cleaning", () => {
     expect(state.goal).toBe("any%[31m");
   });
 
+  test("keeps the joiner inside an emoji sequence and strips it anywhere else", () => {
+    let state = createRace({ countdownMs });
+    state = run(state, { type: "join", entrantId: "a", name: "bob" });
+    expect(refusal(state, { type: "join", entrantId: "b", name: "b\u200dob" })).toBe("nameTaken");
+    state = run(state, { type: "join", entrantId: "b", name: "\u{1F44D}\u{1F44D}" });
+    expect(refusal(state, { type: "join", entrantId: "e", name: "\u{1F44D}\u200d\u{1F44D}" })).toBe(
+      "nameTaken",
+    );
+
+    for (const name of [
+      "\u{1F468}\u200d\u{1F469}\u200d\u{1F467}",
+      "\u{1F468}\u{1F3FB}\u200d\u{1F692}",
+    ]) {
+      expect(run(state, { type: "join", entrantId: "c", name }).entrants.at(-1)?.name).toBe(name);
+    }
+  });
+
   test("a name of only invisible characters is refused", () => {
     expect(
       refusal(createRace({ countdownMs }), { type: "join", entrantId: "a", name: "\u200b\u0000" }),

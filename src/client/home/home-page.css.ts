@@ -8,8 +8,10 @@ export const page = style([
   container,
   {
     display: "grid",
-    // Top-aligned, so an empty part of a column never covers a note opened from the footer.
+    // Top-aligned, so an empty part of a column never covers a note opened from the footer, and
+    // the stacked rows on a phone don't stretch over the page's spare height.
     alignItems: "start",
+    alignContent: "start",
     gap: tokens.space.xl,
     paddingBlock: tokens.space.l,
     "@media": { "(min-width: 48rem)": { gridTemplateColumns: "minmax(0, 2fr) minmax(0, 1fr)" } },
@@ -79,6 +81,9 @@ export const spinner = style({
   blockSize: "1em",
   animation: `${spin} 800ms linear infinite`,
 });
+
+// Keeps the status card as tall as its 2 count lines while it waits or gets no answer.
+export const statusLines = style({ minBlockSize: "2lh" });
 
 export const warning = style({
   display: "flex",

@@ -47,6 +47,14 @@ export interface ServerConfig {
   /** Sets how hard that proof is, as leading zero bits of a SHA-256. */
   surgeBits: number;
   countdownMs: number;
+  /** Clears a room this long after `.end`, as RaceBot announces. */
+  clearAfterEndMs: number;
+  /** Caps the sessions a room hands entrant ids to, so throwaway cookies can't fill it. */
+  maxSessionsPerRoom: number;
+  /** Keeps this many chat and RaceBot lines per room for people who reconnect. */
+  feedCapacity: number;
+  /** Limits requests to speedrun.com per minute across all visitors. */
+  speedrunPerMinute: number;
   /** Lets each entrant send 1 chat line this often. */
   chatEveryMs: number;
   maxSocketsPerIp: number;
@@ -99,6 +107,10 @@ export function loadConfig(env: Env): ServerConfig {
     // About 65,000 hashes, roughly a second in a phone's browser.
     surgeBits: 16,
     countdownMs: 10_000,
+    clearAfterEndMs: 10 * 60_000,
+    maxSessionsPerRoom: 200,
+    feedCapacity: 200,
+    speedrunPerMinute: 60,
     chatEveryMs: count("RACEME_CHAT_SECONDS", 3) * 1000,
     maxSocketsPerIp: count("RACEME_MAX_SOCKETS_PER_IP", 10),
     maxSockets: count("RACEME_MAX_SOCKETS", 8192),

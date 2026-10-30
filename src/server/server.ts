@@ -70,7 +70,13 @@ export function startServer(config: ServerConfig, clock = steadyClock): RunningS
   const limits = new ClientLimits(config, clock);
   const hub = new RoomHub<SocketData>((slug, message) => server.publish(slug, message), clock);
   const catalog =
-    config.speedrunApi === null ? null : new SpeedrunCatalog({ apiUrl: config.speedrunApi, clock });
+    config.speedrunApi === null
+      ? null
+      : new SpeedrunCatalog({
+          apiUrl: config.speedrunApi,
+          perMinute: config.speedrunPerMinute,
+          clock,
+        });
   const surge = new SurgeGuard({
     roomsPerMinute: config.surgeRoomsPerMinute,
     bits: config.surgeBits,
@@ -92,6 +98,7 @@ export function startServer(config: ServerConfig, clock = steadyClock): RunningS
       limits,
       clock,
       chatEveryMs: config.chatEveryMs,
+      clearAfterEndMs: config.clearAfterEndMs,
       countsChanged,
     }),
   });

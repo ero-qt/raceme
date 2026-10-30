@@ -6,8 +6,6 @@ import { randomSecret, randomSlug, secretsEqual } from "./tokens.ts";
 // 10 base32 characters give 50 bits, far past guessing invite links at any rate the server allows.
 const slugLength = 10;
 const entrantIdLength = 8;
-const maxSessionsPerRoom = 200;
-const feedCapacity = 200;
 
 export class Room {
   readonly #hostToken: string;
@@ -15,7 +13,7 @@ export class Room {
   readonly #entrantIds = new Map<string, string>();
   /** Counts the open sockets of each session secret. */
   readonly #sessionSockets = new Map<string, number>();
-  readonly feed = new Feed(feedCapacity);
+  readonly feed: Feed;
   race: RaceState;
   /** Drops the room at this server time even while people are in it, `null` when not set. */
   clearAt: number | null = null;
@@ -37,13 +35,14 @@ export class Room {
     hostToken: string,
     settings: NewRaceSettings,
     now: number,
-    lifetimeMs: number,
+    readonly limits: Pick<ServerConfig, "roomLifetimeMs" | "maxSessionsPerRoom" | "feedCapacity">,
   ) {
     this.#hostToken = hostToken;
     this.race = createRace(settings);
+    this.feed = new Feed(limits.feedCapacity);
     this.#lastActivityAt = now;
     this.openedAt = now;
-    this.expiresAt = now + lifetimeMs;
+    this.expiresAt = now + limits.roomLifetimeMs;
     this.#lastInputAt = now;
   }
 
@@ -99,7 +98,7 @@ export class Room {
     if (known) {
       return known;
     }
-    if (this.#entrantIds.size >= maxSessionsPerRoom) {
+    if (this.#entrantIds.size >= this.limits.maxSessionsPerRoom) {
       return null;
     }
 
@@ -187,6 +186,8 @@ export type RoomRegistryOptions = Pick<
   | "unusedRoomMs"
   | "abandonedAfterMs"
   | "abandonedRoomHeadroom"
+  | "maxSessionsPerRoom"
+  | "feedCapacity"
 >;
 
 export type CloseReason = "ended" | "expired" | "restart" | "idle" | "empty";
@@ -247,7 +248,7 @@ export class RoomRegistry {
     }
 
     const hostToken = randomSecret();
-    const room = new Room(slug, hostToken, settings, now, this.options.roomLifetimeMs);
+    const room = new Room(slug, hostToken, settings, now, this.options);
     room.restartAt = this.#restartAt;
     this.#rooms.set(slug, room);
     return { ok: true, room, hostToken };

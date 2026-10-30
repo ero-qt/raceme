@@ -7,8 +7,8 @@ import {
   useGamePicker,
 } from "../goal/goal-picker.tsx";
 import * as styles from "../goal/goal-title.css.ts";
-import { visuallyHidden } from "../home/home-page.css.ts";
 import { Button } from "../primitives/button.tsx";
+import { visuallyHidden } from "../styles/controls.css.ts";
 
 /**
  * Shows the goal as the page title. For the host the goal is an input that looks like plain text

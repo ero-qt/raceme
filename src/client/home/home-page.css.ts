@@ -65,15 +65,6 @@ export const field = style([
   },
 ]);
 
-export const visuallyHidden = style({
-  position: "absolute",
-  inlineSize: "1px",
-  blockSize: "1px",
-  overflow: "hidden",
-  clipPath: "inset(50%)",
-  whiteSpace: "nowrap",
-});
-
 const spin = keyframes({ to: { transform: "rotate(360deg)" } });
 
 export const spinner = style({

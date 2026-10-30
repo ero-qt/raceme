@@ -11,7 +11,7 @@ import { GoalPicker, useGamePicker } from "../goal/goal-picker.tsx";
 import * as titleStyles from "../goal/goal-title.css.ts";
 import { Button } from "../primitives/button.tsx";
 import { refusalText } from "../room/action-labels.ts";
-import * as styles from "../room/room.css.ts";
+import { notice as noticeText, visuallyHidden, warningIcon } from "../styles/controls.css.ts";
 import { HomeIntro } from "./home-intro.tsx";
 import * as homeStyles from "./home-page.css.ts";
 import { useRoomCheck } from "./room-check.ts";
@@ -151,7 +151,7 @@ export function HomePage(props: {
   return (
     <main class={homeStyles.page}>
       <section class={homeStyles.start}>
-        <h1 class={homeStyles.visuallyHidden}>raceme</h1>
+        <h1 class={visuallyHidden}>raceme</h1>
         <form
           class={titleStyles.form}
           onPaste={() => {
@@ -187,7 +187,7 @@ export function HomePage(props: {
             </Button>
           </Show>
         </form>
-        <p class={styles.notice} role="status">
+        <p class={noticeText} role="status">
           {notice()}
         </p>
       </section>
@@ -196,8 +196,8 @@ export function HomePage(props: {
         <ServerStatusCard status={status()}>
           <Show when={restartAt()}>
             {(at) => (
-              <p class={`${styles.notice} ${homeStyles.warning}`}>
-                <TriangleAlert class={styles.closedIcon} aria-hidden="true" />
+              <p class={`${noticeText} ${homeStyles.warning}`}>
+                <TriangleAlert class={warningIcon} aria-hidden="true" />
                 {restartText(at(), now())}
               </p>
             )}

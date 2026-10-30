@@ -2,6 +2,7 @@ import { For, type JSX, Show, createSignal, onCleanup } from "solid-js";
 import { type FractionDigits, formatClock } from "../../shared/format-time.ts";
 import type { Standing } from "../../shared/race/race.ts";
 import { StatusBadge } from "../primitives/status-badge.tsx";
+import { visuallyHidden } from "../styles/controls.css.ts";
 import * as styles from "./room.css.ts";
 
 export function EntrantTable(props: {
@@ -34,7 +35,7 @@ export function EntrantTable(props: {
         <tr>
           <Show when={props.muteButton}>
             <th class={styles.headCell} scope="col">
-              <span class={styles.visuallyHidden}>chat</span>
+              <span class={visuallyHidden}>chat</span>
             </th>
           </Show>
           <th class={styles.headCell} scope="col">
@@ -51,7 +52,7 @@ export function EntrantTable(props: {
               time
             </th>
             <th class={styles.headCell} scope="col">
-              <span class={styles.visuallyHidden}>actions</span>
+              <span class={visuallyHidden}>actions</span>
             </th>
           </Show>
         </tr>

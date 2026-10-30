@@ -19,6 +19,7 @@ import {
 } from "../../shared/race/race.ts";
 import type { GoalCatalog } from "../goal/goal-picker.tsx";
 import { Button } from "../primitives/button.tsx";
+import { icon, warningIcon } from "../styles/controls.css.ts";
 import { actionLabel, refusalText } from "./action-labels.ts";
 import { type ActionType, availableActions } from "./available-actions.ts";
 import { chatCommand } from "./chat-command.ts";
@@ -145,8 +146,8 @@ export function RoomView(props: RoomViewProps): JSX.Element {
           aria-label={`${actionLabel[type()]} ${row.name}`}
           onClick={(event) => press(event, { type: type(), entrantId: row.id })}
         >
-          <Show when={muted()} fallback={<Volume2 class={styles.rowIcon} aria-hidden="true" />}>
-            <VolumeOff class={styles.rowIcon} aria-hidden="true" />
+          <Show when={muted()} fallback={<Volume2 class={icon} aria-hidden="true" />}>
+            <VolumeOff class={icon} aria-hidden="true" />
           </Show>
         </Button>
       </Show>
@@ -251,7 +252,7 @@ export function RoomView(props: RoomViewProps): JSX.Element {
           <div class={styles.closedNotice} role="status">
             <p class={styles.closedReason}>{props.notice}</p>
             <p class={styles.closedBox}>
-              <TriangleAlert class={styles.closedIcon} aria-hidden="true" />
+              <TriangleAlert class={warningIcon} aria-hidden="true" />
               <span>
                 this page is only kept in this tab.
                 <br />

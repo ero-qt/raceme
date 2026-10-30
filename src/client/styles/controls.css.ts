@@ -87,3 +87,32 @@ globalStyle(
     opacity: 1,
   },
 );
+
+/** Keeps text in the page for screen readers while nothing shows on screen. */
+export const visuallyHidden = style({
+  position: "absolute",
+  inlineSize: "1px",
+  blockSize: "1px",
+  overflow: "hidden",
+  clipPath: "inset(50%)",
+  whiteSpace: "nowrap",
+});
+
+/** Sizes an icon beside text or in a button, the same on every page. */
+export const icon = style({ flex: "none", inlineSize: "1.25em", blockSize: "1.25em" });
+
+/** Draws the warning sign beside a notice, centered on its first line. */
+export const warningIcon = style({
+  flex: "none",
+  inlineSize: "1.1em",
+  blockSize: "1.1em",
+  color: tokens.color.danger,
+  // Centers the icon on the first line of text, since the body line height is 1.5.
+  marginBlockStart: "0.2em",
+});
+
+/** Colors a line that reports a refusal or a warning red, on every page. */
+export const notice = style({
+  margin: 0,
+  color: tokens.color.statusForfeit,
+});

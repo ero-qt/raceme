@@ -3,6 +3,7 @@ import { type JSX, Show } from "solid-js";
 import type { ClientAction } from "../../shared/protocol.ts";
 import { type RaceState, maxEntrants, minEntrantCap } from "../../shared/race/race.ts";
 import { Button } from "../primitives/button.tsx";
+import { icon, visuallyHidden } from "../styles/controls.css.ts";
 import * as styles from "./room.css.ts";
 
 /**
@@ -22,8 +23,8 @@ export function EntrantsHeader(props: {
   const locked = () => props.race.entryLocked || !beforeStart();
   const editable = () => props.isHost && beforeStart();
   const lockIcon = () => (
-    <Show when={locked()} fallback={<LockOpen class={styles.headerIcon} aria-hidden="true" />}>
-      <Lock class={styles.headerIcon} aria-hidden="true" />
+    <Show when={locked()} fallback={<LockOpen class={icon} aria-hidden="true" />}>
+      <Lock class={icon} aria-hidden="true" />
     </Show>
   );
 
@@ -60,9 +61,9 @@ export function EntrantsHeader(props: {
       </span>
       <Show when={props.watchers !== null}>
         <span class={styles.watcherCount} title={`${props.watchers} watching`}>
-          <Eye class={styles.headerIcon} aria-hidden="true" />
+          <Eye class={icon} aria-hidden="true" />
           <span class={styles.countDigits}>{props.watchers}</span>
-          <span class={styles.visuallyHidden}> watching</span>
+          <span class={visuallyHidden}> watching</span>
         </span>
       </Show>
       <span class={styles.headerSpacer} />

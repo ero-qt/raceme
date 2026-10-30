@@ -135,11 +135,6 @@ export const timeCell = style([
   { fontFamily: tokens.font.mono, fontVariantNumeric: "tabular-nums" },
 ]);
 
-export const notice = style({
-  margin: 0,
-  color: tokens.color.statusForfeit,
-});
-
 export const closedNotice = style({
   display: "grid",
   gap: tokens.space.s,
@@ -168,24 +163,6 @@ export const rule = style([
   divider,
   { marginBlock: tokens.space.s, marginInline: 0, borderInline: "none", borderBlockEnd: "none" },
 ]);
-
-export const closedIcon = style({
-  flex: "none",
-  inlineSize: "1.1em",
-  blockSize: "1.1em",
-  color: tokens.color.danger,
-  // Centers the icon on the first line of text, since the body line height is 1.5.
-  marginBlockStart: "0.2em",
-});
-
-export const visuallyHidden = style({
-  position: "absolute",
-  inlineSize: "1px",
-  blockSize: "1px",
-  overflow: "hidden",
-  clipPath: "inset(50%)",
-  whiteSpace: "nowrap",
-});
 
 export const chatRow = style({
   display: "flex",
@@ -273,11 +250,6 @@ export const capDigits = style([
 export const watcherCount = style([entrantCount, { gap: tokens.space.xs }]);
 
 export const headerSpacer = style({ flex: "1 1 auto" });
-
-export const headerIcon = style({
-  inlineSize: "1.25em",
-  blockSize: "1.25em",
-});
 
 export const entrantsTitle = style({
   margin: 0,
@@ -370,8 +342,3 @@ export const exportText = style([
     background: tokens.color.bg1,
   },
 ]);
-
-export const rowIcon = style({
-  inlineSize: "1.25em",
-  blockSize: "1.25em",
-});

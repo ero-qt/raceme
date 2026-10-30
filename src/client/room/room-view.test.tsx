@@ -292,7 +292,7 @@ describe("RoomView layout", () => {
     expect(view.queryByRole("navigation", { hidden: true })).toBeNull();
   });
 
-  test("a phone shows the clock on the race card as well, so each tab has one", () => {
+  test("a phone shows the clock on the race card as well, so both tabs have one", () => {
     const realMatchMedia = globalThis.matchMedia;
     globalThis.matchMedia = (() => ({
       matches: true,

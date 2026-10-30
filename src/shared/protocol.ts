@@ -43,8 +43,14 @@ export type RoomRefusal =
 /** Tells whether the room's lifetime or a queued server restart closes the room. */
 export type ClosesFor = "lifetime" | "restart";
 
+/** Identifies the viewer in a room: the entrant id their session owns and whether they host. */
+export interface Me {
+  entrantId: string;
+  isHost: boolean;
+}
+
 export type ServerMessage =
-  | { type: "welcome"; entrantId: string; isHost: boolean; chatEveryMs: number }
+  | ({ type: "welcome"; chatEveryMs: number } & Me)
   /**
    * Gives the room's state, with `closesAt` as the server time the room will close and `watchers`
    * as the number of people with the room open who haven't entered.

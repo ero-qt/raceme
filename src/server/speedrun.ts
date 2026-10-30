@@ -34,8 +34,8 @@ interface CatalogOptions {
   apiUrl: string;
   clock: () => number;
   fetch?: typeof fetch;
-  /** Requests to speedrun.com allowed per minute across all visitors. */
-  perMinute?: number;
+  /** Limits requests to speedrun.com per minute across all visitors. */
+  perMinute: number;
 }
 
 /** Gives `"overBudget"` when raceme's own request budget ran out, while speedrun.com may be fine. */
@@ -67,7 +67,7 @@ export class SpeedrunCatalog {
 
   constructor(options: CatalogOptions) {
     this.#options = options;
-    const perMinute = options.perMinute ?? 60;
+    const { perMinute } = options;
     this.#budget = new TokenBucket(perMinute, perMinute / 60, options.clock());
     this.#fetch = options.fetch ?? fetch;
   }

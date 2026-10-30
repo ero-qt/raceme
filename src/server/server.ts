@@ -1,4 +1,5 @@
 import type { Server } from "bun";
+import type { ServerConfig } from "../config.ts";
 import { SpikeAlerts } from "./alerts.ts";
 import { ClientLimits } from "./client-limits.ts";
 import { json, status, withSecurityHeaders } from "./http.ts";
@@ -9,72 +10,6 @@ import { type CloseReason, RoomRegistry } from "./rooms.ts";
 import { createRouter } from "./routes.ts";
 import { SpeedrunCatalog } from "./speedrun.ts";
 import { SurgeGuard } from "./surge.ts";
-
-export interface ServerConfig {
-  port: number;
-  /** Sets the interface to listen on, like `127.0.0.1` behind Caddy. */
-  hostname: string;
-  /**
-   * Marks cookies `Secure`. Only a plain http preview turns this off, because browsers drop
-   * `Secure` cookies on http pages other than localhost.
-   */
-  secureCookies: boolean;
-  /** Sets the URL prefix like `/apps/raceme`, with `""` at the root. */
-  basePath: string;
-  /** Only origin allowed to create rooms and open sockets, `null` to allow any. */
-  origin: string | null;
-  /** Folder with the built client, `null` when Vite serves it in development. */
-  staticDir: string | null;
-  /** Reads the client IP from `X-Forwarded-For`, for running behind Caddy. */
-  trustProxy: boolean;
-  /** Base URL of the speedrun.com API for the game picker, `null` to turn the picker off. */
-  speedrunApi: string | null;
-  maxRooms: number;
-  idleMs: number;
-  /** Ends a room after this long without input from anyone, even with tabs open. */
-  idleInputMs: number;
-  /** Gives an idle room this long between the warning and the end. */
-  idleWarningMs: number;
-  /** Ends every room this long after it opened. */
-  roomLifetimeMs: number;
-  /** Warns a room this long before it reaches `roomLifetimeMs`. */
-  closingWarningMs: number;
-  /** Drops an empty room nobody ever entered after this long. */
-  unusedRoomMs: number;
-  /** Counts a room as abandoned after this long with nobody connected. */
-  abandonedAfterMs: number;
-  /** Frees abandoned rooms once fewer than this many rooms are free. */
-  abandonedRoomHeadroom: number;
-  /** Asks new rooms for a proof of work once more than this many open within a minute. */
-  surgeRoomsPerMinute: number;
-  /** Sets how hard that proof is, as leading zero bits of a SHA-256. */
-  surgeBits: number;
-  countdownMs: number;
-  /** Lets each entrant send 1 chat line this often. */
-  chatEveryMs: number;
-  maxSocketsPerIp: number;
-  maxSockets: number;
-  /** Checks for idle and cleared rooms this often. */
-  sweepIntervalMs: number;
-  /** Posts to this Discord webhook when rooms or people online climb past a level, `null` for none. */
-  alertWebhook: string | null;
-  /** Listens on 127.0.0.1 at this port for the deploy script, `null` to leave it off. */
-  adminPort: number | null;
-  /** Restarts for a new release at this hour in UTC, unless all rooms are closed before then. */
-  restartHourUtc: number;
-  /** Points at the release this server runs, `null` for a build that didn't come from a release. */
-  build: BuildInfo | null;
-}
-
-/** Points at the commit and the attested release tarball, so visitors can check the build. */
-export interface BuildInfo {
-  /** Gives the release tag, like `1.2.0`. */
-  release: string;
-  /** Links to the source on GitHub, which keeps outside hosts out of the page bundle. */
-  repository: string;
-  commit: string;
-  digest: string;
-}
 
 export interface RunningServer {
   server: Server<SocketData>;
@@ -116,17 +51,7 @@ export function steadyClock(): number {
 
 /** Starts raceme's HTTP and websocket server with every room kept in memory. */
 export function startServer(config: ServerConfig, clock = steadyClock): RunningServer {
-  const rooms = new RoomRegistry({
-    maxRooms: config.maxRooms,
-    idleMs: config.idleMs,
-    idleInputMs: config.idleInputMs,
-    idleWarningMs: config.idleWarningMs,
-    roomLifetimeMs: config.roomLifetimeMs,
-    closingWarningMs: config.closingWarningMs,
-    unusedRoomMs: config.unusedRoomMs,
-    abandonedAfterMs: config.abandonedAfterMs,
-    abandonedRoomHeadroom: config.abandonedRoomHeadroom,
-  });
+  const rooms = new RoomRegistry(config);
   const webhook = config.alertWebhook;
   const alerts = new SpikeAlerts((content) => {
     if (webhook) {
@@ -145,7 +70,13 @@ export function startServer(config: ServerConfig, clock = steadyClock): RunningS
   const limits = new ClientLimits(config, clock);
   const hub = new RoomHub<SocketData>((slug, message) => server.publish(slug, message), clock);
   const catalog =
-    config.speedrunApi === null ? null : new SpeedrunCatalog({ apiUrl: config.speedrunApi, clock });
+    config.speedrunApi === null
+      ? null
+      : new SpeedrunCatalog({
+          apiUrl: config.speedrunApi,
+          perMinute: config.speedrunPerMinute,
+          clock,
+        });
   const surge = new SurgeGuard({
     roomsPerMinute: config.surgeRoomsPerMinute,
     bits: config.surgeBits,
@@ -167,6 +98,7 @@ export function startServer(config: ServerConfig, clock = steadyClock): RunningS
       limits,
       clock,
       chatEveryMs: config.chatEveryMs,
+      clearAfterEndMs: config.clearAfterEndMs,
       countsChanged,
     }),
   });

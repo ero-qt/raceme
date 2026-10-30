@@ -1,3 +1,4 @@
+import type { ServerConfig } from "../config.ts";
 import { type NewRaceSettings, type RaceState, createRace } from "../shared/race/race.ts";
 import { Feed } from "./feed.ts";
 import { randomSecret, randomSlug, secretsEqual } from "./tokens.ts";
@@ -5,8 +6,6 @@ import { randomSecret, randomSlug, secretsEqual } from "./tokens.ts";
 // 10 base32 characters give 50 bits, far past guessing invite links at any rate the server allows.
 const slugLength = 10;
 const entrantIdLength = 8;
-const maxSessionsPerRoom = 200;
-const feedCapacity = 200;
 
 export class Room {
   readonly #hostToken: string;
@@ -14,7 +13,7 @@ export class Room {
   readonly #entrantIds = new Map<string, string>();
   /** Counts the open sockets of each session secret. */
   readonly #sessionSockets = new Map<string, number>();
-  readonly feed = new Feed(feedCapacity);
+  readonly feed: Feed;
   race: RaceState;
   /** Drops the room at this server time even while people are in it, `null` when not set. */
   clearAt: number | null = null;
@@ -36,13 +35,14 @@ export class Room {
     hostToken: string,
     settings: NewRaceSettings,
     now: number,
-    lifetimeMs: number,
+    readonly limits: Pick<ServerConfig, "roomLifetimeMs" | "maxSessionsPerRoom" | "feedCapacity">,
   ) {
     this.#hostToken = hostToken;
     this.race = createRace(settings);
+    this.feed = new Feed(limits.feedCapacity);
     this.#lastActivityAt = now;
     this.openedAt = now;
-    this.expiresAt = now + lifetimeMs;
+    this.expiresAt = now + limits.roomLifetimeMs;
     this.#lastInputAt = now;
   }
 
@@ -98,7 +98,7 @@ export class Room {
     if (known) {
       return known;
     }
-    if (this.#entrantIds.size >= maxSessionsPerRoom) {
+    if (this.#entrantIds.size >= this.limits.maxSessionsPerRoom) {
       return null;
     }
 
@@ -130,8 +130,8 @@ export class Room {
   }
 
   /**
-   * Counts a session's socket as closed. A session with no socket left that never entered gives its
-   * id back, so visitors with throwaway cookies can't use up the room's session limit.
+   * Counts a session's socket as closed. A session with no sockets left that never entered gives
+   * its id back, so visitors with throwaway cookies can't use up the room's session limit.
    */
   detachSession(sessionSecret: string): void {
     const left = (this.#sessionSockets.get(sessionSecret) ?? 1) - 1;
@@ -175,28 +175,20 @@ export class Room {
   }
 }
 
-export interface RoomRegistryOptions {
-  maxRooms: number;
-  /** Drops a room after this many ms with nobody connected and no action in it. */
-  idleMs: number;
-  /**
-   * Warns a room after this many ms without input and drops it `idleWarningMs` later, because an open
-   * tab nobody touches would keep it alive.
-   */
-  idleInputMs: number;
-  /** Gives an idle room this long between the warning and the end. */
-  idleWarningMs: number;
-  /** Ends every room this long after it opened, however active it is. */
-  roomLifetimeMs: number;
-  /** Warns a room this long before it reaches `roomLifetimeMs`. */
-  closingWarningMs: number;
-  /** Drops an empty room nobody ever entered after this long, so lobbies can't fill the cap. */
-  unusedRoomMs: number;
-  /** Counts a room as abandoned after this long with nobody connected, so it may be freed early. */
-  abandonedAfterMs: number;
-  /** Frees abandoned rooms, longest-abandoned first, once fewer than this many rooms are free. */
-  abandonedRoomHeadroom: number;
-}
+export type RoomRegistryOptions = Pick<
+  ServerConfig,
+  | "maxRooms"
+  | "idleMs"
+  | "idleInputMs"
+  | "idleWarningMs"
+  | "roomLifetimeMs"
+  | "closingWarningMs"
+  | "unusedRoomMs"
+  | "abandonedAfterMs"
+  | "abandonedRoomHeadroom"
+  | "maxSessionsPerRoom"
+  | "feedCapacity"
+>;
 
 export type CloseReason = "ended" | "expired" | "restart" | "idle" | "empty";
 
@@ -232,7 +224,7 @@ export class RoomRegistry {
     }
   }
 
-  /** Counts the people with any room open, a person in 2 rooms twice. */
+  /** Counts the people in open rooms, a person in 2 rooms twice. */
   get peopleCount(): number {
     let people = 0;
     for (const room of this.#rooms.values()) {
@@ -256,7 +248,7 @@ export class RoomRegistry {
     }
 
     const hostToken = randomSecret();
-    const room = new Room(slug, hostToken, settings, now, this.options.roomLifetimeMs);
+    const room = new Room(slug, hostToken, settings, now, this.options);
     room.restartAt = this.#restartAt;
     this.#rooms.set(slug, room);
     return { ok: true, room, hostToken };

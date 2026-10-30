@@ -15,9 +15,6 @@ export interface SocketData extends Session {
 
 type Socket = ServerWebSocket<SocketData>;
 
-// RaceBot: "Race terminated. The channel will be cleared in 10 minutes!"
-const clearAfterEndMs = 10 * 60_000;
-
 function send(socket: Socket, message: ServerMessage): void {
   socket.send(JSON.stringify(message));
 }
@@ -29,10 +26,11 @@ export function roomSocketHandlers(deps: {
   limits: ClientLimits;
   clock: () => number;
   chatEveryMs: number;
+  clearAfterEndMs: number;
   /** Runs whenever a socket opens or closes, for the spike alerts. */
   countsChanged?: () => void;
 }): WebSocketHandler<SocketData> {
-  const { rooms, hub, limits, clock, chatEveryMs } = deps;
+  const { rooms, hub, limits, clock, chatEveryMs, clearAfterEndMs } = deps;
 
   function open(socket: Socket): void {
     limits.socketOpened(socket.data.ip);

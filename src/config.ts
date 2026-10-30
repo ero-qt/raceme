@@ -1,8 +1,85 @@
 import { readFileSync } from "node:fs";
-import type { BuildInfo, ServerConfig } from "./server/server.ts";
 import { normalizeBasePath } from "./shared/base-path.ts";
 
 type Env = Record<string, string | undefined>;
+
+export interface ServerConfig {
+  port: number;
+  /** Sets the interface to listen on, like `127.0.0.1` behind Caddy. */
+  hostname: string;
+  /**
+   * Marks cookies `Secure`. Only a plain http preview turns this off, because browsers drop
+   * `Secure` cookies on http pages other than localhost.
+   */
+  secureCookies: boolean;
+  /** Sets the URL prefix like `/apps/raceme`, with `""` at the root. */
+  basePath: string;
+  /** Only origin allowed to create rooms and open sockets, `null` to allow any. */
+  origin: string | null;
+  /** Folder with the built client, `null` when Vite serves it in development. */
+  staticDir: string | null;
+  /** Reads the client IP from `X-Forwarded-For`, for running behind Caddy. */
+  trustProxy: boolean;
+  /** Base URL of the speedrun.com API for the game picker, `null` to turn the picker off. */
+  speedrunApi: string | null;
+  maxRooms: number;
+  /** Drops a room after this many ms with nobody connected and no action in it. */
+  idleMs: number;
+  /**
+   * Warns a room after this many ms without input and drops it `idleWarningMs` later, because an
+   * open tab nobody touches would keep it alive.
+   */
+  idleInputMs: number;
+  /** Gives an idle room this long between the warning and the end. */
+  idleWarningMs: number;
+  /** Ends every room this long after it opened, however active it is. */
+  roomLifetimeMs: number;
+  /** Warns a room this long before it reaches `roomLifetimeMs`. */
+  closingWarningMs: number;
+  /** Drops an empty room nobody ever entered after this long, so lobbies can't fill the cap. */
+  unusedRoomMs: number;
+  /** Counts a room as abandoned after this long with nobody connected, so it may be freed early. */
+  abandonedAfterMs: number;
+  /** Frees abandoned rooms, longest-abandoned first, once fewer than this many rooms are free. */
+  abandonedRoomHeadroom: number;
+  /** Asks new rooms for a proof of work once more than this many open within a minute. */
+  surgeRoomsPerMinute: number;
+  /** Sets how hard that proof is, as leading zero bits of a SHA-256. */
+  surgeBits: number;
+  countdownMs: number;
+  /** Clears a room this long after `.end`, as RaceBot announces. */
+  clearAfterEndMs: number;
+  /** Caps the sessions a room hands entrant ids to, so throwaway cookies can't fill it. */
+  maxSessionsPerRoom: number;
+  /** Keeps this many chat and RaceBot lines per room for people who reconnect. */
+  feedCapacity: number;
+  /** Limits requests to speedrun.com per minute across all visitors. */
+  speedrunPerMinute: number;
+  /** Lets each entrant send 1 chat line this often. */
+  chatEveryMs: number;
+  maxSocketsPerIp: number;
+  maxSockets: number;
+  /** Checks for idle and cleared rooms this often. */
+  sweepIntervalMs: number;
+  /** Posts to this Discord webhook when rooms or people online climb past a level, `null` for none. */
+  alertWebhook: string | null;
+  /** Listens on 127.0.0.1 at this port for the deploy script, `null` to leave it off. */
+  adminPort: number | null;
+  /** Restarts for a new release at this hour in UTC, unless all rooms are closed before then. */
+  restartHourUtc: number;
+  /** Points at the release this server runs, `null` for a build that didn't come from a release. */
+  build: BuildInfo | null;
+}
+
+/** Points at the commit and the attested release tarball, so visitors can check the build. */
+export interface BuildInfo {
+  /** Gives the release tag, like `1.2.0`. */
+  release: string;
+  /** Links to the source on GitHub, which keeps outside hosts out of the page bundle. */
+  repository: string;
+  commit: string;
+  digest: string;
+}
 
 /** Reads the server settings from environment variables, see the table in hosting.md. */
 export function loadConfig(env: Env): ServerConfig {
@@ -30,6 +107,10 @@ export function loadConfig(env: Env): ServerConfig {
     // About 65,000 hashes, roughly a second in a phone's browser.
     surgeBits: 16,
     countdownMs: 10_000,
+    clearAfterEndMs: 10 * 60_000,
+    maxSessionsPerRoom: 200,
+    feedCapacity: 200,
+    speedrunPerMinute: 60,
     chatEveryMs: count("RACEME_CHAT_SECONDS", 3) * 1000,
     maxSocketsPerIp: count("RACEME_MAX_SOCKETS_PER_IP", 10),
     maxSockets: count("RACEME_MAX_SOCKETS", 8192),

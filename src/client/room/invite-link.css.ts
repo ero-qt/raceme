@@ -64,8 +64,6 @@ export const reveal = style([
   },
 ]);
 
-export const icon = style({ flex: "none", inlineSize: "1.25em", blockSize: "1.25em" });
-
 export const decoy = style({
   position: "absolute",
   inset: 0,
@@ -103,13 +101,4 @@ export const toast = style({
       borderRadius: tokens.radius.s,
     },
   },
-});
-
-export const visuallyHidden = style({
-  position: "absolute",
-  inlineSize: "1px",
-  blockSize: "1px",
-  overflow: "hidden",
-  clipPath: "inset(50%)",
-  whiteSpace: "nowrap",
 });

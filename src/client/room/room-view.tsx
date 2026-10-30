@@ -10,15 +10,17 @@ import {
   onCleanup,
 } from "solid-js";
 import type { FeedEntry } from "../../shared/feed-entry.ts";
-import type { ClientAction, ClosesFor } from "../../shared/protocol.ts";
+import type { ClientAction, ClosesFor, Me } from "../../shared/protocol.ts";
 import {
   type RaceState,
   type Standing,
+  beforeStart,
   earliestResultMs,
   standings,
 } from "../../shared/race/race.ts";
-import type { GoalCatalog } from "../home/goal-picker.tsx";
+import type { GoalCatalog } from "../goal/goal-picker.tsx";
 import { Button } from "../primitives/button.tsx";
+import { icon, warningIcon } from "../styles/controls.css.ts";
 import { actionLabel, refusalText } from "./action-labels.ts";
 import { type ActionType, availableActions } from "./available-actions.ts";
 import { chatCommand } from "./chat-command.ts";
@@ -43,7 +45,7 @@ const accentActions = new Set<ActionType>(["rematch"]);
 
 export interface RoomViewProps {
   race: RaceState;
-  me: { entrantId: string; isHost: boolean };
+  me: Me;
   /** Current time on the server's clock, in ms. */
   now: number;
   inviteUrl: string;
@@ -76,7 +78,6 @@ function usePhoneScreen(): () => boolean {
 /** Shows one race room: goal, clock, invite link, entrants and the chat with the race buttons. */
 export function RoomView(props: RoomViewProps): JSX.Element {
   const actions = () => availableActions(props.race, props.me.entrantId, props.me.isHost);
-  const beforeStart = () => props.race.phase === "open" || props.race.phase === "countdown";
   const over = () => props.race.phase === "finished" || props.race.phase === "terminated";
   const entryRefusal = () => (props.race.entryLocked ? "entry is closed" : "race is full");
   const entered = () => props.race.entrants.some((e) => e.id === props.me.entrantId);
@@ -122,7 +123,7 @@ export function RoomView(props: RoomViewProps): JSX.Element {
     props.closed ? null : row.id === props.me.entrantId ? (
       <Index each={sideActions()}>{actionButton}</Index>
     ) : (
-      <Show when={props.me.isHost && beforeStart()}>
+      <Show when={props.me.isHost && beforeStart(props.race)}>
         <Button
           variant="danger"
           aria-label={`${actionLabel.remove} ${row.name}`}
@@ -145,8 +146,8 @@ export function RoomView(props: RoomViewProps): JSX.Element {
           aria-label={`${actionLabel[type()]} ${row.name}`}
           onClick={(event) => press(event, { type: type(), entrantId: row.id })}
         >
-          <Show when={muted()} fallback={<Volume2 class={styles.rowIcon} aria-hidden="true" />}>
-            <VolumeOff class={styles.rowIcon} aria-hidden="true" />
+          <Show when={muted()} fallback={<Volume2 class={icon} aria-hidden="true" />}>
+            <VolumeOff class={icon} aria-hidden="true" />
           </Show>
         </Button>
       </Show>
@@ -251,7 +252,7 @@ export function RoomView(props: RoomViewProps): JSX.Element {
           <div class={styles.closedNotice} role="status">
             <p class={styles.closedReason}>{props.notice}</p>
             <p class={styles.closedBox}>
-              <TriangleAlert class={styles.closedIcon} aria-hidden="true" />
+              <TriangleAlert class={warningIcon} aria-hidden="true" />
               <span>
                 this page is only kept in this tab.
                 <br />
@@ -263,7 +264,7 @@ export function RoomView(props: RoomViewProps): JSX.Element {
         </Show>
         <GoalTitle
           goal={props.race.goal}
-          editable={props.me.isHost && beforeStart() && !props.closed}
+          editable={props.me.isHost && beforeStart(props.race) && !props.closed}
           onSubmit={(goal) => props.send({ type: "setGoal", goal })}
           catalog={props.catalog}
         />
@@ -289,7 +290,7 @@ export function RoomView(props: RoomViewProps): JSX.Element {
           />
           <EntrantTable
             rows={standings(props.race)}
-            started={!beforeStart() && props.race.startsAt !== null}
+            started={!beforeStart(props.race) && props.race.startsAt !== null}
             digits={precision.digits()}
             rowActions={rowActions}
             muteButton={props.me.isHost && !props.closed ? muteButton : undefined}
@@ -309,7 +310,7 @@ export function RoomView(props: RoomViewProps): JSX.Element {
             when={entered()}
             fallback={
               <Show
-                when={beforeStart()}
+                when={beforeStart(props.race)}
                 fallback={
                   <div class={styles.row}>
                     <Index each={mainActions()}>{actionButton}</Index>

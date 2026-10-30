@@ -23,7 +23,7 @@ function fakeApi(routes: Record<string, unknown>) {
 }
 
 function catalog(api: ReturnType<typeof fakeApi>, now = () => 0) {
-  return new SpeedrunCatalog({ apiUrl, fetch: api.fetch, clock: now });
+  return new SpeedrunCatalog({ apiUrl, fetch: api.fetch, clock: now, perMinute: 60 });
 }
 
 const searchPath = "/api/v1/games?name=super+mario+64&max=50&_bulk=yes";

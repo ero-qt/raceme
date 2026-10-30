@@ -274,11 +274,13 @@ function endIfAllFinished(state: RaceState, now: number): RaceState {
     : state;
 }
 
-function beforeStart(state: RaceState): boolean {
+/** Tells whether entrants can still join, ready up and leave, before GO. */
+export function beforeStart(state: RaceState): boolean {
   return state.phase === "open" || state.phase === "countdown";
 }
 
-function isOver(state: RaceState): boolean {
+/** Tells whether the race finished or was ended, so only a rematch is left. */
+export function isOver(state: RaceState): boolean {
   return state.phase === "finished" || state.phase === "terminated";
 }
 

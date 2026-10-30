@@ -1,4 +1,5 @@
 import { type ComponentProps, type JSX, createUniqueId, splitProps } from "solid-js";
+import { visuallyHidden } from "../styles/controls.css.ts";
 import * as styles from "./text-field.css.ts";
 
 export interface TextFieldProps extends ComponentProps<"input"> {
@@ -13,7 +14,11 @@ export function TextField(props: TextFieldProps): JSX.Element {
   const id = local.id ?? createUniqueId();
   return (
     <div class={styles.field}>
-      <label class={styles.label} for={id} data-hidden={local.hideLabel === true}>
+      <label
+        class={styles.label}
+        classList={{ [visuallyHidden]: local.hideLabel === true }}
+        for={id}
+      >
         {local.label}
       </label>
       <input class={styles.input} id={id} type="text" {...rest} />

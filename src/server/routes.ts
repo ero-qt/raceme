@@ -1,4 +1,5 @@
 import type { Server } from "bun";
+import type { ServerConfig } from "../config.ts";
 import { createRace } from "../shared/race/race.ts";
 import { sessionCookieDays } from "../shared/retention.ts";
 import type { ClientLimits } from "./client-limits.ts";
@@ -8,7 +9,6 @@ import { applyAndAnnounce } from "./room-actions.ts";
 import { botLines } from "./room-hub.ts";
 import type { SocketData } from "./room-socket.ts";
 import type { Room, RoomRegistry } from "./rooms.ts";
-import type { ServerConfig } from "./server.ts";
 import {
   type CatalogEntry,
   type CatalogResult,

@@ -93,7 +93,7 @@ describe("readying", () => {
     expect(refusal(state, { type: "ready", entrantId: "a" })).toBe("noGoal");
   });
 
-  test("starts the countdown once every entrant is ready", () => {
+  test("starts the countdown once all entrants are ready", () => {
     let state = run(twoJoined(), { type: "ready", entrantId: "a" });
     expect(state.phase).toBe("open");
 

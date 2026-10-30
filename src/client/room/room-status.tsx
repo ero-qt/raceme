@@ -1,5 +1,5 @@
 import type { JSX } from "solid-js";
-import type { RaceState } from "../../shared/race/race.ts";
+import { type RaceState, beforeStart } from "../../shared/race/race.ts";
 import { type Status, StatusBadge } from "../primitives/status-badge.tsx";
 
 const roomStatus: Record<RaceState["phase"], Status> = {
@@ -17,10 +17,11 @@ const roomStatusLabel: Partial<Record<RaceState["phase"], string>> = {
 
 /** Shows the room's phase as a badge. Before the start, closed entry shows instead of the phase. */
 export function RoomStatus(props: { race: RaceState }): JSX.Element {
-  const beforeStart = () => props.race.phase === "open" || props.race.phase === "countdown";
   const label = () =>
-    props.race.entryLocked && beforeStart() ? "entry closed" : roomStatusLabel[props.race.phase];
+    props.race.entryLocked && beforeStart(props.race)
+      ? "entry closed"
+      : roomStatusLabel[props.race.phase];
   const status = () =>
-    props.race.entryLocked && beforeStart() ? "forfeit" : roomStatus[props.race.phase];
+    props.race.entryLocked && beforeStart(props.race) ? "forfeit" : roomStatus[props.race.phase];
   return <StatusBadge status={status()} {...(label() ? { label: label() } : {})} />;
 }

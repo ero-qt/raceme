@@ -1,5 +1,6 @@
 import { ClipboardCheck, Link, TriangleAlert } from "lucide-solid";
 import { type JSX, Show, createSignal, onCleanup } from "solid-js";
+import { icon, visuallyHidden } from "../styles/controls.css.ts";
 import * as styles from "./invite-link.css.ts";
 
 // Stands in for the link so the real one never sits in the page until someone asks for it. The
@@ -53,15 +54,15 @@ export function InviteLink(props: { url: string }): JSX.Element {
         onClick={copy}
       >
         {copyResult() === "copied" ? (
-          <ClipboardCheck class={styles.icon} aria-hidden="true" />
+          <ClipboardCheck class={icon} aria-hidden="true" />
         ) : (
-          <Link class={styles.icon} aria-hidden="true" />
+          <Link class={icon} aria-hidden="true" />
         )}
       </button>
       <p class={styles.toast} role="status">
         {copyResult()}
       </p>
-      <p class={styles.visuallyHidden} role="status">
+      <p class={visuallyHidden} role="status">
         <Show when={visibility() === "warned"}>{revealWarning}</Show>
       </p>
       <div class={styles.revealArea}>
@@ -79,7 +80,7 @@ export function InviteLink(props: { url: string }): JSX.Element {
               when={visibility() === "warned"}
               fallback={<span class={styles.text}>{props.url}</span>}
             >
-              <TriangleAlert class={styles.icon} aria-hidden="true" />
+              <TriangleAlert class={icon} aria-hidden="true" />
               <span class={styles.text}>{revealWarning}</span>
             </Show>
           </Show>

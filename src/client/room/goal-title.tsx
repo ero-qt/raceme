@@ -1,14 +1,14 @@
 import { type JSX, Show, createEffect, createSignal, on } from "solid-js";
-import { rememberGoal } from "../home/goal-history.ts";
+import { rememberGoal } from "../goal/goal-history.ts";
 import {
   type GoalCatalog,
   GoalPicker,
   serverCatalog,
   useGamePicker,
-} from "../home/goal-picker.tsx";
-import { visuallyHidden } from "../home/home-page.css.ts";
+} from "../goal/goal-picker.tsx";
+import * as styles from "../goal/goal-title.css.ts";
 import { Button } from "../primitives/button.tsx";
-import * as styles from "./goal-title.css.ts";
+import { visuallyHidden } from "../styles/controls.css.ts";
 
 /**
  * Shows the goal as the page title. For the host the goal is an input that looks like plain text

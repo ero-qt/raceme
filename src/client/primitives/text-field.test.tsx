@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { render } from "@solidjs/testing-library";
+import { visuallyHidden } from "../styles/controls.css.ts";
 import { TextField } from "./text-field.tsx";
 
 describe("textField", () => {
@@ -10,6 +11,6 @@ describe("textField", () => {
     ));
 
     expect((getByLabelText("your name") as HTMLInputElement).placeholder).toBe("your name");
-    expect(getByText("your name").dataset.hidden).toBe("true");
+    expect(getByText("your name").classList.contains(visuallyHidden)).toBe(true);
   });
 });

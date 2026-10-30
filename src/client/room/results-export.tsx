@@ -10,7 +10,7 @@ import {
 } from "../../shared/results.ts";
 import { homePath } from "../page-path.ts";
 import { Button } from "../primitives/button.tsx";
-import { numberField } from "../styles/controls.css.ts";
+import { icon, numberField } from "../styles/controls.css.ts";
 import { resultsImage } from "./results-image.ts";
 import * as styles from "./room.css.ts";
 
@@ -133,12 +133,12 @@ function ExportRow(props: {
       </Show>
       <Show when={props.copy}>
         <Button variant="icon" aria-label={copyLabel()} title={copyLabel()} onClick={copy}>
-          <Show when={copied()} fallback={<Copy class={styles.rowIcon} aria-hidden="true" />}>
+          <Show when={copied()} fallback={<Copy class={icon} aria-hidden="true" />}>
             {(state) =>
               state() === "copied" ? (
-                <Check class={styles.rowIcon} aria-hidden="true" />
+                <Check class={icon} aria-hidden="true" />
               ) : (
-                <X class={styles.rowIcon} aria-hidden="true" />
+                <X class={icon} aria-hidden="true" />
               )
             }
           </Show>
@@ -152,7 +152,7 @@ function ExportRow(props: {
             title={`download ${inPhrase(props.name)}`}
             onClick={download()}
           >
-            <Download class={styles.rowIcon} aria-hidden="true" />
+            <Download class={icon} aria-hidden="true" />
           </Button>
         )}
       </Show>

@@ -44,9 +44,10 @@ function EditableGoal(props: {
     ),
   );
 
+  // Focus stays in the field after Enter or Escape, so Tab goes on from the goal.
   const putBack = () => {
     setDraft(props.goal ?? "");
-    (document.activeElement as HTMLElement | null)?.blur();
+    setEditing(false);
   };
 
   return (
@@ -57,7 +58,7 @@ function EditableGoal(props: {
         const goal = picker.goal();
         props.onSubmit(goal);
         rememberGoal(goal);
-        (document.activeElement as HTMLElement | null)?.blur();
+        setEditing(false);
       }}
       // Leaving the input for .setgoal keeps editing, so Tab can reach the button.
       onFocusOut={(event) => {
@@ -74,7 +75,10 @@ function EditableGoal(props: {
         label="goal"
         inputClass={styles.input}
         value={draft()}
-        onInput={setDraft}
+        onInput={(text) => {
+          setDraft(text);
+          setEditing(true);
+        }}
         onFocus={(input) => {
           setEditing(true);
           input.select();

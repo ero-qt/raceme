@@ -147,6 +147,23 @@ describe("RoomView goal", () => {
     expect(host.sent).toEqual([]);
   });
 
+  test("Enter and Escape leave focus in the goal field, so Tab goes on from there", () => {
+    const host = renderRoom("a", true);
+    const input = host.getByLabelText("goal") as HTMLInputElement;
+    input.focus();
+    fireEvent.input(input, { target: { value: "100%" } });
+
+    fireEvent.submit(input.closest("form") as HTMLFormElement);
+    expect(document.activeElement).toBe(input);
+    expect(host.queryByRole("button", { name: ".setgoal" })).toBeNull();
+
+    fireEvent.input(input, { target: { value: "oops" } });
+    fireEvent.keyDown(input, { key: "Escape" });
+    fireEvent.keyDown(input, { key: "Escape" });
+    expect(document.activeElement).toBe(input);
+    expect(input.value).toBe("any%");
+  });
+
   test("the host picks a speedrun.com game and category for the goal and keeps it in their goals", async () => {
     localStorage.clear();
     const host = renderRoom("a", true);

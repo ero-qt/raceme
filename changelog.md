@@ -53,6 +53,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - On phones, screen readers hear new chat and RaceBot lines on the race tab too.
 - "entry is closed" and "race is full" show as a red line under the name field instead of as its placeholder.
 - On phones, the start page field lines up with the cards and sits as far above them as they are apart.
+- Enter and Escape in the goal field keep the focus there.
 
 ### Security
 

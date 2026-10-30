@@ -50,6 +50,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 ### Security
 
 - A solved proof of work opens one room, even when the same proof is sent several times at once.
+- The session cookie is used only when it has the shape the server mints.
+- An uncaught server error answers with a plain error page instead of a stack trace.
 
 ## [1.1.2] - 2026-10-26
 

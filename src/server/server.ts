@@ -87,6 +87,8 @@ export function startServer(config: ServerConfig, clock = steadyClock): RunningS
   const server = Bun.serve<SocketData>({
     port: config.port,
     hostname: config.hostname,
+    // Development mode answers an uncaught error with a stack trace and server paths.
+    development: false,
     maxRequestBodySize: maxRequestBytes,
     async fetch(request, server) {
       const response = await route(request, server);
@@ -149,6 +151,7 @@ export function startServer(config: ServerConfig, clock = steadyClock): RunningS
       ? null
       : Bun.serve({
           unix: config.adminSocket,
+          development: false,
           fetch(request) {
             if (new URL(request.url).pathname !== "/restart") {
               return status(404);

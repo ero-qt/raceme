@@ -150,10 +150,11 @@ describe("server", () => {
     expect(preview.response.headers.getSetCookie()[0]).not.toContain("Secure");
   });
 
-  test("listens only on the configured host", () => {
+  test("listens only on the configured host, without development mode", () => {
     start();
 
     expect(running?.server.hostname).toBe("127.0.0.1");
+    expect(running?.server.development).toBe(false);
   });
 
   test("opens the room with the goal already set", async () => {

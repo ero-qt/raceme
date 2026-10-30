@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, waitFor } from "@solidjs/testing-library";
 import { createSignal } from "solid-js";
 import type { ClientAction } from "../../shared/protocol.ts";
 import { type RaceAction, type RaceState, apply, createRace } from "../../shared/race/race.ts";
+import { warningIcon } from "../styles/controls.css.ts";
 import { RoomView } from "./room-view.tsx";
 
 function raceAfter(actions: RaceAction[]): RaceState {
@@ -925,7 +926,10 @@ describe("RoomView invite link", () => {
 
     fireEvent.click(field);
     expect(field.textContent).toContain("you are about to reveal the invite link!");
-    expect(field.querySelector(".lucide-triangle-alert")).not.toBeNull();
+    // The warning sign sits on the first line, like in the other warnings.
+    expect(field.querySelector(".lucide-triangle-alert")?.classList.contains(warningIcon)).toBe(
+      true,
+    );
     expect(document.body.innerHTML).not.toContain("abcdefghij");
 
     fireEvent.click(field);

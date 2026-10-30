@@ -12,7 +12,9 @@ export const page = style([
     // the stacked rows on a phone don't stretch over the page's spare height.
     alignItems: "start",
     alignContent: "start",
-    gap: tokens.space.xl,
+    // Stacked on a phone, the rows sit as far apart as the cards in the side column.
+    rowGap: tokens.space.l,
+    columnGap: tokens.space.xl,
     paddingBlock: tokens.space.l,
     "@media": { "(min-width: 48rem)": { gridTemplateColumns: "minmax(0, 2fr) minmax(0, 1fr)" } },
   },
@@ -21,8 +23,11 @@ export const page = style([
 export const start = style({
   display: "flex",
   flexDirection: "column",
-  gap: tokens.space.s,
 });
+
+// The notice line stays in the page for screen readers and brings its own spacing once it has
+// text, so an empty one puts nothing between the field and the first card.
+globalStyle(`${start} > p:not(:empty)`, { paddingBlockStart: tokens.space.s });
 
 export const side = style({
   display: "flex",
@@ -58,6 +63,9 @@ export const field = style([
   outlined,
   {
     fontSize: "1rem",
+    // Sits on the column's edge like the cards, with none of the room goal's pull to the left.
+    marginInlineStart: 0,
+    inlineSize: "100%",
     selectors: {
       // Hides a pasted room code on screen the way a password field would.
       '&[data-kind="code"]': { WebkitTextSecurity: "disc" } as Record<string, string>,

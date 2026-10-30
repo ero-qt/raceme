@@ -165,7 +165,7 @@ export function HomePage(props: {
           <GoalPicker
             picker={picker}
             label="goal or room code"
-            placeholder="set a goal or paste a room code"
+            placeholder="set goal or paste code"
             inputClass={`${titleStyles.input} ${homeStyles.field}`}
             kind={code() ? "code" : "goal"}
             value={value()}

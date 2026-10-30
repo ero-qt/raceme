@@ -30,6 +30,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - Length messages read like "a name needs to be 1-24 characters long."
 - The restart notice on the start page reads "all rooms will be closed for a server restart at 10:00 UTC (in 3 h 20 min)!".
 - The restart notice on the start page sits in the server status card.
+- The start page field's placeholder reads "set goal or paste code".
 - **Breaking:** `RACEME_ADMIN_SOCKET` replaces `RACEME_ADMIN_PORT`.
 - The notice during a rush of new rooms reads "lots of rooms are being opened right now. please wait a few seconds…".
 
@@ -51,6 +52,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - The closing warning no longer dims the room behind it.
 - On phones, screen readers hear new chat and RaceBot lines on the race tab too.
 - "entry is closed" and "race is full" show as a red line under the name field instead of as its placeholder.
+- On phones, the start page field lines up with the cards and sits as far above them as they are apart.
 
 ### Security
 

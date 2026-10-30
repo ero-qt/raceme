@@ -288,12 +288,19 @@ describe("home layout", () => {
 
     await page.setViewportSize({ width: 390, height: 800 });
     const phoneForm = await form.boundingBox();
-    const phoneIntro = await intro.boundingBox();
-    if (!phoneForm || !phoneIntro) {
-      throw new Error("the start field or the intro is missing");
+    if (!phoneForm) {
+      throw new Error("the start field is missing");
     }
-    const below = phoneIntro.y - phoneForm.y - phoneForm.height;
-    expect(below >= 0 && below <= 48).toBe(true);
+    const cards = await page.getByRole("complementary").locator("> section").all();
+    const [welcome, status] = await Promise.all(cards.map((card) => card.boundingBox()));
+    if (!welcome || !status) {
+      throw new Error("the welcome or the status card is missing");
+    }
+    // The field lines up with the cards, and the gap below it is the gap between the cards.
+    expect(Math.round(phoneForm.x)).toBe(Math.round(welcome.x));
+    expect(Math.round(welcome.y - phoneForm.y - phoneForm.height)).toBe(
+      Math.round(status.y - welcome.y - welcome.height),
+    );
 
     await context.close();
   });

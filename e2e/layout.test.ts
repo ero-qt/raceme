@@ -91,10 +91,10 @@ describe("room layout", () => {
 });
 
 describe("room columns", () => {
-  test("the race card takes the wide left column and the chat the right, tabs on phones", async () => {
+  test("the room details take the wide left column and the chat the right, tabs on phones", async () => {
     const { context, page } = await newPage(harness);
     await openLobbyAndEnter(page, harness.origin, "ero");
-    const race = page.getByRole("region", { name: "race" });
+    const race = page.getByRole("region", { name: "room" });
     const chat = page.getByRole("region", { name: "chat" });
 
     const wideRace = await race.boundingBox();
@@ -103,19 +103,19 @@ describe("room columns", () => {
     expect({
       sideBySide: (wideChat?.x ?? 0) >= (wideRace?.x ?? 0) + (wideRace?.width ?? 0),
       raceWider: (wideRace?.width ?? 0) > (wideChat?.width ?? 0),
-      // The chat card runs down to the page's bottom padding, so the log gets the spare height.
+      // The chat runs down to the page's bottom padding, so the log gets the spare height.
       chatFillsHeight:
         (wideChat?.y ?? 0) + (wideChat?.height ?? 0) >= (main?.y ?? 0) + (main?.height ?? 0) - 17,
       noTabs: await page.getByRole("button", { name: "chat", exact: true }).isHidden(),
     }).toEqual({ sideBySide: true, raceWider: true, chatFillsHeight: true, noTabs: true });
 
-    // The host entered after the room opened, so the chat card with the join form is up first.
+    // The host entered after the room opened, so the chat with the join form is up first.
     await page.setViewportSize({ width: 390, height: 800 });
-    await page.getByRole("button", { name: "race", exact: true }).waitFor();
+    await page.getByRole("button", { name: "room", exact: true }).waitFor();
     expect([await race.isVisible(), await chat.isVisible()]).toEqual([false, true]);
-    await page.getByRole("button", { name: "race", exact: true }).click();
+    await page.getByRole("button", { name: "room", exact: true }).click();
     expect([await race.isVisible(), await chat.isVisible()]).toEqual([true, false]);
-    // Each card has its own clock on a phone, so the race tab keeps the time in view.
+    // Each card has its own clock on a phone, so the room tab keeps the time in view.
     expect(await race.getByRole("timer").isVisible()).toBe(true);
 
     // The footer's links sit above the tab bar, not under it.
@@ -187,7 +187,7 @@ describe("entrant table on phones", () => {
     for (const width of [800, 412, 360]) {
       await page.setViewportSize({ width, height: 800 });
       if (width < 768) {
-        await page.getByRole("button", { name: "race", exact: true }).click();
+        await page.getByRole("button", { name: "room", exact: true }).click();
       }
       await page.getByRole("columnheader", { name: "time" }).waitFor({ state: "detached" });
       await page.waitForFunction(

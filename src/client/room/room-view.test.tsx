@@ -287,7 +287,7 @@ describe("RoomView layout", () => {
     expect(view.container.querySelector('main > p[role="status"]')).toBeNull();
   });
 
-  test("a closed room goes back to the race card and loses the tab bar", () => {
+  test("a closed room goes back to the room details and loses the tab bar", () => {
     const [closed, setClosed] = createSignal(false);
     const view = render(() => (
       <RoomView
@@ -306,13 +306,13 @@ describe("RoomView layout", () => {
 
     setClosed(true);
 
-    expect(view.getByRole("region", { name: "race" }).dataset.active).toBe("true");
+    expect(view.getByRole("region", { name: "room" }).dataset.active).toBe("true");
     expect(view.queryByRole("navigation", { hidden: true })).toBeNull();
-    // The chat card went away under the focus, so the closed notice takes it.
+    // The chat went away under the focus, so the closed notice takes it.
     expect(document.activeElement?.textContent).toContain("this page is only kept in this tab");
   });
 
-  test("a phone shows the clock on the race card as well, so both tabs have one", () => {
+  test("a phone shows the clock in the room details as well, so both tabs have one", () => {
     const realMatchMedia = globalThis.matchMedia;
     globalThis.matchMedia = (() => ({
       matches: true,
@@ -324,14 +324,14 @@ describe("RoomView layout", () => {
 
       const timers = view.getAllByRole("timer", { hidden: true });
       expect(timers.length).toBe(2);
-      expect(view.getByRole("region", { name: "race" }).contains(timers[0] ?? null)).toBe(true);
+      expect(view.getByRole("region", { name: "room" }).contains(timers[0] ?? null)).toBe(true);
       expect(view.getByRole("navigation", { hidden: true }).textContent).not.toMatch(/\d\d:\d\d/);
     } finally {
       globalThis.matchMedia = realMatchMedia;
     }
   });
 
-  test("a visitor starts on the chat card, where the join form is", () => {
+  test("a visitor starts on the chat, where the join form is", () => {
     const view = renderRoom("x");
 
     expect(view.getByRole("region", { name: "chat" }).dataset.active).toBe("true");
@@ -339,7 +339,7 @@ describe("RoomView layout", () => {
 
   test("the phone tabs mark which card is active, race first for an entrant", () => {
     const view = renderRoom("a");
-    const race = view.getByRole("region", { name: "race" });
+    const race = view.getByRole("region", { name: "room" });
     const chat = view.getByRole("region", { name: "chat" });
     expect([race.dataset.active, chat.dataset.active]).toEqual(["true", "false"]);
 
@@ -563,7 +563,7 @@ describe("RoomView layout", () => {
     expect(view.getByTitle("3 watching").textContent).toBe("3 watching");
   });
 
-  test("the chat box comes after the entrants, in the chat card", () => {
+  test("the chat box comes after the entrants", () => {
     const view = renderRoom("a");
     const message = view.getByLabelText("message");
     const table = view.getByRole("table", { name: "entrants" });
@@ -665,12 +665,12 @@ describe("RoomView layout", () => {
     setState(raceAfter([...joinedBoth, { type: "remove", targetId: "b" }]));
 
     expect(document.activeElement).not.toBe(view.getByRole("button", { name: ".end" }));
-    expect(view.getByRole("region", { name: "race" }).contains(document.activeElement)).toBe(true);
+    expect(view.getByRole("region", { name: "room" }).contains(document.activeElement)).toBe(true);
     // Focus in the goal field would select the goal, so one typed letter replaces it.
     expect(document.activeElement).not.toBe(view.getByRole("combobox", { name: "goal" }));
   });
 
-  test("a phone's race tab reads the newest log line aloud, since the log is on the chat tab", () => {
+  test("a phone's room tab reads the newest log line aloud, since the log is on the chat tab", () => {
     const realMatchMedia = globalThis.matchMedia;
     globalThis.matchMedia = (() => ({
       matches: true,
@@ -679,7 +679,7 @@ describe("RoomView layout", () => {
     })) as unknown as typeof matchMedia;
     try {
       const view = renderRoom("a");
-      const raceCard = view.getByRole("region", { name: "race" });
+      const raceCard = view.getByRole("region", { name: "room" });
 
       const mirror = view.getByRole("status", { name: "latest chat line", hidden: true });
       expect(raceCard.contains(mirror)).toBe(true);
@@ -695,6 +695,21 @@ describe("RoomView layout", () => {
     expect(view.queryByRole("status", { name: "latest chat line", hidden: true })).toBeNull();
   });
 
+  test("a phone opens a room page without focusing a field, so no keyboard pops up", () => {
+    const realMatchMedia = globalThis.matchMedia;
+    globalThis.matchMedia = (() => ({
+      matches: true,
+      addEventListener() {},
+      removeEventListener() {},
+    })) as unknown as typeof matchMedia;
+    try {
+      renderRoom("v");
+      expect(document.activeElement).toBe(document.body);
+    } finally {
+      globalThis.matchMedia = realMatchMedia;
+    }
+  });
+
   test("a room page opens with focus in the name field, or the message box once entered", () => {
     const guest = renderRoom("v");
     expect(document.activeElement).toBe(guest.getByLabelText("your name"));
@@ -702,6 +717,40 @@ describe("RoomView layout", () => {
 
     const entrant = renderRoom("a");
     expect(document.activeElement).toBe(entrant.getByLabelText("message"));
+  });
+
+  test("on a phone, leaving the race keeps focus in the room details, since the chat is hidden", () => {
+    const realMatchMedia = globalThis.matchMedia;
+    globalThis.matchMedia = (() => ({
+      matches: true,
+      addEventListener() {},
+      removeEventListener() {},
+    })) as unknown as typeof matchMedia;
+    try {
+      const [state, setState] = createSignal(race);
+      const view = render(() => (
+        <RoomView
+          race={state()}
+          me={{ entrantId: "a", isHost: false }}
+          now={0}
+          inviteUrl={inviteUrl}
+          notice={null}
+          feed={[]}
+          send={() => {}}
+        />
+      ));
+      const unenter = view.getByRole("button", { name: ".unenter" });
+      unenter.focus();
+
+      fireEvent.click(unenter);
+      setState(raceAfter([...joinedBoth, { type: "leave", entrantId: "a" }]));
+
+      expect(view.getByRole("region", { name: "room" }).contains(document.activeElement)).toBe(
+        true,
+      );
+    } finally {
+      globalThis.matchMedia = realMatchMedia;
+    }
   });
 
   test("entering moves focus to the message box", () => {

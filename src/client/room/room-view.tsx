@@ -94,8 +94,11 @@ export function RoomView(props: RoomViewProps): JSX.Element {
   let pressedCard: Element | null | undefined = null;
   const press = (event: MouseEvent, action: ClientAction) => {
     pressed = event.currentTarget as Element;
-    // Leaving the race takes focus to the chat card, where the join form is.
-    pressedCard = rowActionTypes.has(action.type as ActionType) ? chat : pressed.closest("section");
+    // Leaving the race takes focus to the chat, where the join form is, unless a phone has
+    // the chat hidden. A hidden control can't take focus.
+    const leavesRow = rowActionTypes.has(action.type as ActionType);
+    const ownCard = race?.contains(pressed) ? race : chat;
+    pressedCard = leavesRow && !(phoneScreen() && tab() === "race") ? chat : ownCard;
     props.send(action);
   };
 
@@ -191,8 +194,8 @@ export function RoomView(props: RoomViewProps): JSX.Element {
   let race: HTMLElement | undefined;
   let chat: HTMLElement | undefined;
   const phoneScreen = usePhoneScreen();
-  // The clock line sits on the chat card. A phone shows one card at a time, so the race card
-  // gets its own copy. Only one of the 2 is ever on screen.
+  // The clock line sits in the chat. A phone shows the room details or the chat, so the room
+  // details get their own copy. Only one of the 2 is ever on screen.
   const clockLine = () => (
     <div class={styles.clockLine}>
       <div class={styles.clockBlock}>
@@ -208,10 +211,10 @@ export function RoomView(props: RoomViewProps): JSX.Element {
       </Show>
     </div>
   );
-  // Phones show one card at a time, picked in the bar at the bottom. The join form is on the
-  // chat card, so that's where someone who hasn't entered starts.
+  // Phones show the room details or the chat, picked in the bar at the bottom. The join form is
+  // in the chat, so that's where someone who hasn't entered starts.
   const [tab, setTab] = createSignal<"race" | "chat">(entered() ? "race" : "chat");
-  // A closed room has its results on the race card, so a phone shows that card. The chat card's
+  // A closed room has its results in the room details, so a phone shows those. The chat's
   // controls are gone then, so the notice takes the focus they held.
   let closedNotice: HTMLDivElement | undefined;
   createEffect(() => {
@@ -234,8 +237,9 @@ export function RoomView(props: RoomViewProps): JSX.Element {
   document.addEventListener("keydown", jumpToChat);
   onCleanup(() => document.removeEventListener("keydown", jumpToChat));
   // The page opens on the field the viewer needs next, the name field or the message box.
+  // A phone is left alone, since focus in a field would pop the keyboard up on every open.
   onMount(() => {
-    if (!props.closed) {
+    if (!props.closed && !phoneScreen()) {
       (entered() ? messageBox : chat?.querySelector<HTMLInputElement>("input"))?.focus();
     }
   });
@@ -269,8 +273,8 @@ export function RoomView(props: RoomViewProps): JSX.Element {
 
   return (
     <main class={styles.page} data-closed={props.closed === true}>
-      <section class={styles.raceCard} data-active={tab() === "race"} aria-label="race" ref={race}>
-        {/* A phone hides the chat card and its live log on the race tab, so the newest line is
+      <section class={styles.raceCard} data-active={tab() === "race"} aria-label="room" ref={race}>
+        {/* A phone hides the chat and its live log on the room tab, so the newest line is
             read from here instead. */}
         <Show when={phoneScreen()}>
           <p class={visuallyHidden} role="status" aria-label="latest chat line">
@@ -386,7 +390,7 @@ export function RoomView(props: RoomViewProps): JSX.Element {
             aria-pressed={tab() === "race"}
             onClick={() => setTab("race")}
           >
-            race
+            room
           </button>
           <button
             type="button"

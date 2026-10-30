@@ -12,8 +12,8 @@ import { tokens } from "../styles/tokens.css.ts";
 
 const phone = "(max-width: 47.99rem)";
 
-// The race card takes the wide left column and the chat the right one. Phones show one card at a
-// time and keep room for the tab bar at the bottom.
+// The room details take the wide left column and the chat the right one. Phones show one of
+// the 2 at a time and keep space for the tab bar at the bottom.
 export const page = style([
   container,
   {
@@ -46,7 +46,7 @@ const card = style([
 
 export const raceCard = card;
 
-// Stretches to the row, so the chat log gets the height the race card or the window gives it.
+// Stretches to the row, so the chat log gets the height the room details or the window gives it.
 export const chatCard = style([card, { alignSelf: "stretch" }]);
 
 // Keeps the footer's links above the phone tab bar in a room.

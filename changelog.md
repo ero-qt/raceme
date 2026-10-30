@@ -10,7 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 
 - A server status card on the start page with the open rooms and people online.
 - A line in the chat log when a typed name first reaches the 24-character limit.
-- A bar at the bottom of a room on phones to switch between the race and the chat.
+- A bar at the bottom of a room on phones to switch between the room details and the chat.
 
 ### Changed
 
@@ -51,7 +51,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - Screen readers read the closing warning once instead of every second.
 - After a race button, focus stays on the page, off `.end` and out of the goal field.
 - The closing warning no longer dims the room behind it.
-- On phones, screen readers hear new chat and RaceBot lines on the race tab too.
+- On phones, screen readers hear new chat and RaceBot lines on the room tab too.
 - "entry is closed" and "race is full" show as a red line under the name field instead of as its placeholder.
 - On phones, the start page field lines up with the cards and sits as far above them as they are apart.
 - Enter and Escape in the goal field keep the focus there.

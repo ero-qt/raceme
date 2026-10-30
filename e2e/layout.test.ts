@@ -109,6 +109,22 @@ describe("room columns", () => {
       noTabs: await page.getByRole("button", { name: "chat", exact: true }).isHidden(),
     }).toEqual({ sideBySide: true, raceWider: true, chatFillsHeight: true, noTabs: true });
 
+    // Just past the phone breakpoint the chat column is narrow, and still holds its controls.
+    await page.setViewportSize({ width: 1000, height: 800 });
+    const narrowChat = await chat.boundingBox();
+    const end = await page.getByRole("button", { name: ".end" }).boundingBox();
+    const guest = await newPage(harness);
+    await guest.page.setViewportSize({ width: 1000, height: 800 });
+    await guest.page.goto(page.url());
+    const name = await guest.page.getByLabel("your name").boundingBox();
+    const enter = await guest.page.getByRole("button", { name: ".enter" }).boundingBox();
+    await guest.context.close();
+    expect({
+      endInside:
+        (end?.x ?? 0) + (end?.width ?? 0) <= (narrowChat?.x ?? 0) + (narrowChat?.width ?? 0),
+      enterBesideName: Math.round(enter?.y ?? 0) === Math.round(name?.y ?? 1),
+    }).toEqual({ endInside: true, enterBesideName: true });
+
     // The host entered after the room opened, so the chat with the join form is up first.
     await page.setViewportSize({ width: 390, height: 800 });
     await page.getByRole("button", { name: "room", exact: true }).waitFor();

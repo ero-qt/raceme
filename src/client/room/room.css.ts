@@ -24,7 +24,8 @@ export const page = style([
     paddingBlock: tokens.space.l,
     "@media": {
       "(min-width: 48rem)": {
-        gridTemplateColumns: "minmax(0, 2fr) minmax(0, 1fr)",
+        // The chat keeps room for its clock line and the name field with `.enter` beside it.
+        gridTemplateColumns: "minmax(0, 2fr) minmax(22rem, 1fr)",
         selectors: { '&[data-closed="true"]': { gridTemplateColumns: "minmax(0, 1fr)" } },
       },
       [phone]: { paddingBlockEnd: `calc(${tokens.target.min} + 2 * ${tokens.space.l})` },
@@ -212,6 +213,7 @@ globalStyle(`${chatRow} > div`, { flex: "1 1 0", minInlineSize: 0 });
 
 export const clockLine = style({
   display: "flex",
+  flexWrap: "wrap",
   alignItems: "center",
   justifyContent: "space-between",
   gap: tokens.space.s,

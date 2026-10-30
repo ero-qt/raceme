@@ -46,6 +46,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - Focus stays put when another entrant acts after one of your race buttons was refused.
 - Messages a tab sends past its own limit no longer count against the limit it shares with other tabs on the same address.
 
+### Security
+
+- A solved proof of work opens one room, even when the same proof is sent several times at once.
+
 ## [1.1.2] - 2026-10-26
 
 ### Changed

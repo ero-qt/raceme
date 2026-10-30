@@ -37,6 +37,18 @@ describe("SurgeGuard", () => {
     expect(await surge.acceptProof(challenge.token, nonce)).toBe(false);
   });
 
+  test("accepts a solved challenge once even when the same proof arrives all at once", async () => {
+    const surge = guard(() => 0);
+    const challenge = surge.issueChallenge();
+    const nonce = await solveChallenge(challenge.token, challenge.bits);
+
+    const answers = await Promise.all(
+      Array.from({ length: 5 }, () => surge.acceptProof(challenge.token, nonce)),
+    );
+
+    expect(answers.filter(Boolean)).toHaveLength(1);
+  });
+
   test("refuses a wrong answer, a changed challenge and an expired one", async () => {
     let now = 0;
     const surge = guard(() => now);

@@ -67,12 +67,18 @@ export class SurgeGuard {
     if (!this.#signatureMatches(`${salt}.${expiry}`, signature) || this.#used.has(token)) {
       return false;
     }
-    if (!Number.isSafeInteger(nonce) || !(await proofHolds(token, nonce, this.#options.bits))) {
+    if (!Number.isSafeInteger(nonce)) {
       return false;
     }
 
+    // Marks the token used before the hash check awaits, so the same proof sent in parallel
+    // can't pass the `used` check 5 times while the first check is still running.
     this.#used.set(token, expiresAt);
-    return true;
+    if (await proofHolds(token, nonce, this.#options.bits)) {
+      return true;
+    }
+    this.#used.delete(token);
+    return false;
   }
 
   #sign(body: string): string {

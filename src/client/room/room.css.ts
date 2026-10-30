@@ -307,13 +307,6 @@ export const stackedActions = style({ marginBlockStart: tokens.space.xs });
 globalStyle(`${actionCell} button`, { inlineSize: "100%" });
 globalStyle(`${stackedActions} button`, { inlineSize: "auto" });
 
-export const download = style({
-  display: "inline-flex",
-  alignItems: "center",
-  minBlockSize: tokens.target.min,
-  color: tokens.color.link,
-});
-
 export const muteButton = style({
   selectors: { "&[data-muted=true]": { color: tokens.color.statusForfeit } },
 });
@@ -381,9 +374,4 @@ export const exportText = style([
 export const rowIcon = style({
   inlineSize: "1.25em",
   blockSize: "1.25em",
-});
-
-export const empty = style({
-  margin: 0,
-  color: tokens.color.text1,
 });

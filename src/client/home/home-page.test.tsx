@@ -237,6 +237,31 @@ describe("HomePage busy server", () => {
     await waitFor(() => expect(home.opened).toEqual(["duxanagxds"]));
     expect(bodies[1]).toMatchObject({ goal: "any%", proof: { token: "abc.1.sig" } });
   });
+
+  test("tells the visitor the rush makes opening a room slower", async () => {
+    globalThis.fetch = (async () =>
+      Response.json(
+        { challenge: { token: "abc.1.sig", bits: 4 } },
+        { status: 428 },
+      )) as unknown as typeof fetch;
+    // Hashing that never finishes holds the page in the middle of solving.
+    const realSubtle = crypto.subtle;
+    Object.defineProperty(crypto, "subtle", {
+      value: { digest: () => new Promise(() => {}) },
+      configurable: true,
+    });
+    const home = renderHome();
+    home.type("any%");
+
+    home.submit();
+
+    await waitFor(() =>
+      expect(home.getByRole("status").textContent).toBe(
+        "lots of rooms are being opened right now. please wait a few seconds…",
+      ),
+    );
+    Object.defineProperty(crypto, "subtle", { value: realSubtle, configurable: true });
+  });
 });
 
 describe("HomePage busy server, no WebCrypto", () => {
@@ -524,7 +549,7 @@ describe("HomePage server status", () => {
 });
 
 describe("HomePage restart notice", () => {
-  test("tells about a queued server restart on the start page", async () => {
+  test("shows a queued server restart in the server status card", async () => {
     const restartAt = Date.now() + (3 * 60 + 20) * 60_000 + 30_000;
     globalThis.fetch = mock(async () =>
       Response.json({ rooms: 2, people: 5, restartAt }),
@@ -539,6 +564,9 @@ describe("HomePage restart notice", () => {
     // Uses the red of the other notices and the warning sign of the closed room.
     expect(notice?.className).toContain(view.getByRole("status").className);
     expect(notice?.querySelector("svg[aria-hidden='true']")).not.toBeNull();
+    expect(notice?.parentElement).toBe(
+      view.getByRole("heading", { name: "server status" }).parentElement,
+    );
   });
 
   test("counts down while the page stays open", async () => {

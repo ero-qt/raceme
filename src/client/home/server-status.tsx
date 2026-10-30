@@ -30,10 +30,13 @@ function count(n: number, one: string, many: string): string {
 }
 
 /**
- * Shows how many rooms are open and people are online right now. The status is `undefined` until
- * the server first answers and `null` when it can't.
+ * Shows how many rooms are open and people are online right now, with `children` like a restart
+ * notice below. The status is `undefined` until the server first answers and `null` when it can't.
  */
-export function ServerStatusCard(props: { status: ServerStatus | null | undefined }): JSX.Element {
+export function ServerStatusCard(props: {
+  status: ServerStatus | null | undefined;
+  children?: JSX.Element;
+}): JSX.Element {
   return (
     <section class={styles.card}>
       <h2 class={styles.cardHeading}>server status</h2>
@@ -55,6 +58,7 @@ export function ServerStatusCard(props: { status: ServerStatus | null | undefine
           </p>
         )}
       </Show>
+      {props.children}
     </section>
   );
 }

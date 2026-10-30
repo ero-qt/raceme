@@ -29,6 +29,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - The name field keeps your name after `.unenter`.
 - Length messages read like "a name needs to be 1-24 characters long."
 - The restart notice on the start page reads "all rooms will be closed for a server restart at 10:00 UTC (in 3 h 20 min)!".
+- The restart notice on the start page sits in the server status card.
+- The notice during a rush of new rooms reads "lots of rooms are being opened right now. please wait a few seconds…".
 
 ### Removed
 

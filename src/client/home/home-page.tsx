@@ -124,7 +124,7 @@ export function HomePage(props: {
 
     // During a rush of new rooms the server asks for a proof of work first.
     if (response?.status === 428) {
-      setNotice("lots of new rooms right now, checking this browser…");
+      setNotice("lots of rooms are being opened right now. please wait a few seconds…");
       const { challenge } = (await response.json()) as { challenge: Challenge };
       // Browsers only offer crypto.subtle on https pages, so solving can fail on plain http.
       const nonce = await solveChallenge(challenge.token, challenge.bits).catch(() => null);
@@ -186,18 +186,19 @@ export function HomePage(props: {
         <p class={styles.notice} role="status">
           {notice()}
         </p>
-        <Show when={restartAt()}>
-          {(at) => (
-            <p class={`${styles.notice} ${homeStyles.warning}`}>
-              <TriangleAlert class={styles.closedIcon} aria-hidden="true" />
-              {restartText(at(), now())}
-            </p>
-          )}
-        </Show>
       </section>
       <aside class={homeStyles.side}>
         <HomeIntro />
-        <ServerStatusCard status={status()} />
+        <ServerStatusCard status={status()}>
+          <Show when={restartAt()}>
+            {(at) => (
+              <p class={`${styles.notice} ${homeStyles.warning}`}>
+                <TriangleAlert class={styles.closedIcon} aria-hidden="true" />
+                {restartText(at(), now())}
+              </p>
+            )}
+          </Show>
+        </ServerStatusCard>
       </aside>
     </main>
   );

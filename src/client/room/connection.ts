@@ -121,14 +121,14 @@ export function connectRoom(slug: string): RoomConnection {
     const currentRace = race();
     const currentMe = me();
     if (currentRace && currentMe) {
-      const closed: ClosedRoom = {
+      const snapshot: ClosedRoom = {
         race: currentRace,
         me: currentMe,
         notice,
         closedAt: Date.now() + clockOffset(),
       };
-      saveClosedRoom(slug, closed);
-      showClosed(closed);
+      saveClosedRoom(slug, snapshot);
+      showClosed(snapshot);
     } else if (saved) {
       showClosed(saved);
     } else {
@@ -139,11 +139,11 @@ export function connectRoom(slug: string): RoomConnection {
     markReady();
   }
 
-  function showClosed(closed: ClosedRoom): void {
-    setRace(closed.race);
-    setMe(closed.me);
-    setNotice(closed.notice);
-    setClosedAt(closed.closedAt);
+  function showClosed(snapshot: ClosedRoom): void {
+    setRace(snapshot.race);
+    setMe(snapshot.me);
+    setNotice(snapshot.notice);
+    setClosedAt(snapshot.closedAt);
   }
 
   function receive(message: ServerMessage): void {

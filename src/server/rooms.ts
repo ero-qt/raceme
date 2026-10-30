@@ -130,8 +130,8 @@ export class Room {
   }
 
   /**
-   * Counts a session's socket as closed. A session with no socket left that never entered gives its
-   * id back, so visitors with throwaway cookies can't use up the room's session limit.
+   * Counts a session's socket as closed. A session with no sockets left that never entered gives
+   * its id back, so visitors with throwaway cookies can't use up the room's session limit.
    */
   detachSession(sessionSecret: string): void {
     const left = (this.#sessionSockets.get(sessionSecret) ?? 1) - 1;
@@ -224,7 +224,7 @@ export class RoomRegistry {
     }
   }
 
-  /** Counts the people with any room open, a person in 2 rooms twice. */
+  /** Counts the people in open rooms, a person in 2 rooms twice. */
   get peopleCount(): number {
     let people = 0;
     for (const room of this.#rooms.values()) {

@@ -296,12 +296,8 @@ export class RoomRegistry {
     return closing;
   }
 
-  sweep(now: number): string[] {
-    return this.sweepWithReasons(now).map((dropped) => dropped.slug);
-  }
-
   /** Drops the rooms that are over, each with the reason it closed. */
-  sweepWithReasons(now: number): DroppedRoom[] {
+  sweep(now: number): DroppedRoom[] {
     const dropped: DroppedRoom[] = [];
     const drop = (room: Room, reason: CloseReason) => {
       this.#rooms.delete(room.slug);

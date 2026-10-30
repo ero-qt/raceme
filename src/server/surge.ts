@@ -10,7 +10,6 @@ export interface SurgeOptions {
   roomsPerMinute: number;
   /** Sets how many leading zero bits a proof needs, about 2^bits hashes of work. */
   bits: number;
-  secret?: string;
   clock: () => number;
 }
 
@@ -33,7 +32,7 @@ export class SurgeGuard {
 
   constructor(options: SurgeOptions) {
     this.#options = options;
-    this.#secret = options.secret ?? randomSecret();
+    this.#secret = randomSecret();
   }
 
   recordRoom(): void {

@@ -193,7 +193,7 @@ export function startServer(config: ServerConfig, clock = steadyClock): RunningS
         hub.publishLines(room, botLines([line], now));
       }
     }
-    for (const { slug, reason } of rooms.sweepWithReasons(now)) {
+    for (const { slug, reason } of rooms.sweep(now)) {
       hub.closeRoom(slug, closeText(reason));
       countsChanged();
     }

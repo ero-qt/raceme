@@ -12,6 +12,10 @@ const settings = { countdownMs: 10_000 };
 
 const timings = loadConfig({});
 
+function sweptSlugs(rooms: RoomRegistry, now: number): string[] {
+  return rooms.sweep(now).map((dropped) => dropped.slug);
+}
+
 function registry(options: Partial<RoomRegistryOptions> = {}) {
   return new RoomRegistry({
     ...timings,
@@ -74,7 +78,7 @@ describe("RoomRegistry.sweep", () => {
     const fresh = created(rooms.create(settings, 0)).room;
     fresh.touch(50_000);
 
-    rooms.sweep(60_001);
+    sweptSlugs(rooms, 60_001);
 
     expect(rooms.get(stale.slug)).toBeUndefined();
     expect(rooms.get(fresh.slug)).toBe(fresh);
@@ -87,8 +91,8 @@ describe("RoomRegistry.sweep", () => {
     room.clearAt = 600_000;
     room.touch(599_000);
 
-    expect(rooms.sweep(599_999)).toEqual([]);
-    expect(rooms.sweep(600_000)).toEqual([room.slug]);
+    expect(sweptSlugs(rooms, 599_999)).toEqual([]);
+    expect(sweptSlugs(rooms, 600_000)).toEqual([room.slug]);
     expect(rooms.get(room.slug)).toBeUndefined();
   });
 
@@ -98,10 +102,10 @@ describe("RoomRegistry.sweep", () => {
     withEntrant(room, "a");
 
     room.connect(0);
-    expect(rooms.sweep(2 * 60 * 60_000)).toEqual([]);
+    expect(sweptSlugs(rooms, 2 * 60 * 60_000)).toEqual([]);
 
     room.disconnect(2 * 60 * 60_000);
-    expect(rooms.sweep(2 * 60 * 60_000 + 60_001)).toEqual([room.slug]);
+    expect(sweptSlugs(rooms, 2 * 60 * 60_000 + 60_001)).toEqual([room.slug]);
   });
 
   // Keeps one visitor from filling the room cap with lobbies nobody ever joins.
@@ -111,8 +115,8 @@ describe("RoomRegistry.sweep", () => {
     const used = created(rooms.create(settings, 0)).room;
     withEntrant(used, "a");
 
-    expect(rooms.sweep(10 * 60_000)).toEqual([]);
-    expect(rooms.sweep(10 * 60_000 + 1)).toEqual([empty.slug]);
+    expect(sweptSlugs(rooms, 10 * 60_000)).toEqual([]);
+    expect(sweptSlugs(rooms, 10 * 60_000 + 1)).toEqual([empty.slug]);
   });
 });
 
@@ -125,8 +129,8 @@ describe("RoomRegistry lifetime", () => {
     room.touch(72 * 60 * 60_000 - 1);
     room.noteInput(72 * 60 * 60_000 - 1);
 
-    expect(rooms.sweep(72 * 60 * 60_000 - 1)).toEqual([]);
-    expect(rooms.sweep(72 * 60 * 60_000)).toEqual([room.slug]);
+    expect(sweptSlugs(rooms, 72 * 60 * 60_000 - 1)).toEqual([]);
+    expect(sweptSlugs(rooms, 72 * 60 * 60_000)).toEqual([room.slug]);
   });
 
   test("names each room once when it has 1 hour left", () => {
@@ -158,8 +162,8 @@ describe("RoomRegistry idle rooms", () => {
     withEntrant(room, "a");
     room.connect(0);
 
-    expect(rooms.sweep(hours(2) + 10 * 60_000 - 1)).toEqual([]);
-    expect(rooms.sweep(hours(2) + 10 * 60_000)).toEqual([room.slug]);
+    expect(sweptSlugs(rooms, hours(2) + 10 * 60_000 - 1)).toEqual([]);
+    expect(sweptSlugs(rooms, hours(2) + 10 * 60_000)).toEqual([room.slug]);
   });
 
   test("never treats a room as idle while someone is still racing", () => {
@@ -170,7 +174,7 @@ describe("RoomRegistry idle rooms", () => {
     room.connect(0);
 
     expect(rooms.idleWarnings(hours(5))).toEqual([]);
-    expect(rooms.sweep(hours(5))).toEqual([]);
+    expect(sweptSlugs(rooms, hours(5))).toEqual([]);
   });
 
   // Closed and hibernated tabs both drop their sockets, so the server can't tell them apart.
@@ -180,8 +184,8 @@ describe("RoomRegistry idle rooms", () => {
     withEntrant(room, "a");
     room.race = { ...room.race, phase: "running", startsAt: 0 };
 
-    expect(rooms.sweep(hours(5))).toEqual([]);
-    expect(rooms.sweep(hours(6) + 1)).toEqual([room.slug]);
+    expect(sweptSlugs(rooms, hours(5))).toEqual([]);
+    expect(sweptSlugs(rooms, hours(6) + 1)).toEqual([room.slug]);
   });
 
   test("input clears the warning and starts the 2 hours over", () => {
@@ -192,11 +196,11 @@ describe("RoomRegistry idle rooms", () => {
 
     expect(room.noteInput(hours(2) + 60_000)).toBe(true);
     expect(room.noteInput(hours(2) + 120_000)).toBe(false);
-    expect(rooms.sweep(hours(3))).toEqual([]);
+    expect(sweptSlugs(rooms, hours(3))).toEqual([]);
   });
 });
 
-describe("RoomRegistry.sweepWithReasons", () => {
+describe("RoomRegistry close reasons", () => {
   const hours = (n: number) => n * 60 * 60_000;
 
   test("says why each room closed", () => {
@@ -208,10 +212,8 @@ describe("RoomRegistry.sweepWithReasons", () => {
     withEntrant(quiet, "b");
     quiet.connect(0);
 
-    expect(rooms.sweepWithReasons(60_000)).toEqual([{ slug: ended.slug, reason: "ended" }]);
-    expect(rooms.sweepWithReasons(hours(2) + 10 * 60_000)).toEqual([
-      { slug: quiet.slug, reason: "idle" },
-    ]);
+    expect(rooms.sweep(60_000)).toEqual([{ slug: ended.slug, reason: "ended" }]);
+    expect(rooms.sweep(hours(2) + 10 * 60_000)).toEqual([{ slug: quiet.slug, reason: "idle" }]);
   });
 });
 
@@ -308,7 +310,7 @@ describe("RoomRegistry queued restart", () => {
 
     expect(rooms.closingSoon(hours(4) - 1)).toEqual([]);
     expect(rooms.closingSoon(hours(4))).toEqual([room.slug]);
-    expect(rooms.sweepWithReasons(hours(5))).toEqual([{ slug: room.slug, reason: "restart" }]);
+    expect(rooms.sweep(hours(5))).toEqual([{ slug: room.slug, reason: "restart" }]);
   });
 });
 
@@ -338,11 +340,11 @@ describe("RoomRegistry abandoned rooms", () => {
     const live = created(rooms.create(settings, minutes(2))).room;
     live.connect(minutes(2));
 
-    const dropped = rooms.sweepWithReasons(minutes(12));
+    const dropped = rooms.sweep(minutes(12));
 
     expect(dropped).toEqual([]);
     openAndLeave(rooms, minutes(3));
-    expect(rooms.sweepWithReasons(minutes(14)).map((d) => d.slug)).toEqual([oldest.slug]);
+    expect(rooms.sweep(minutes(14)).map((d) => d.slug)).toEqual([oldest.slug]);
     expect(rooms.get(older.slug)).toBeDefined();
     expect(rooms.get(live.slug)).toBe(live);
   });
@@ -353,8 +355,8 @@ describe("RoomRegistry abandoned rooms", () => {
     const recent = openAndLeave(rooms, minutes(5));
     rooms.queueRestart(minutes(600));
 
-    expect(rooms.sweepWithReasons(minutes(12))).toEqual([]);
-    expect(rooms.sweepWithReasons(minutes(15))).toEqual([
+    expect(rooms.sweep(minutes(12))).toEqual([]);
+    expect(rooms.sweep(minutes(15))).toEqual([
       { slug: abandoned.slug, reason: "restart" },
       { slug: recent.slug, reason: "restart" },
     ]);
@@ -366,6 +368,6 @@ describe("RoomRegistry abandoned rooms", () => {
     created(rooms.create(settings, 0)).room.connect(0);
     rooms.queueRestart(minutes(600));
 
-    expect(rooms.sweepWithReasons(minutes(30))).toEqual([]);
+    expect(rooms.sweep(minutes(30))).toEqual([]);
   });
 });

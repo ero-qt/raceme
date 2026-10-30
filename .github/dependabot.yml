@@ -1,10 +1,16 @@
 version: 2
 updates:
-  # One grouped pull request moves every workflow to the same new major versions together.
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: monthly
     groups:
       actions:
+        patterns: ["*"]
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      packages:
         patterns: ["*"]

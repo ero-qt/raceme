@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { ServerConfig } from "../config.ts";
+import { type ServerConfig, loadConfig } from "../config.ts";
 import { solveChallenge } from "../shared/proof-of-work.ts";
 import type { ServerMessage } from "../shared/protocol.ts";
 import { type RunningServer, startServer, steadyClock } from "./server.ts";
@@ -20,34 +20,19 @@ afterEach(() => {
 function start(overrides: Partial<ServerConfig> = {}) {
   running = startServer(
     {
+      ...loadConfig({}),
       port: 0,
-      hostname: "127.0.0.1",
-      secureCookies: true,
       basePath: "/apps/raceme",
       origin,
-      staticDir: null,
-      trustProxy: false,
       speedrunApi: null,
       maxRooms: 10,
       idleMs: 60_000,
-      idleInputMs: 2 * 60 * 60_000,
-      idleWarningMs: 10 * 60_000,
-      roomLifetimeMs: 48 * 60 * 60_000,
-      closingWarningMs: 60 * 60_000,
-      unusedRoomMs: 10 * 60_000,
-      abandonedAfterMs: 10 * 60_000,
       abandonedRoomHeadroom: 0,
       surgeRoomsPerMinute: 1000,
       surgeBits: 8,
       countdownMs: 50,
-      chatEveryMs: 3_000,
-      maxSocketsPerIp: 10,
       maxSockets: 2000,
       sweepIntervalMs: 20,
-      build: null,
-      adminPort: null,
-      restartHourUtc: 10,
-      alertWebhook: null,
       ...overrides,
     },
     () => Date.now() + clockOffsetMs,

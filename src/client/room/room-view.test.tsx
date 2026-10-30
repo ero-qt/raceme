@@ -601,6 +601,29 @@ describe("RoomView layout", () => {
     expect(document.activeElement).toBe(view.getByLabelText("your name"));
   });
 
+  test("focus stays put when a pressed button is still there at the next update", () => {
+    const [state, setState] = createSignal(race);
+    const view = render(() => (
+      <RoomView
+        race={state()}
+        me={{ entrantId: "a", isHost: false }}
+        now={0}
+        inviteUrl={inviteUrl}
+        notice={null}
+        feed={[]}
+        send={() => {}}
+      />
+    ));
+    const ready = view.getByRole("button", { name: ".ready" });
+    ready.focus();
+    fireEvent.click(ready);
+    ready.blur();
+
+    setState(raceAfter([...joinedBoth, { type: "ready", entrantId: "b" }]));
+
+    expect(document.activeElement).toBe(document.body);
+  });
+
   test("entering moves focus to the message box", () => {
     const [state, setState] = createSignal(race);
     const view = render(() => (

@@ -88,9 +88,9 @@ export function RoomView(props: RoomViewProps): JSX.Element {
 
   // A pressed button often makes way for its opposite, like .ready for .unready. Keeping the
   // button in its slot keeps focus on it, and focus that falls off a removed one comes back below.
-  let pressed = false;
-  const press = (action: ClientAction) => {
-    pressed = true;
+  let pressed: Element | null = null;
+  const press = (event: MouseEvent, action: ClientAction) => {
+    pressed = event.currentTarget as Element;
     props.send(action);
   };
 
@@ -113,7 +113,7 @@ export function RoomView(props: RoomViewProps): JSX.Element {
               : "go"
       }
       disabled={tooEarly(action())}
-      onClick={() => press({ type: action() } as ClientAction)}
+      onClick={(event) => press(event, { type: action() } as ClientAction)}
     >
       {actionLabel[action()]}
     </Button>
@@ -126,7 +126,7 @@ export function RoomView(props: RoomViewProps): JSX.Element {
         <Button
           variant="danger"
           aria-label={`${actionLabel.remove} ${row.name}`}
-          onClick={() => press({ type: "remove", entrantId: row.id })}
+          onClick={(event) => press(event, { type: "remove", entrantId: row.id })}
         >
           {actionLabel.remove}
         </Button>
@@ -143,7 +143,7 @@ export function RoomView(props: RoomViewProps): JSX.Element {
           class={styles.muteButton}
           data-muted={muted()}
           aria-label={`${actionLabel[type()]} ${row.name}`}
-          onClick={() => press({ type: type(), entrantId: row.id })}
+          onClick={(event) => press(event, { type: type(), entrantId: row.id })}
         >
           <Show when={muted()} fallback={<Volume2 class={styles.rowIcon} aria-hidden="true" />}>
             <VolumeOff class={styles.rowIcon} aria-hidden="true" />
@@ -233,12 +233,12 @@ export function RoomView(props: RoomViewProps): JSX.Element {
       () => props.race,
       () => {
         const lost = document.activeElement === null || document.activeElement === document.body;
-        if (pressed && lost) {
+        if (pressed && !pressed.isConnected && lost) {
           // On a phone the chat card may be hidden. A hidden control can't take focus.
           const card = tab() === "race" && phoneScreen() ? race : chat;
           card?.querySelector<HTMLElement>("input, button")?.focus();
         }
-        pressed = false;
+        pressed = null;
       },
       { defer: true },
     ),

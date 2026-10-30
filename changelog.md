@@ -41,6 +41,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - Emoji made of several emoji, like a family, stay whole in names, goals and chat.
 - The restart notice on the start page counts down while the page stays open.
 - `.startrace` works again after the server replies with an error page instead of a room.
+- Focus stays put when another entrant acts after one of your race buttons was refused.
 
 ## [1.1.2] - 2026-10-26
 

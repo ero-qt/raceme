@@ -14,7 +14,10 @@ Environment=RACEME_ORIGIN=https://ero-qt.eu
 Environment=RACEME_TRUST_PROXY=1
 Environment=RACEME_STATIC_DIR=/srv/raceme/current/client
 Environment=RACEME_BUILD_FILE=/srv/raceme/current/build.json
-Environment=RACEME_ADMIN_PORT=8796
+# The admin socket is only reachable by the raceme user, so no other local account can queue a restart.
+RuntimeDirectory=raceme
+UMask=0077
+Environment=RACEME_ADMIN_SOCKET=/run/raceme/admin.sock
 # The webhook stays root-only in /etc/raceme. systemd hands raceme a copy it can read.
 LoadCredential=discord-webhook:/etc/raceme/discord-webhook
 Environment=RACEME_ALERT_WEBHOOK_FILE=%d/discord-webhook

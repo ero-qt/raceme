@@ -22,7 +22,7 @@ sudo systemctl start raceme-deploy.service
 sudo systemctl enable --now raceme.service raceme-preview.service
 ```
 
-Then point the reverse proxy at `127.0.0.1:8790` for `/apps/raceme/`. Port 8796 is the admin port and stays unproxied.
+Then point the reverse proxy at `127.0.0.1:8790` for `/apps/raceme/`. The deploy script talks to the server over `/run/raceme/admin.sock`, which only the `raceme` user can open.
 
 ## preview
 

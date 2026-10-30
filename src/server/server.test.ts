@@ -527,11 +527,14 @@ describe("server", () => {
   });
 
   describe("queued restart", () => {
-    const adminUrl = () => `http://127.0.0.1:${running?.admin?.port}/restart`;
+    const adminSocket = join(tmpdir(), `raceme-admin-${process.pid}-${Date.now()}.sock`);
+    const admin = (init?: RequestInit) =>
+      fetch("http://raceme/restart", { ...init, unix: adminSocket } as RequestInit);
+    afterEach(() => rmSync(adminSocket, { force: true }));
 
     test("moves every room's close time to the next restart and tells the room", async () => {
       clockOffsetMs = Date.UTC(2026, 9, 25, 7) - Date.now();
-      const base = start({ adminPort: 0 });
+      const base = start({ adminSocket });
       const { slug } = await createRoom(base);
       const client = new Client(
         socketUrl(base, slug),
@@ -539,7 +542,7 @@ describe("server", () => {
       );
       await client.waitFor((m) => m.type === "state");
 
-      const queued = await (await fetch(adminUrl(), { method: "POST" })).json();
+      const queued = await (await admin({ method: "POST" })).json();
       const restartAt = Date.UTC(2026, 9, 25, 10);
 
       expect(queued).toEqual({ restartAt, rooms: 1 });
@@ -555,11 +558,11 @@ describe("server", () => {
 
     test("marks the state as closing for the restart and shows the restart on the public API", async () => {
       clockOffsetMs = Date.UTC(2026, 9, 25, 7) - Date.now();
-      const base = start({ adminPort: 0 });
+      const base = start({ adminSocket });
       const { slug } = await createRoom(base);
       expect(await (await fetch(`${base}/api/status`)).json()).toMatchObject({ restartAt: null });
 
-      await fetch(adminUrl(), { method: "POST" });
+      await admin({ method: "POST" });
       const client = new Client(
         socketUrl(base, slug),
         session("mark-secret-mark-secret-mark-secr"),
@@ -573,7 +576,7 @@ describe("server", () => {
 
     test("warns every room once the restart is less than an hour away", async () => {
       clockOffsetMs = Date.UTC(2026, 9, 25, 9, 30) - Date.now();
-      const base = start({ adminPort: 0 });
+      const base = start({ adminSocket });
       const { slug } = await createRoom(base);
       const client = new Client(
         socketUrl(base, slug),
@@ -581,7 +584,7 @@ describe("server", () => {
       );
       await client.waitFor((m) => m.type === "state");
 
-      await fetch(adminUrl(), { method: "POST" });
+      await admin({ method: "POST" });
 
       await client.waitFor(
         (m) => m.type === "restartWarning" && m.closesAt === Date.UTC(2026, 9, 25, 10),
@@ -589,10 +592,10 @@ describe("server", () => {
     });
 
     test("reports the open rooms without queueing, and stays off the public port", async () => {
-      const base = start({ adminPort: 0 });
+      const base = start({ adminSocket });
       await createRoom(base);
 
-      expect(await (await fetch(adminUrl())).json()).toEqual({ restartAt: null, rooms: 1 });
+      expect(await (await admin()).json()).toEqual({ restartAt: null, rooms: 1 });
       expect((await fetch(`${base}/restart`, { method: "POST" })).status).toBe(404);
     });
   });

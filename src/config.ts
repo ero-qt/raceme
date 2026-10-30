@@ -63,8 +63,11 @@ export interface ServerConfig {
   sweepIntervalMs: number;
   /** Posts to this Discord webhook when rooms or people online climb past a level, `null` for none. */
   alertWebhook: string | null;
-  /** Listens on 127.0.0.1 at this port for the deploy script, `null` to leave it off. */
-  adminPort: number | null;
+  /**
+   * Listens on this unix socket for the deploy script, `null` to leave it off. Only the socket's
+   * owner can connect, so no other local account can queue a restart.
+   */
+  adminSocket: string | null;
   /** Restarts for a new release at this hour in UTC, unless all rooms are closed before then. */
   restartHourUtc: number;
   /** Points at the release this server runs, `null` for a build that didn't come from a release. */
@@ -118,7 +121,7 @@ export function loadConfig(env: Env): ServerConfig {
     alertWebhook: env.RACEME_ALERT_WEBHOOK_FILE
       ? readSecret(env.RACEME_ALERT_WEBHOOK_FILE, "RACEME_ALERT_WEBHOOK_FILE")
       : null,
-    adminPort: env.RACEME_ADMIN_PORT ? count("RACEME_ADMIN_PORT", 0) : null,
+    adminSocket: env.RACEME_ADMIN_SOCKET ?? null,
     restartHourUtc: hourUtc(env.RACEME_RESTART_HOUR_UTC),
     build: env.RACEME_BUILD_FILE ? readBuildFile(env.RACEME_BUILD_FILE) : null,
   };

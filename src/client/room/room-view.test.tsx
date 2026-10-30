@@ -692,6 +692,15 @@ describe("RoomView layout", () => {
     expect(view.queryByRole("status", { name: "latest chat line", hidden: true })).toBeNull();
   });
 
+  test("a room page opens with focus in the name field, or the message box once entered", () => {
+    const guest = renderRoom("v");
+    expect(document.activeElement).toBe(guest.getByLabelText("your name"));
+    cleanup();
+
+    const entrant = renderRoom("a");
+    expect(document.activeElement).toBe(entrant.getByLabelText("message"));
+  });
+
   test("entering moves focus to the message box", () => {
     const [state, setState] = createSignal(race);
     const view = render(() => (

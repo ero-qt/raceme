@@ -8,6 +8,7 @@ import {
   createSignal,
   on,
   onCleanup,
+  onMount,
 } from "solid-js";
 import type { FeedEntry } from "../../shared/feed-entry.ts";
 import type { ClientAction, ClosesFor, Me } from "../../shared/protocol.ts";
@@ -229,6 +230,12 @@ export function RoomView(props: RoomViewProps): JSX.Element {
   };
   document.addEventListener("keydown", jumpToChat);
   onCleanup(() => document.removeEventListener("keydown", jumpToChat));
+  // The page opens on the field the viewer needs next, the name field or the message box.
+  onMount(() => {
+    if (!props.closed) {
+      (entered() ? messageBox : chat?.querySelector<HTMLInputElement>("input"))?.focus();
+    }
+  });
   createEffect(
     on(entered, (isIn, wasIn) => {
       if (isIn && wasIn === false) {

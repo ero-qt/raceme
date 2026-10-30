@@ -1,7 +1,7 @@
 import { Eye, Lock, LockOpen } from "lucide-solid";
 import { type JSX, Show } from "solid-js";
 import type { ClientAction } from "../../shared/protocol.ts";
-import { type RaceState, maxEntrants, minEntrantCap } from "../../shared/race/race.ts";
+import { type RaceState, beforeStart, maxEntrants, minEntrantCap } from "../../shared/race/race.ts";
 import { Button } from "../primitives/button.tsx";
 import { icon, visuallyHidden } from "../styles/controls.css.ts";
 import * as styles from "./room.css.ts";
@@ -17,11 +17,10 @@ export function EntrantsHeader(props: {
   watchers: number | null;
   send: (action: ClientAction) => void;
 }): JSX.Element {
-  const beforeStart = () => props.race.phase === "open" || props.race.phase === "countdown";
   const cap = () => props.race.settings.entrantCap ?? maxEntrants;
   // Entry is closed once the race starts, so the lock shows that too.
-  const locked = () => props.race.entryLocked || !beforeStart();
-  const editable = () => props.isHost && beforeStart();
+  const locked = () => props.race.entryLocked || !beforeStart(props.race);
+  const editable = () => props.isHost && beforeStart(props.race);
   const lockIcon = () => (
     <Show when={locked()} fallback={<LockOpen class={icon} aria-hidden="true" />}>
       <Lock class={icon} aria-hidden="true" />

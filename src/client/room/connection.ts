@@ -1,12 +1,12 @@
 import { type Accessor, createSignal, onCleanup } from "solid-js";
 import type { FeedEntry } from "../../shared/feed-entry.ts";
-import type { ClientAction, ClosesFor, ServerMessage } from "../../shared/protocol.ts";
+import type { ClientAction, ClosesFor, Me, ServerMessage } from "../../shared/protocol.ts";
 import type { RaceState } from "../../shared/race/race.ts";
 import { refusalText } from "./action-labels.ts";
 
 export interface RoomConnection {
   race: Accessor<RaceState | null>;
-  me: Accessor<{ entrantId: string; isHost: boolean } | null>;
+  me: Accessor<Me | null>;
   /** Adds to `Date.now()` to get the server's clock. */
   clockOffset: Accessor<number>;
   notice: Accessor<string | null>;
@@ -37,7 +37,7 @@ const maxFeedEntries = 200;
 
 interface ClosedRoom {
   race: RaceState;
-  me: { entrantId: string; isHost: boolean };
+  me: Me;
   notice: string;
   closedAt: number;
 }
@@ -65,7 +65,7 @@ function saveClosedRoom(slug: string, room: ClosedRoom): void {
 /** Keeps a websocket to the room open for as long as the calling component lives. */
 export function connectRoom(slug: string): RoomConnection {
   const [race, setRace] = createSignal<RaceState | null>(null);
-  const [me, setMe] = createSignal<{ entrantId: string; isHost: boolean } | null>(null);
+  const [me, setMe] = createSignal<Me | null>(null);
   const [clockOffset, setClockOffset] = createSignal(0);
   const [notice, setNotice] = createSignal<string | null>(null);
   const [feed, setFeed] = createSignal<FeedEntry[]>([]);

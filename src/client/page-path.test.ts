@@ -14,7 +14,7 @@ describe("pagePath", () => {
       pagePath("/apps/raceme", "/apps/raceme/"),
       pagePath("/apps/raceme/", "/apps/raceme/"),
       pagePath("/apps/raceme/abcdefghij", "/apps/raceme/"),
-      pagePath("/catalog", "/"),
-    ]).toEqual(["/", "/", "/abcdefghij", "/catalog"]);
+      pagePath("/missing", "/"),
+    ]).toEqual(["/", "/", "/abcdefghij", "/missing"]);
   });
 });

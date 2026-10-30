@@ -35,6 +35,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - The "Made with AI" note on the page.
 - The line about the Discord message in the privacy note.
 
+### Fixed
+
+- Emoji made of several emoji, like a family, stay whole in names, goals and chat.
+
 ## [1.1.2] - 2026-10-26
 
 ### Changed

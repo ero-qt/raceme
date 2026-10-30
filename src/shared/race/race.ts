@@ -290,9 +290,12 @@ function unreadied(entrant: Entrant): Entrant {
   return entrant.ready ? { ...entrant, ready: false } : entrant;
 }
 
-/** Compares names case-blind and with look-alike forms folded, like full-width `ｂｏｂ` and `bob`. */
+/**
+ * Compares names case-blind and with look-alike forms folded, like full-width `ｂｏｂ` and `bob`.
+ * It drops the zero width joiner too, because `👍‍👍` looks just like `👍👍`.
+ */
 function nameKey(name: string): string {
-  return name.normalize("NFKC").toLowerCase();
+  return name.normalize("NFKC").toLowerCase().replaceAll("\u200d", "");
 }
 
 function ok(state: RaceState): RaceResult {

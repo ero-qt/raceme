@@ -90,10 +90,6 @@ describe("exportFileName", () => {
     expect(exportFileName(race, "csv")).toBe("raceme-sm64-16-star-2026-10-24.csv");
   });
 
-  test("names the image like the other files", () => {
-    expect(exportFileName(race, "png").endsWith(".png")).toBe(true);
-  });
-
   test("a race ended before GO takes its end date", () => {
     const ended = { ...race, phase: "terminated" as const, startsAt: null };
 

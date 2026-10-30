@@ -199,6 +199,27 @@ describe("HomePage", () => {
   });
 });
 
+describe("HomePage odd replies", () => {
+  for (const status of [201, 428]) {
+    test(`a ${status} reply that isn't JSON frees .startrace again`, async () => {
+      globalThis.fetch = (async () =>
+        new Response("<html>bad gateway</html>", { status })) as unknown as typeof fetch;
+      const home = renderHome();
+      home.type("any%");
+
+      home.submit();
+
+      await waitFor(() =>
+        expect(home.getByRole("status").textContent).toBe("couldn't open a room."),
+      );
+      expect((home.getByRole("button", { name: ".startrace" }) as HTMLButtonElement).disabled).toBe(
+        false,
+      );
+      expect(localStorage.getItem("raceme.goalHistory")).toBeNull();
+    });
+  }
+});
+
 describe("HomePage busy server", () => {
   test("solves the proof of work the server asks for during a rush, then opens the room", async () => {
     const bodies: unknown[] = [];

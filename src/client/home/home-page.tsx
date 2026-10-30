@@ -112,6 +112,14 @@ export function HomePage(props: {
 
   async function startRace(): Promise<void> {
     setCreating(true);
+    // A proxy error page in place of the JSON reply makes `json()` throw.
+    await createRoom().catch(() => {
+      setCreating(false);
+      setNotice(failureText(null));
+    });
+  }
+
+  async function createRoom(): Promise<void> {
     let response = await requestRoom(picker.goal(), null);
 
     // During a rush of new rooms the server asks for a proof of work first.
@@ -131,8 +139,8 @@ export function HomePage(props: {
       return;
     }
 
-    rememberGoal(picker.goal());
     const { slug } = (await response.json()) as { slug: string };
+    rememberGoal(picker.goal());
     open(slug);
   }
 

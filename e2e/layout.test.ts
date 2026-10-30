@@ -312,7 +312,7 @@ describe("home layout", () => {
     const before = await form.boundingBox();
 
     await page.getByText("privacy", { exact: true }).click();
-    await page.getByText("the server keeps nothing on disk.").waitFor();
+    await page.getByText("raceme doesn't save anything about you.", { exact: false }).waitFor();
     expect(await form.boundingBox()).toEqual(before);
 
     await page.getByText("build", { exact: true }).click();
@@ -331,7 +331,7 @@ describe("home layout", () => {
     const before = await boxes();
 
     await page.getByText("privacy", { exact: true }).click();
-    const notice = page.getByText("the server keeps nothing on disk.");
+    const notice = page.getByText("raceme doesn't save anything about you.", { exact: false });
     await notice.waitFor();
     expect(await boxes()).toEqual(before);
     expect(((await notice.boundingBox())?.y ?? 0) < (before[0]?.y ?? 0)).toBe(true);
@@ -350,7 +350,7 @@ describe("home layout", () => {
     await page.setViewportSize({ width: 1280, height: 700 });
     await page.goto(`${harness.origin}/`);
     await page.getByText("privacy", { exact: true }).click();
-    await page.getByText("the server keeps nothing on disk.").waitFor();
+    await page.getByText("raceme doesn't save anything about you.", { exact: false }).waitFor();
 
     const hiddenPixels = await page.evaluate(() => {
       const body = document.querySelector("details[open] > div") as HTMLElement;
@@ -364,7 +364,7 @@ describe("home layout", () => {
   test("a click outside the note or Escape closes it", async () => {
     const { context, page } = await newPage(harness);
     await page.goto(`${harness.origin}/`);
-    const notice = page.getByText("the server keeps nothing on disk.");
+    const notice = page.getByText("raceme doesn't save anything about you.", { exact: false });
 
     await page.getByText("privacy", { exact: true }).click();
     await notice.waitFor();

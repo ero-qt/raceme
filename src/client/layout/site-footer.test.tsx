@@ -14,10 +14,10 @@ describe("SiteFooter", () => {
     const view = render(() => <SiteFooter />);
 
     const notice = view.getByText("privacy", { selector: "summary" }).parentElement;
-    expect(notice?.textContent).toContain("the server keeps nothing on disk.");
-    expect(notice?.textContent).toContain(`expire after ${sessionCookieDays} days`);
-    expect(notice?.textContent).toContain(`for up to ${catalogCacheHours} hours`);
-    expect(notice?.textContent).toContain("no accounts, usage stats, ads or trackers");
+    expect(notice?.textContent).toContain("raceme doesn't save anything about you.");
+    expect(notice?.textContent).toContain(`deleted after ${sessionCookieDays} days`);
+    expect(notice?.textContent).toContain(`kept for up to ${catalogCacheHours} hours`);
+    expect(notice?.textContent).toContain("no accounts, no ads, no trackers.");
   });
 
   test("shows the release commit once the build note opens", async () => {

@@ -106,6 +106,12 @@ export const row = style({
   gap: tokens.space.s,
 });
 
+export const joinForm = style([row, { rowGap: tokens.space.xs }]);
+
+// Always one line tall, in the log's small text, so the form doesn't move when entry closes
+// or the race fills up.
+export const joinNotice = style({ flexBasis: "100%", minBlockSize: "1lh", fontSize: "0.75rem" });
+
 export const table = style({
   inlineSize: "100%",
   tableLayout: "fixed",

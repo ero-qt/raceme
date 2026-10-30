@@ -470,7 +470,8 @@ describe("RoomView layout", () => {
     expect(locked.getByText("entry closed")).toBeTruthy();
     const name = locked.getByLabelText("your name") as HTMLInputElement;
     expect(name.disabled).toBe(true);
-    expect(name.placeholder).toBe("entry is closed");
+    expect(name.placeholder).toBe("your name");
+    expect(locked.getByText("entry is closed.").getAttribute("role")).toBe("status");
     expect((locked.getByRole("button", { name: ".enter" }) as HTMLButtonElement).disabled).toBe(
       true,
     );

@@ -478,6 +478,19 @@ describe("HomePage server status", () => {
     expect(document.activeElement).toBe(field);
   });
 
+  test("shows the start field while the server status is still on its way", () => {
+    const view = render(() => (
+      <Suspense fallback={<p>loading</p>}>
+        <HomePage loadStatus={() => new Promise(() => {})} />
+      </Suspense>
+    ));
+
+    expect(view.getByLabelText("goal or room code")).toBeTruthy();
+    const card = view.getByRole("heading", { name: "server status" }).parentElement;
+    expect(card?.textContent).toBe("server status loading");
+    expect(card?.querySelector("svg[aria-hidden='true']")).not.toBeNull();
+  });
+
   test("counts 1 room in the singular", async () => {
     globalThis.fetch = mock(async () =>
       Response.json({ rooms: 1, people: 1, restartAt: null }),

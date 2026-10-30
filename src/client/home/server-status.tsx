@@ -1,3 +1,4 @@
+import { LoaderCircle } from "lucide-solid";
 import { type JSX, Show } from "solid-js";
 import * as styles from "./home-page.css.ts";
 
@@ -28,14 +29,26 @@ function count(n: number, one: string, many: string): string {
   return `${n} ${n === 1 ? one : many}`;
 }
 
-/** Shows how many rooms are open and people are online right now. */
-export function ServerStatusCard(props: { status: ServerStatus | null }): JSX.Element {
+/**
+ * Shows how many rooms are open and people are online right now. The status is `undefined` until
+ * the server first answers and `null` when it can't.
+ */
+export function ServerStatusCard(props: { status: ServerStatus | null | undefined }): JSX.Element {
   return (
     <section class={styles.card}>
       <h2 class={styles.cardHeading}>server status</h2>
-      <Show when={props.status} fallback={<p>no answer from the server right now.</p>}>
+      <Show
+        when={props.status}
+        fallback={
+          <p class={styles.statusLines}>
+            <Show when={props.status === undefined} fallback="no answer from the server right now.">
+              <LoaderCircle class={styles.spinner} aria-hidden="true" /> loading
+            </Show>
+          </p>
+        }
+      >
         {(status) => (
-          <p>
+          <p class={styles.statusLines}>
             {status().people} online
             <br />
             {count(status().rooms, "room open", "rooms open")}

@@ -80,6 +80,9 @@ export const spinner = style({
   animation: `${spin} 800ms linear infinite`,
 });
 
+// Keeps the status card as tall as its 2 count lines while it waits or gets no answer.
+export const statusLines = style({ minBlockSize: "2lh" });
+
 export const warning = style({
   display: "flex",
   alignItems: "flex-start",

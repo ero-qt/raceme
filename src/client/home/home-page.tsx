@@ -1,5 +1,5 @@
 import { LoaderCircle, TriangleAlert } from "lucide-solid";
-import { type JSX, Show, createResource, createSignal, onCleanup } from "solid-js";
+import { type JSX, Show, createSignal, onCleanup } from "solid-js";
 import { solveChallenge } from "../../shared/proof-of-work.ts";
 import { Button } from "../primitives/button.tsx";
 import { refusalText } from "../room/action-labels.ts";
@@ -41,13 +41,13 @@ export function HomePage(props: {
   const [notice, setNotice] = createSignal<string | null>(props.notice ?? null);
   const [creating, setCreating] = createSignal(false);
   const busy = () => creating() || props.busy === true;
-  const [serverStatus, { refetch }] = createResource(props.loadStatus ?? loadStatusFromServer);
-  // `latest` keeps the last answer up during a poll. Reading the resource itself would count as
-  // loading for the page's Suspense and swap the whole page for its fallback on every poll.
-  const status = () => serverStatus.latest ?? null;
-  const restartAt = () => status()?.restartAt ?? null;
-  const statusTimer = setInterval(() => void refetch(), props.statusEveryMs ?? statusEveryMs);
+  const [status, setStatus] = createSignal<ServerStatus | null | undefined>(undefined);
+  const loadStatus = props.loadStatus ?? loadStatusFromServer;
+  const pollStatus = () => void loadStatus().then(setStatus);
+  pollStatus();
+  const statusTimer = setInterval(pollStatus, props.statusEveryMs ?? statusEveryMs);
   onCleanup(() => clearInterval(statusTimer));
+  const restartAt = () => status()?.restartAt ?? null;
   document.title = "raceme";
 
   const roomCheck = useRoomCheck(value, {

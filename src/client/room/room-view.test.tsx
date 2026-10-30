@@ -624,6 +624,31 @@ describe("RoomView layout", () => {
     expect(document.activeElement).toBe(document.body);
   });
 
+  test("a host's .remove never lands focus on .end", () => {
+    const [state, setState] = createSignal(race);
+    const view = render(() => (
+      <RoomView
+        race={state()}
+        me={{ entrantId: "a", isHost: true }}
+        now={0}
+        inviteUrl={inviteUrl}
+        notice={null}
+        feed={[]}
+        send={() => {}}
+      />
+    ));
+    const remove = view.getByRole("button", { name: ".remove bob" });
+    remove.focus();
+
+    fireEvent.click(remove);
+    setState(raceAfter([...joinedBoth, { type: "remove", targetId: "b" }]));
+
+    expect(document.activeElement).not.toBe(view.getByRole("button", { name: ".end" }));
+    expect(view.getByRole("region", { name: "race" }).contains(document.activeElement)).toBe(true);
+    // Focus in the goal field would select the goal, so one typed letter replaces it.
+    expect(document.activeElement).not.toBe(view.getByRole("combobox", { name: "goal" }));
+  });
+
   test("entering moves focus to the message box", () => {
     const [state, setState] = createSignal(race);
     const view = render(() => (

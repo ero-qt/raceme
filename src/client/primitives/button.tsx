@@ -16,5 +16,12 @@ export function Button(props: ButtonProps): JSX.Element {
   const className = () =>
     [buttonVariant[local.variant ?? "accent"], local.class].filter(Boolean).join(" ");
 
-  return <button type={local.type ?? "button"} class={className()} {...rest} />;
+  return (
+    <button
+      type={local.type ?? "button"}
+      class={className()}
+      data-variant={local.variant ?? "accent"}
+      {...rest}
+    />
+  );
 }

@@ -90,8 +90,11 @@ export function RoomView(props: RoomViewProps): JSX.Element {
   // A pressed button often makes way for its opposite, like .ready for .unready. Keeping the
   // button in its slot keeps focus on it, and focus that falls off a removed one comes back below.
   let pressed: Element | null = null;
+  let pressedCard: Element | null | undefined = null;
   const press = (event: MouseEvent, action: ClientAction) => {
     pressed = event.currentTarget as Element;
+    // Leaving the race takes focus to the chat card, where the join form is.
+    pressedCard = rowActionTypes.has(action.type as ActionType) ? chat : pressed.closest("section");
     props.send(action);
   };
 
@@ -235,11 +238,16 @@ export function RoomView(props: RoomViewProps): JSX.Element {
       () => {
         const lost = document.activeElement === null || document.activeElement === document.body;
         if (pressed && !pressed.isConnected && lost) {
-          // On a phone the chat card may be hidden. A hidden control can't take focus.
-          const card = tab() === "race" && phoneScreen() ? race : chat;
-          card?.querySelector<HTMLElement>("input, button")?.focus();
+          // Focus stays in the card the press came from, on a control that can't end the race
+          // and isn't the goal field, where focus selects the goal for typing over.
+          pressedCard
+            ?.querySelector<HTMLElement>(
+              'input:not([aria-label="goal"]), button:not([data-variant="danger"])',
+            )
+            ?.focus();
         }
         pressed = null;
+        pressedCard = null;
       },
       { defer: true },
     ),

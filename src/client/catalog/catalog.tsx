@@ -6,7 +6,7 @@ import { catalogEntries } from "./entries.tsx";
 export function Catalog(): JSX.Element {
   return (
     <main class={styles.page}>
-      <h1>Catalog</h1>
+      <h1>catalog</h1>
       <For each={catalogEntries}>
         {(entry) => (
           <section class={styles.section}>

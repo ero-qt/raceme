@@ -1,5 +1,6 @@
 import { type JSX, type ParentProps, Show, createSignal, onCleanup } from "solid-js";
 import { maxChatLength } from "../../shared/protocol.ts";
+import { maxNameLength } from "../../shared/race/race.ts";
 import { Button } from "../primitives/button.tsx";
 import { TextField } from "../primitives/text-field.tsx";
 import { actionLabel } from "./action-labels.ts";
@@ -9,8 +10,13 @@ export function JoinForm(props: {
   onSubmit: (name: string) => void;
   /** Turns the form off and shows why in the name field, like `entry is closed`. */
   closedBecause?: string | null;
+  /** Runs the first time the typed name reaches the longest a name can be. */
+  onLimit?: () => void;
+  /** Fills the field, like with the name of someone who just left the race. */
+  initialName?: string;
 }): JSX.Element {
-  const [name, setName] = createSignal("");
+  const [name, setName] = createSignal(props.initialName ?? "");
+  let limitShown = false;
   return (
     <form
       class={styles.row}
@@ -23,10 +29,17 @@ export function JoinForm(props: {
         label="your name"
         hideLabel
         placeholder={props.closedBecause ?? "your name"}
+        value={props.initialName ?? ""}
         disabled={Boolean(props.closedBecause)}
-        maxLength={24}
+        maxLength={maxNameLength}
         autocomplete="nickname"
-        onInput={(e) => setName(e.currentTarget.value)}
+        onInput={(e) => {
+          if (e.currentTarget.value.length >= maxNameLength && !limitShown) {
+            limitShown = true;
+            props.onLimit?.();
+          }
+          setName(e.currentTarget.value);
+        }}
       />
       <Button type="submit" disabled={Boolean(props.closedBecause)}>
         {actionLabel.join}

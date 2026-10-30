@@ -1,4 +1,5 @@
 import { type RoomRefusal, maxChatLength } from "../../shared/protocol.ts";
+import { maxGoalLength, maxNameLength } from "../../shared/race/race.ts";
 import type { ActionType } from "./available-actions.ts";
 
 // SRL's RaceBot commands. `.undone` also took back a `.quit`, so both undo actions share it.
@@ -24,10 +25,10 @@ export const actionLabel: Record<ActionType, string> = {
 export const refusalText: Record<RoomRefusal, string> = {
   alreadyFinished: "you already have a result.",
   alreadyJoined: "you're already in this race.",
-  badChat: `messages need 1 to ${maxChatLength} characters.`,
-  badGoal: "the goal needs 1 to 200 characters.",
+  badChat: `a message needs to be 1-${maxChatLength} characters long.`,
+  badGoal: `the goal needs to be 1-${maxGoalLength} characters long.`,
   badMessage: "the server didn't understand that.",
-  badName: "your name needs 1 to 24 characters.",
+  badName: `a name needs to be 1-${maxNameLength} characters long.`,
   nameTaken: "someone in this race already has that name.",
   noGoal: "the host has to set a goal before anyone can ready up.",
   notDone: "you haven't finished.",

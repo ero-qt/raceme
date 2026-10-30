@@ -176,7 +176,9 @@ describe("HomePage", () => {
     home.type("x");
     home.submit();
     await waitFor(() =>
-      expect(home.getByRole("status").textContent).toBe("the goal needs 1 to 200 characters."),
+      expect(home.getByRole("status").textContent).toBe(
+        "the goal needs to be 1-200 characters long.",
+      ),
     );
   });
 

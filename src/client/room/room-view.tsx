@@ -19,7 +19,7 @@ import {
 } from "../../shared/race/race.ts";
 import type { GoalCatalog } from "../home/goal-picker.tsx";
 import { Button } from "../primitives/button.tsx";
-import { actionLabel } from "./action-labels.ts";
+import { actionLabel, refusalText } from "./action-labels.ts";
 import { type ActionType, availableActions } from "./available-actions.ts";
 import { chatCommand } from "./chat-command.ts";
 import { EntrantTable } from "./entrant-table.tsx";
@@ -161,12 +161,16 @@ export function RoomView(props: RoomViewProps): JSX.Element {
 
   // Every notice becomes a red line in the log that only this browser sees, dated when it came.
   const [notices, setNotices] = createSignal<NoticeLine[]>([]);
+  // A name stays filled in after .unenter, so entering again is one click.
+  const [lastName, setLastName] = createSignal("");
+  const addNotice = (text: string) =>
+    setNotices((lines) => [...lines, { at: props.now, kind: "notice", text }]);
   createEffect(
     on(
       () => props.notice,
       (text) => {
         if (text !== null) {
-          setNotices((lines) => [...lines, { at: props.now, kind: "notice", text }]);
+          addNotice(text);
         }
       },
     ),
@@ -313,8 +317,13 @@ export function RoomView(props: RoomViewProps): JSX.Element {
                 }
               >
                 <JoinForm
-                  onSubmit={(name) => props.send({ type: "join", name })}
+                  initialName={lastName()}
+                  onSubmit={(name) => {
+                    setLastName(name);
+                    props.send({ type: "join", name });
+                  }}
                   closedBecause={actions().includes("join") ? null : entryRefusal()}
+                  onLimit={() => addNotice(refusalText.badName)}
                 />
               </Show>
             }

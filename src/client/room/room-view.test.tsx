@@ -191,6 +191,58 @@ describe("RoomView layout", () => {
     expect(chat.textContent).toContain("entry open");
   });
 
+  test("a name that reaches the limit gets the name length line in the chat log", () => {
+    const view = renderRoom("x");
+    const field = view.getByLabelText("your name") as HTMLInputElement;
+    const log = view.getByRole("log", { name: "race chat" });
+
+    field.value = "x".repeat(23);
+    fireEvent.input(field);
+    expect(log.textContent).not.toContain("a name needs to be 1-24 characters long.");
+
+    field.value = "x".repeat(24);
+    fireEvent.input(field);
+    expect(log.textContent).toContain("a name needs to be 1-24 characters long.");
+  });
+
+  test("the length line shows once per entry, and again after .unenter with the name filled in", () => {
+    const [state, setState] = createSignal(race);
+    const view = render(() => (
+      <RoomView
+        race={state()}
+        me={{ entrantId: "x", isHost: false }}
+        now={0}
+        inviteUrl={inviteUrl}
+        notice={null}
+        feed={[]}
+        send={() => {}}
+      />
+    ));
+    const lengthLines = () =>
+      [...view.getByRole("log", { name: "race chat" }).querySelectorAll("p")].filter((line) =>
+        line.textContent?.includes("a name needs to be 1-24 characters long."),
+      ).length;
+    const type = (text: string) => {
+      const field = view.getByLabelText("your name") as HTMLInputElement;
+      field.value = text;
+      fireEvent.input(field);
+    };
+
+    type("y".repeat(24));
+    type("y".repeat(23));
+    type("y".repeat(24));
+    expect(lengthLines()).toBe(1);
+
+    fireEvent.submit(view.getByLabelText("your name").closest("form") as HTMLFormElement);
+    setState(raceAfter([...joinedBoth, { type: "join", entrantId: "x", name: "y".repeat(24) }]));
+    setState(race);
+
+    expect((view.getByLabelText("your name") as HTMLInputElement).value).toBe("y".repeat(24));
+    type("y".repeat(23));
+    type("y".repeat(24));
+    expect(lengthLines()).toBe(2);
+  });
+
   test("a notice shows as a red line in the chat log, kept in time order with the feed", () => {
     const [notice, setNotice] = createSignal<string | null>(null);
     const view = render(() => (

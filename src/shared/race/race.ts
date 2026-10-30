@@ -13,8 +13,8 @@ export type { Standing } from "./standings.ts";
 export { standings } from "./standings.ts";
 export type * from "./types.ts";
 
-const maxNameLength = 24;
-const maxGoalLength = 200;
+export const maxNameLength = 24;
+export const maxGoalLength = 200;
 export const maxEntrants = 50;
 export const minEntrantCap = 2;
 // Entrants named like the bot could post chat that passes for its announcements.

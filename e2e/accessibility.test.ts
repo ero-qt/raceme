@@ -54,13 +54,16 @@ describe("axe-core WCAG 2.2 AA", () => {
     await context.close();
   });
 
-  test("start page with each corner note open", async () => {
+  test("start page with each footer note open", async () => {
     const { context, page } = await newPage(harness, { bypassCSP: true });
     await page.goto(`${harness.origin}/`);
     await page.getByText("privacy", { exact: true }).click();
     await page.getByText("the server keeps nothing on disk.").waitFor();
 
     expect(await violations(page)).toEqual([]);
+
+    await page.getByText("build", { exact: true }).click();
+    await page.getByText(/unverified build/).waitFor();
 
     expect(await violations(page)).toEqual([]);
 

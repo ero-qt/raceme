@@ -2,6 +2,7 @@ import { LoaderCircle, TriangleAlert } from "lucide-solid";
 import { type JSX, Show, createResource, createSignal, onCleanup } from "solid-js";
 import { solveChallenge } from "../../shared/proof-of-work.ts";
 import { Button } from "../primitives/button.tsx";
+import { refusalText } from "../room/action-labels.ts";
 import * as titleStyles from "../room/goal-title.css.ts";
 import * as styles from "../room/room.css.ts";
 import { type CatalogEntry, loadCategoriesFromServer, searchGamesOnServer } from "./game-search.ts";
@@ -213,7 +214,7 @@ function requestRoom(goal: string, proof: { token: string; nonce: number } | nul
 /** Explains a failed room creation. Without a status the request never reached the server. */
 function failureText(status: number | null): string {
   if (status === 400) {
-    return "the goal needs 1 to 200 characters.";
+    return refusalText.badGoal;
   }
   return status === 429 ? "too many new rooms. try again in a minute." : "couldn't open a room.";
 }

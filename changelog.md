@@ -8,26 +8,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 
 ### Added
 
-- A server status card on the start page with the open rooms and people online, refreshed every 30 seconds.
+- A server status card on the start page with the open rooms and people online.
+- A line in the chat log when a typed name first reaches the 24-character limit.
+- A bar at the bottom of a room on phones to switch between the race and the chat.
 
 ### Changed
 
-- One mid-gray look for everyone, without a theme button or a light theme.
-- A header bar across the top of every page and a footer bar with the privacy, AI and build notes at the bottom.
-- The start page has a column next to the form that tells what raceme is and how a race goes.
-- Buttons, fields and the footer notes are smaller.
-- Panels like the chat log and the intro have a shadow and a lighter surface.
-- The site meets WCAG 2.2 AA instead of AAA, which allows richer status colors.
+- One mid-gray look on every page.
+- A header bar across the top of every page.
+- A footer bar at the bottom of every page with the privacy and build notes as links.
+- A column next to the start form that tells what raceme is.
+- Smaller buttons and fields.
+- Panels like the chat log and the intro have a shadow.
+- The site meets WCAG 2.2 AA instead of AAA.
 - Everything on the page is lowercase, apart from names like SRL and RaceBot.
-- The footer notes read as links.
-- The room has 2 columns: the goal, invite link and entrants on the left, the clock, room status and chat on the right. Phones show one at a time, with a bar at the bottom to switch and the running time.
+- The room has 2 columns, with the goal, invite link and entrants on the left and the clock and chat on the right.
 - Bot lines in the room chat show without a name.
 - Chat lines in the room chat show as `name: text`.
+- Refused commands show as red lines in the chat log.
+- The name field keeps your name after `.unenter`.
+- Length messages read like "a name needs to be 1-24 characters long."
 
 ### Removed
 
-- The "Made with AI" note on the page. The readme still has it.
-- The line in the privacy note about the Discord message, since the counts it sends are on the start page now.
+- The theme button and the light theme.
+- The "Made with AI" note on the page.
+- The line about the Discord message in the privacy note.
 
 ## [1.1.2] - 2026-10-26
 

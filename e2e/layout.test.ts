@@ -32,9 +32,9 @@ async function positions(page: Page): Promise<Record<string, number[]>> {
       "[aria-label='chat'] span",
       /^(entry|starting|in progress|complete|terminated)/,
     ),
-    nameColumn: await box("nameColumn", "th >> text=Name"),
-    statusColumn: await box("statusColumn", "th >> text=Status"),
-    timeColumn: await box("timeColumn", "th >> text=Time"),
+    nameColumn: await box("nameColumn", "th >> text=name"),
+    statusColumn: await box("statusColumn", "th >> text=status"),
+    timeColumn: await box("timeColumn", "th >> text=time"),
     chat: await box("chat", "[aria-label='chat']"),
     clock: await box("clock", "[role='timer']"),
     roomTimer: await box("roomTimer", "button[aria-label^='room closes']"),
@@ -304,12 +304,14 @@ describe("home layout", () => {
     await page.getByText("the server keeps nothing on disk.").waitFor();
     expect(await form.boundingBox()).toEqual(before);
 
+    await page.getByText("build", { exact: true }).click();
+    await page.getByText(/unverified build/).waitFor();
     expect(await form.boundingBox()).toEqual(before);
 
     await context.close();
   });
 
-  test("the corner note summaries stay put when a note opens above them", async () => {
+  test("the footer note summaries stay put when a note opens above them", async () => {
     const { context, page } = await newPage(harness);
     await page.goto(`${harness.origin}/`);
     const summaries = page.locator("summary");

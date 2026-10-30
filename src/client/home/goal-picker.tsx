@@ -1,4 +1,5 @@
 import { For, type JSX, Show, createSignal } from "solid-js";
+import { maxGoalLength } from "../../shared/race/race.ts";
 import * as titleStyles from "../room/goal-title.css.ts";
 import {
   type CatalogEntry,
@@ -24,8 +25,6 @@ export const serverCatalog: GoalCatalog = {
 };
 
 const maxHistoryShown = 5;
-// Same limit the race rules set for a goal.
-const maxGoalLength = 200;
 const typedOptionId = "typed";
 
 /**

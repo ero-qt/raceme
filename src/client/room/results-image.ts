@@ -109,7 +109,7 @@ interface TextOptions {
   color?: string;
 }
 
-/** Reads the color the page gives an element, like a link's orange in the current theme. */
+/** Reads the color the page gives an element, like a link's orange. */
 function themeColor(tag: string): string {
   const probe = document.body.appendChild(document.createElement(tag));
   const color = getComputedStyle(probe).color;

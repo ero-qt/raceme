@@ -79,6 +79,7 @@ export const spinner = style({
   inlineSize: "1em",
   blockSize: "1em",
   animation: `${spin} 800ms linear infinite`,
+  "@media": { "(prefers-reduced-motion: reduce)": { animation: "none" } },
 });
 
 // Keeps the status card as tall as its 2 count lines while it waits or gets no answer.

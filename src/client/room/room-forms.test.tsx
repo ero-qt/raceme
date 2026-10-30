@@ -24,6 +24,18 @@ describe("chatForm", () => {
     expect(send.disabled).toBe(false);
   });
 
+  test("send hands focus back to the message box", () => {
+    const view = render(() => <ChatForm onSay={() => {}} waitMs={50} />);
+    const input = view.getByLabelText("message") as HTMLInputElement;
+    const send = view.getByRole("button", { name: "send" });
+    send.focus();
+
+    fireEvent.input(input, { target: { value: "gl" } });
+    fireEvent.submit(input.form as HTMLFormElement);
+
+    expect(document.activeElement).toBe(input);
+  });
+
   test("runs a command during the slow mode wait", () => {
     const said: string[] = [];
     const commands: string[] = [];

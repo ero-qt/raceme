@@ -178,8 +178,14 @@ export const chatRow = style({
 
 export const sendButton = style({ position: "relative" });
 
+// The ring stands in for the label during the slow mode wait. With motion reduced the ring
+// doesn't show, so the label stays.
 export const sendLabel = style({
-  selectors: { "&[data-waiting=true]": { visibility: "hidden" } },
+  "@media": {
+    "(prefers-reduced-motion: no-preference)": {
+      selectors: { "&[data-waiting=true]": { visibility: "hidden" } },
+    },
+  },
 });
 
 const drain = keyframes({ from: { strokeDashoffset: 0 }, to: { strokeDashoffset: 1 } });
@@ -198,6 +204,7 @@ export const waitRing = style({
   animationName: drain,
   animationTimingFunction: "linear",
   animationFillMode: "forwards",
+  "@media": { "(prefers-reduced-motion: reduce)": { display: "none" } },
 });
 
 // Lets the message box shrink so `send` and the main buttons stay on its line on a phone.

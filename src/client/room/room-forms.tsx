@@ -67,6 +67,7 @@ export function ChatForm(
 ): JSX.Element {
   const [text, setText] = createSignal("");
   const [waiting, setWaiting] = createSignal(false);
+  let messageBox: HTMLInputElement | undefined;
   let waitTimer: ReturnType<typeof setTimeout> | undefined;
   onCleanup(() => clearTimeout(waitTimer));
 
@@ -97,6 +98,8 @@ export function ChatForm(
       onSubmit={(event) => {
         event.preventDefault();
         sendLine();
+        // `send` turns itself off for the slow mode wait, which would drop the focus to the page.
+        messageBox?.focus();
       }}
     >
       <TextField
@@ -104,7 +107,10 @@ export function ChatForm(
         hideLabel
         placeholder={props.muted ? "you are muted" : "chat"}
         disabled={props.muted}
-        ref={(input: HTMLInputElement) => props.inputRef?.(input)}
+        ref={(input: HTMLInputElement) => {
+          messageBox = input;
+          props.inputRef?.(input);
+        }}
         maxLength={maxChatLength}
         autocomplete="off"
         value={text()}

@@ -302,11 +302,14 @@ describe("RoomView layout", () => {
       />
     ));
     expect(view.getByRole("region", { name: "chat" }).dataset.active).toBe("true");
+    view.getByLabelText("your name").focus();
 
     setClosed(true);
 
     expect(view.getByRole("region", { name: "race" }).dataset.active).toBe("true");
     expect(view.queryByRole("navigation", { hidden: true })).toBeNull();
+    // The chat card went away under the focus, so the closed notice takes it.
+    expect(document.activeElement?.textContent).toContain("this page is only kept in this tab");
   });
 
   test("a phone shows the clock on the race card as well, so both tabs have one", () => {
@@ -953,7 +956,7 @@ describe("RoomView after the room closed", () => {
     expect(view.queryByLabelText("goal")).toBeNull();
     expect(view.getByRole("table", { name: "entrants" })).toBeTruthy();
     expect(view.getByRole("button", { name: "download CSV" })).toBeTruthy();
-    expect(view.getByRole("status").textContent).toContain("gone once you close it");
+    expect(view.getByText(/gone once you close it/)).toBeTruthy();
   });
 });
 

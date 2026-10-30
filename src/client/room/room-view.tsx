@@ -211,10 +211,13 @@ export function RoomView(props: RoomViewProps): JSX.Element {
   // Phones show one card at a time, picked in the bar at the bottom. The join form is on the
   // chat card, so that's where someone who hasn't entered starts.
   const [tab, setTab] = createSignal<"race" | "chat">(entered() ? "race" : "chat");
-  // A closed room has its results on the race card, so a phone shows that card.
+  // A closed room has its results on the race card, so a phone shows that card. The chat card's
+  // controls are gone then, so the notice takes the focus they held.
+  let closedNotice: HTMLDivElement | undefined;
   createEffect(() => {
     if (props.closed) {
       setTab("race");
+      closedNotice?.focus();
     }
   });
 
@@ -275,7 +278,7 @@ export function RoomView(props: RoomViewProps): JSX.Element {
           </p>
         </Show>
         <Show when={props.closed}>
-          <div class={styles.closedNotice} role="status">
+          <div class={styles.closedNotice} role="status" tabIndex={-1} ref={closedNotice}>
             <p class={styles.closedReason}>{props.notice}</p>
             <p class={styles.closedBox}>
               <TriangleAlert class={warningIcon} aria-hidden="true" />

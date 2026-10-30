@@ -1,6 +1,6 @@
 import { ChevronDown, ChevronRight, Plus, X } from "lucide-solid";
 import { For, type JSX, Show, createMemo, createSignal, createUniqueId } from "solid-js";
-import { visuallyHidden } from "./home-page.css.ts";
+import { visuallyHidden } from "../home/home-page.css.ts";
 import * as styles from "./suggestion-box.css.ts";
 
 export interface SuggestionOption {

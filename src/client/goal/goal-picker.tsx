@@ -1,6 +1,6 @@
 import { For, type JSX, Show, createSignal } from "solid-js";
 import { maxGoalLength } from "../../shared/race/race.ts";
-import * as titleStyles from "../room/goal-title.css.ts";
+import { parseRoomCode } from "../home/room-code.ts";
 import {
   type CatalogEntry,
   loadCategoriesFromServer,
@@ -9,7 +9,7 @@ import {
 } from "./game-search.ts";
 import { forgetGoal, loadGoalHistory } from "./goal-history.ts";
 import * as styles from "./goal-picker.css.ts";
-import { parseRoomCode } from "./room-code.ts";
+import * as titleStyles from "./goal-title.css.ts";
 import { SuggestionBox, type SuggestionGroup } from "./suggestion-box.tsx";
 
 /** Looks up speedrun.com games and categories for the picker. */

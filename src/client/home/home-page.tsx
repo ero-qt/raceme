@@ -1,13 +1,17 @@
 import { LoaderCircle, TriangleAlert } from "lucide-solid";
 import { type JSX, Show, createSignal, onCleanup } from "solid-js";
 import { solveChallenge } from "../../shared/proof-of-work.ts";
+import {
+  type CatalogEntry,
+  loadCategoriesFromServer,
+  searchGamesOnServer,
+} from "../goal/game-search.ts";
+import { rememberGoal } from "../goal/goal-history.ts";
+import { GoalPicker, useGamePicker } from "../goal/goal-picker.tsx";
+import * as titleStyles from "../goal/goal-title.css.ts";
 import { Button } from "../primitives/button.tsx";
 import { refusalText } from "../room/action-labels.ts";
-import * as titleStyles from "../room/goal-title.css.ts";
 import * as styles from "../room/room.css.ts";
-import { type CatalogEntry, loadCategoriesFromServer, searchGamesOnServer } from "./game-search.ts";
-import { rememberGoal } from "./goal-history.ts";
-import { GoalPicker, useGamePicker } from "./goal-picker.tsx";
 import { HomeIntro } from "./home-intro.tsx";
 import * as homeStyles from "./home-page.css.ts";
 import { useRoomCheck } from "./room-check.ts";

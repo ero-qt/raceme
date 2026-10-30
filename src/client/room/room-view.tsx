@@ -17,7 +17,7 @@ import {
   earliestResultMs,
   standings,
 } from "../../shared/race/race.ts";
-import type { GoalCatalog } from "../home/goal-picker.tsx";
+import type { GoalCatalog } from "../goal/goal-picker.tsx";
 import { Button } from "../primitives/button.tsx";
 import { actionLabel, refusalText } from "./action-labels.ts";
 import { type ActionType, availableActions } from "./available-actions.ts";

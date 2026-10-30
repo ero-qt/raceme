@@ -3,7 +3,6 @@
 ## requirements
 
 - bun `>=1.4.0`
-- node `>=22.17.0` for `bun run audit` only
 
 ## quick start
 
@@ -24,4 +23,3 @@ run the 2 dev commands in separate terminals, then open the vite url from the se
 - `bun run check` runs biome and typescript
 - `bun run test` runs the unit tests
 - `bun run test:e2e` builds the page and runs the browser tests
-- `bun run audit` checks the built page with the EDPS Website Evidence Collector and Pa11y and writes the reports to `audit/`

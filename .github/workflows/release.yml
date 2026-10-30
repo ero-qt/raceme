@@ -36,8 +36,6 @@ jobs:
           key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
       - name: Install packages
         run: bun install --frozen-lockfile
-        env:
-          PUPPETEER_SKIP_DOWNLOAD: "true"
       - name: Install Chromium
         run: bunx playwright install --with-deps chromium
       - name: Lint and type check

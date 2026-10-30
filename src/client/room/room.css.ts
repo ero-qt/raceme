@@ -13,7 +13,7 @@ import { tokens } from "../styles/tokens.css.ts";
 const phone = "(max-width: 47.99rem)";
 
 // The room details take the wide left column and the chat the right one. Phones show one of
-// the 2 at a time and keep space for the tab bar at the bottom.
+// the 2 at a time, with the tab bar under it.
 export const page = style([
   container,
   {
@@ -28,7 +28,8 @@ export const page = style([
         gridTemplateColumns: "minmax(0, 2fr) minmax(22rem, 1fr)",
         selectors: { '&[data-closed="true"]': { gridTemplateColumns: "minmax(0, 1fr)" } },
       },
-      [phone]: { paddingBlockEnd: `calc(${tokens.target.min} + 2 * ${tokens.space.l})` },
+      // The shown card gets the spare height, the tab bar keeps its own.
+      [phone]: { gridTemplateRows: "1fr auto" },
     },
   },
 ]);
@@ -50,11 +51,6 @@ export const raceCard = card;
 // Stretches to the row, so the chat log gets the height the room details or the window gives it.
 export const chatCard = style([card, { alignSelf: "stretch" }]);
 
-// Keeps the footer's links above the phone tab bar in a room.
-globalStyle(`${page} ~ footer`, {
-  "@media": { [phone]: { paddingBlockEnd: `calc(${tokens.target.min} + 2 * ${tokens.space.s})` } },
-});
-
 export const clockBlock = style({
   display: "flex",
   flexDirection: "column",
@@ -64,14 +60,17 @@ export const clockBlock = style({
 // Fits the longest room status, "entry closed", so a shorter one keeps the same box.
 export const clockStatus = style({ display: "inline-block", minInlineSize: "13ch" });
 
-// A bar across the bottom of a phone's screen with the 2 cards and the running time.
+// A bar under the shown card on a phone. It sticks to the screen's bottom while the page is
+// longer than the screen, and the footer scrolls in below it.
 export const tabBar = style({
   display: "none",
   "@media": {
     [phone]: {
-      position: "fixed",
-      insetInline: 0,
+      position: "sticky",
       insetBlockEnd: 0,
+      // Eats the page's padding, so the bar reaches the screen's edges and the footer.
+      marginInline: `calc(-1 * ${tokens.space.l})`,
+      marginBlockEnd: `calc(-1 * ${tokens.space.l})`,
       zIndex: 1,
       display: "flex",
       alignItems: "center",

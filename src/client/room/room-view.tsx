@@ -236,6 +236,19 @@ export function RoomView(props: RoomViewProps): JSX.Element {
   };
   document.addEventListener("keydown", jumpToChat);
   onCleanup(() => document.removeEventListener("keydown", jumpToChat));
+  // The stuck phone tab bar covers the screen's bottom. Browsers don't scroll for a focused
+  // control that is on screen but under it, so this scrolls it up into view.
+  let tabBar: HTMLElement | undefined;
+  const keepAboveTabBar = (event: FocusEvent) => {
+    const bar = tabBar?.getBoundingClientRect();
+    const control = (event.target as Element).getBoundingClientRect();
+    const hidden = bar && bar.height > 0 ? control.bottom - bar.top : 0;
+    if (hidden > 0) {
+      window.scrollBy({ top: hidden + 8 });
+    }
+  };
+  document.addEventListener("focusin", keepAboveTabBar);
+  onCleanup(() => document.removeEventListener("focusin", keepAboveTabBar));
   // The page opens on the field the viewer needs next, the name field or the message box.
   // A phone is left alone, since focus in a field would pop the keyboard up on every open.
   onMount(() => {
@@ -383,7 +396,7 @@ export function RoomView(props: RoomViewProps): JSX.Element {
         </Show>
       </section>
       <Show when={!props.closed}>
-        <nav class={styles.tabBar} aria-label="room cards">
+        <nav class={styles.tabBar} aria-label="room cards" ref={tabBar}>
           <button
             type="button"
             class={styles.tabButton}

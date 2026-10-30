@@ -109,7 +109,7 @@ describe("room columns", () => {
       noTabs: await page.getByRole("button", { name: "chat", exact: true }).isHidden(),
     }).toEqual({ sideBySide: true, raceWider: true, chatFillsHeight: true, noTabs: true });
 
-    // Just past the phone breakpoint the chat column is narrow, and still holds its controls.
+    // Just past the phone breakpoint the chat column is narrow, with its controls still inside.
     await page.setViewportSize({ width: 1000, height: 800 });
     const narrowChat = await chat.boundingBox();
     const end = await page.getByRole("button", { name: ".end" }).boundingBox();
@@ -134,12 +134,46 @@ describe("room columns", () => {
     // Each card has its own clock on a phone, so the room tab keeps the time in view.
     expect(await race.getByRole("timer").isVisible()).toBe(true);
 
-    // The footer's links sit above the tab bar, not under it.
-    const privacy = page.getByText("privacy", { exact: true });
-    await privacy.scrollIntoViewIfNeeded();
-    const link = await privacy.boundingBox();
-    const bar = await page.getByRole("navigation", { name: "room cards" }).boundingBox();
-    expect((link?.y ?? 0) + (link?.height ?? 0) <= (bar?.y ?? 0)).toBe(true);
+    // The tab bar sticks to the bottom of the screen while the page is longer than it, and the
+    // footer scrolls in right below the bar, never under it and with no gap.
+    const bar = page.getByRole("navigation", { name: "room cards" });
+    const footer = page.locator("footer");
+    await page.setViewportSize({ width: 390, height: 300 });
+    await page.evaluate(() => window.scrollTo(0, 0));
+    const stuck = await bar.boundingBox();
+    expect(Math.round((stuck?.y ?? 0) + (stuck?.height ?? 0))).toBe(300);
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    const [atEnd, footerBox] = await Promise.all([bar.boundingBox(), footer.boundingBox()]);
+    expect(Math.round((atEnd?.y ?? 0) + (atEnd?.height ?? 0))).toBe(Math.round(footerBox?.y ?? 0));
+    // Focus scrolls a control up from under the stuck bar, which covers the screen's bottom.
+    await page.setViewportSize({ width: 390, height: 220 });
+    const lastButton = race.getByRole("button").last();
+    await lastButton.evaluate((button) => {
+      window.scrollTo(0, 0);
+      window.scrollTo(0, button.getBoundingClientRect().top - window.innerHeight + 20);
+    });
+    await lastButton.focus();
+    const focused = await lastButton.boundingBox();
+    const shortBar = await bar.boundingBox();
+    expect((focused?.y ?? 0) + (focused?.height ?? 0) <= (shortBar?.y ?? 0)).toBe(true);
+    // The chat runs down to the bar on a short page too.
+    await page.setViewportSize({ width: 390, height: 800 });
+    await page.getByRole("button", { name: "chat", exact: true }).click();
+    const [chatBox, barBox] = await Promise.all([chat.boundingBox(), bar.boundingBox()]);
+    expect(Math.round((chatBox?.y ?? 0) + (chatBox?.height ?? 0) + 16)).toBe(
+      Math.round(barBox?.y ?? 0),
+    );
+    // A footer note opens over the bar, so its last lines stay readable and tappable.
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    await page.getByText("privacy", { exact: true }).click();
+    const barTop = (await bar.boundingBox())?.y ?? 0;
+    const noteCovered = await page.evaluate((barTop) => {
+      const note = document.querySelector("details[open] > div") as HTMLElement;
+      const rect = note.getBoundingClientRect();
+      const hit = document.elementFromPoint(rect.left + rect.width / 2, barTop + 10);
+      return rect.bottom > barTop && !note.contains(hit);
+    }, barTop);
+    expect(noteCovered).toBe(false);
 
     await context.close();
   });

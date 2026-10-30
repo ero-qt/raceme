@@ -56,7 +56,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - On phones, the start page field lines up with the cards and sits as far above them as they are apart.
 - Enter and Escape in the goal field keep the focus there.
 - A room page opens with the focus in the name field, or in the message box once entered.
-- On phones, a focused control scrolls up from under the tab bar.
+- On phones, the tab bar sits between the shown card and the footer, with no gap.
+- On phones, a control that gets focus under the tab bar scrolls up from under it.
+- On phones, the privacy and build notes open over the tab bar instead of under it.
 - Screen readers hear whether a copy worked.
 - When a room closes, the focus moves to the closed notice.
 - `send` hands the focus back to the message box.

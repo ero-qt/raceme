@@ -12,6 +12,8 @@ keep=3
 [[ -f "$root/swap" && -f "$root/pending" ]] || exit 0
 tag=$(cat "$root/pending")
 rm -f "$root/swap" "$root/pending"
+# The raceme user writes `pending`, so only a release tag may reach the paths below.
+[[ "$tag" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "pending tag '$tag' isn't a release tag" >&2; exit 1; }
 commit=$(cat "$root/releases/$tag/commit")
 previous=$(readlink "$root/current" 2>/dev/null || true)
 

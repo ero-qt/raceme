@@ -7,8 +7,9 @@ set -euo pipefail
 repo="${RACEME_REPO:-ero-qt/raceme}"
 github="${RACEME_GITHUB:-https://github.com}"
 root="${RACEME_ROOT:-/srv/raceme}"
-admin="${RACEME_ADMIN_URL:-http://127.0.0.1:8796/restart}"
+admin_socket="${RACEME_ADMIN_SOCKET:-/run/raceme/admin.sock}"
 fetch=(curl -fsS --max-time 60)
+admin=("${fetch[@]}" --unix-socket "$admin_socket" http://raceme/restart)
 
 if [[ ! -f "$root/pending" ]]; then
   # GitHub answers /releases/latest with a redirect to the newest tag, so no API token is needed.
@@ -50,17 +51,17 @@ if [[ ! -f "$root/pending" ]]; then
     echo "prepared $tag, nothing runs yet"
     exit 0
   fi
-  "${fetch[@]}" -X POST -o /dev/null "$admin"
+  "${admin[@]}" -X POST -o /dev/null
   echo "prepared $tag, restart queued"
 fi
 
 # The server answers like {"restartAt":1761386400000,"rooms":2}.
-status=$("${fetch[@]}" "$admin")
+status=$("${admin[@]}")
 rooms=$(sed -E 's/.*"rooms":([0-9]+).*/\1/' <<< "$status")
 restart_at=$(sed -E 's/.*"restartAt":([0-9]+).*/\1/;t;s/.*/0/' <<< "$status")
 if [[ "$rooms" == 0 || ( "$restart_at" != 0 && $(( $(date +%s) * 1000 )) -ge "$restart_at" ) ]]; then
   touch "$root/swap"
 elif [[ "$restart_at" == 0 ]]; then
   # The server lost the queued restart, like after a crash, so it gets queued again.
-  "${fetch[@]}" -X POST -o /dev/null "$admin"
+  "${admin[@]}" -X POST -o /dev/null
 fi

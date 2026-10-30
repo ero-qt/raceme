@@ -116,12 +116,11 @@ describe("loadConfig", () => {
 });
 
 describe("loadConfig restart settings", () => {
-  test("restarts at 10:00 UTC with the admin port off unless set", () => {
-    expect(loadConfig({})).toMatchObject({ restartHourUtc: 10, adminPort: null });
-    expect(loadConfig({ RACEME_RESTART_HOUR_UTC: "0", RACEME_ADMIN_PORT: "8795" })).toMatchObject({
-      restartHourUtc: 0,
-      adminPort: 8795,
-    });
+  test("restarts at 10:00 UTC with the admin socket off unless set", () => {
+    expect(loadConfig({})).toMatchObject({ restartHourUtc: 10, adminSocket: null });
+    expect(
+      loadConfig({ RACEME_RESTART_HOUR_UTC: "0", RACEME_ADMIN_SOCKET: "/run/raceme/admin.sock" }),
+    ).toMatchObject({ restartHourUtc: 0, adminSocket: "/run/raceme/admin.sock" });
   });
 
   test("refuses an hour outside 0 to 23", () => {

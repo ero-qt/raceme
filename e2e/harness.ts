@@ -1,6 +1,7 @@
 import { join } from "node:path";
 import { type Browser, type BrowserContext, type Page, chromium } from "playwright";
-import { type RunningServer, type ServerConfig, startServer } from "../src/server/server.ts";
+import type { ServerConfig } from "../src/config.ts";
+import { type RunningServer, startServer } from "../src/server/server.ts";
 
 export interface Harness {
   origin: string;

@@ -2,9 +2,10 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import type { ServerConfig } from "../config.ts";
 import { solveChallenge } from "../shared/proof-of-work.ts";
 import type { ServerMessage } from "../shared/protocol.ts";
-import { type RunningServer, type ServerConfig, startServer, steadyClock } from "./server.ts";
+import { type RunningServer, startServer, steadyClock } from "./server.ts";
 
 const origin = "http://localhost";
 let running: RunningServer | undefined;

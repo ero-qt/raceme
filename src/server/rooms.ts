@@ -1,3 +1,4 @@
+import type { ServerConfig } from "../config.ts";
 import { type NewRaceSettings, type RaceState, createRace } from "../shared/race/race.ts";
 import { Feed } from "./feed.ts";
 import { randomSecret, randomSlug, secretsEqual } from "./tokens.ts";
@@ -175,28 +176,18 @@ export class Room {
   }
 }
 
-export interface RoomRegistryOptions {
-  maxRooms: number;
-  /** Drops a room after this many ms with nobody connected and no action in it. */
-  idleMs: number;
-  /**
-   * Warns a room after this many ms without input and drops it `idleWarningMs` later, because an open
-   * tab nobody touches would keep it alive.
-   */
-  idleInputMs: number;
-  /** Gives an idle room this long between the warning and the end. */
-  idleWarningMs: number;
-  /** Ends every room this long after it opened, however active it is. */
-  roomLifetimeMs: number;
-  /** Warns a room this long before it reaches `roomLifetimeMs`. */
-  closingWarningMs: number;
-  /** Drops an empty room nobody ever entered after this long, so lobbies can't fill the cap. */
-  unusedRoomMs: number;
-  /** Counts a room as abandoned after this long with nobody connected, so it may be freed early. */
-  abandonedAfterMs: number;
-  /** Frees abandoned rooms, longest-abandoned first, once fewer than this many rooms are free. */
-  abandonedRoomHeadroom: number;
-}
+export type RoomRegistryOptions = Pick<
+  ServerConfig,
+  | "maxRooms"
+  | "idleMs"
+  | "idleInputMs"
+  | "idleWarningMs"
+  | "roomLifetimeMs"
+  | "closingWarningMs"
+  | "unusedRoomMs"
+  | "abandonedAfterMs"
+  | "abandonedRoomHeadroom"
+>;
 
 export type CloseReason = "ended" | "expired" | "restart" | "idle" | "empty";
 

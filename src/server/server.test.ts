@@ -307,6 +307,23 @@ describe("server", () => {
     expect(limited).toBeTruthy();
   });
 
+  test("a socket over its own limit leaves the IP's shared limit to its neighbours", async () => {
+    const base = start();
+    const { slug } = await createRoom(base);
+    const a = new Client(socketUrl(base, slug), "raceme_session=spam-a-spam-a-spam-a-spam-a-spam");
+    const b = new Client(socketUrl(base, slug), "raceme_session=calm-b-calm-b-calm-b-calm-b-calm");
+    await Promise.all([a.opened, b.opened]);
+
+    for (let i = 0; i < 40; i++) {
+      a.send({ type: "ready" });
+    }
+    await a.waitFor((m) => m.type === "refused" && m.refusal === "rateLimited");
+    b.send({ type: "ready" });
+
+    const answer = await b.waitFor((m) => m.type === "refused");
+    expect(answer).toMatchObject({ refusal: "notEntrant" });
+  });
+
   test("refuses room creation from a foreign origin", async () => {
     const base = start();
 

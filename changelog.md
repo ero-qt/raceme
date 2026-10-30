@@ -42,6 +42,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - The restart notice on the start page counts down while the page stays open.
 - `.startrace` works again after the server replies with an error page instead of a room.
 - Focus stays put when another entrant acts after one of your race buttons was refused.
+- Messages a tab sends past its own limit no longer count against the limit it shares with other tabs on the same address.
 
 ## [1.1.2] - 2026-10-26
 

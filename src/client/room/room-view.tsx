@@ -113,7 +113,9 @@ export function RoomView(props: RoomViewProps): JSX.Element {
   const tooEarly = (action: ActionType) =>
     (action === "done" || action === "forfeit") && elapsed() < earliestResultMs;
   const sideActions = () => actions().filter((a) => rowActionTypes.has(a));
-  const mainActions = () => actions().filter((a) => !rowActionTypes.has(a) && a !== "join");
+  // `.rematch` sits on the clock line next to `.end`, the other main buttons by the chat box.
+  const mainActions = () =>
+    actions().filter((a) => !rowActionTypes.has(a) && a !== "join" && a !== "rematch");
   const actionButton = (action: Accessor<ActionType>) => (
     <Button
       variant={
@@ -238,11 +240,16 @@ export function RoomView(props: RoomViewProps): JSX.Element {
           <RoomStatus race={props.race} />
         </span>
       </div>
-      <Show when={props.me.isHost && !over() && !props.closed}>
-        <Button variant="danger" onClick={() => props.send({ type: "end" })}>
-          {actionLabel.end}
-        </Button>
-      </Show>
+      <div class={styles.clockActions}>
+        <Show when={props.me.isHost && !over() && !props.closed}>
+          <Button variant="danger" onClick={() => props.send({ type: "end" })}>
+            {actionLabel.end}
+          </Button>
+        </Show>
+        <Show when={actions().includes("rematch") && !props.closed}>
+          {actionButton(() => "rematch")}
+        </Show>
+      </div>
     </div>
   );
   // Phones show the room details or the chat, picked in the bar at the bottom. The join form is

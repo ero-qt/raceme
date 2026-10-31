@@ -200,7 +200,7 @@ describe("RoomView layout", () => {
     const host = renderRoom("a", true);
     const end = host.getByRole("button", { name: ".end" });
 
-    expect(end.parentElement?.contains(host.getByRole("timer"))).toBe(true);
+    expect(end.parentElement?.parentElement?.contains(host.getByRole("timer"))).toBe(true);
     expect(renderRoom("a").queryByRole("button", { name: ".end" })).toBeNull();
   });
 
@@ -1114,6 +1114,25 @@ describe("RoomView button colors", () => {
     expect(view.getByRole("button", { name: ".rematch" }).classList[0]).not.toBe(
       view.getByRole("button", { name: ".undone" }).classList[0],
     );
+  });
+
+  test(".rematch sits on the clock line, where .end sits for the host, not by the chat box", () => {
+    const finished = raceAfter([
+      ...joinedBoth,
+      { type: "ready", entrantId: "a" },
+      { type: "ready", entrantId: "b" },
+    ]);
+    const over = playAt(finished, [
+      [{ type: "tick" }, 10_000],
+      [{ type: "done", entrantId: "a" }, 20_000],
+      [{ type: "done", entrantId: "b" }, 20_000],
+    ]);
+    const view = renderRoom("a", false, over);
+    const rematch = view.getByRole("button", { name: ".rematch" });
+    const clockLine = view.getByRole("timer").closest("div")?.parentElement;
+
+    expect(clockLine?.contains(rematch)).toBe(true);
+    expect(rematch.closest("form")).toBeNull();
   });
 });
 

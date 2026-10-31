@@ -236,9 +236,16 @@ globalStyle(`${chatLine} > div`, { flex: "1 1 0", minInlineSize: 0 });
 export const clockLine = style({
   display: "flex",
   flexWrap: "wrap",
-  alignItems: "center",
+  alignItems: "flex-start",
   justifyContent: "space-between",
   gap: tokens.space.s,
+});
+
+// `.end` and `.rematch` at the top right of the clock line.
+export const clockActions = style({
+  display: "flex",
+  gap: tokens.space.s,
+  marginInlineStart: "auto",
 });
 
 export const entrants = style({

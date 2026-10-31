@@ -147,6 +147,15 @@ describe("room columns", () => {
     const race = page.getByRole("region", { name: "room" });
     const chat = page.getByRole("region", { name: "chat" });
 
+    // Revealing the invite link puts a line of text where there was none, at the same height.
+    const invite = page.getByRole("button", { name: "copy invite link" }).locator("xpath=..");
+    const hiddenHeight = (await invite.boundingBox())?.height;
+    await page.getByRole("button", { name: "show invite link" }).click();
+    expect((await invite.boundingBox())?.height).toBe(hiddenHeight);
+    await page.getByRole("button", { name: "you are about to reveal the invite link!" }).click();
+    expect((await invite.boundingBox())?.height).toBe(hiddenHeight);
+    await page.mouse.move(0, 0);
+
     const wideRace = await race.boundingBox();
     const wideChat = await chat.boundingBox();
     const main = await page.locator("main").boundingBox();

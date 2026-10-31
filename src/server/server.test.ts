@@ -477,6 +477,19 @@ describe("server", () => {
     expect(rewelcome.type === "welcome" && rewelcome.isHost).toBe(true);
   });
 
+  test("setting the goal that is already set sends the room nothing", async () => {
+    const base = start();
+    const { slug, host } = await createRoom(base, "any%");
+    const client = new Client(socketUrl(base, slug), `${host}; ${session("goal-secret")}`);
+    await client.waitFor((m) => m.type === "feed");
+    const before = client.messages.length;
+
+    client.send({ type: "setGoal", goal: "any%" });
+    await Bun.sleep(50);
+
+    expect(client.messages.length).toBe(before);
+  });
+
   test("a reconnect with ?since= gets only the log lines after that id", async () => {
     const base = start();
     const { slug } = await createRoom(base);

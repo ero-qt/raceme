@@ -128,6 +128,10 @@ export function roomSocketHandlers(deps: {
 
   /** Stores an accepted action's race state and tells everyone in the room about it. */
   function applyResult(room: Room, result: RoomActionResult & { ok: true }, now: number): void {
+    // An action that changed nothing, like setting the goal that is set, has nothing to tell.
+    if (result.state === room.race && result.lines.length === 0) {
+      return;
+    }
     const wasTerminated = room.race.phase === "terminated";
     room.race = result.state;
     if (room.race.phase !== "terminated") {

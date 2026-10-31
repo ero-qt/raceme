@@ -96,6 +96,9 @@ function setGoal(state: RaceState, rawGoal: string): RaceResult {
   if (goal.length === 0 || goal.length > maxGoalLength) {
     return refuse("badGoal");
   }
+  if (goal === state.goal) {
+    return ok(state);
+  }
 
   return ok(stopCountdown({ ...state, goal, entrants: state.entrants.map(unreadied) }));
 }

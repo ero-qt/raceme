@@ -10,7 +10,7 @@ export function announce(before: RaceState, action: RaceAction, after: RaceState
     return before.phase === "countdown" && after.phase === "running" ? ["GO!"] : [];
   }
   if (action.type === "setGoal") {
-    return [`Goal Set: ${after.goal}`];
+    return before.goal === after.goal ? [] : [`Goal Set: ${after.goal}`];
   }
   if (action.type === "end") {
     return ["Race terminated. The channel will be cleared in 10 minutes!"];

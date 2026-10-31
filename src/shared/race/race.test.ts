@@ -137,6 +137,13 @@ describe("readying", () => {
     expect(state.phase).toBe("open");
   });
 
+  test("setting the goal that is already set changes nothing, so nobody gets unreadied", () => {
+    let state = twoJoined();
+    state = run(state, { type: "ready", entrantId: "a" });
+
+    expect(run(state, { type: "setGoal", goal: " any% " })).toBe(state);
+  });
+
   test("changing the goal unreadies everyone", () => {
     let state = run(twoJoined(), { type: "ready", entrantId: "a" });
     state = run(state, { type: "setGoal", goal: "100%" });

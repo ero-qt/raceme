@@ -85,6 +85,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - The entrant table keeps its time and button columns whenever it is at least 540 pixels wide, on a phone turned sideways too, instead of only from 1024 pixels of screen width.
 - The watcher count sits right after the eye, level with it.
 - The invite link box keeps its height when the warning or the link shows.
+- Setting the goal that is already set changes nothing, so nobody gets unreadied and RaceBot stays quiet.
 
 ### Security
 

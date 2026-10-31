@@ -85,7 +85,7 @@ describe("HomePage", () => {
   test("one field at the top, .startrace greyed out while empty", () => {
     const home = renderHome();
 
-    expect(home.field.placeholder).toBe("set a goal or paste a room code");
+    expect(home.field.placeholder).toBe("set goal or paste code");
     expect((home.getByRole("button", { name: ".startrace" }) as HTMLButtonElement).disabled).toBe(
       true,
     );

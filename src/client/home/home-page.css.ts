@@ -1,5 +1,5 @@
 import { globalStyle, keyframes, style } from "@vanilla-extract/css";
-import { outlined, panel } from "../styles/controls.css.ts";
+import { panel } from "../styles/controls.css.ts";
 import { container } from "../styles/layout.css.ts";
 import { tokens } from "../styles/tokens.css.ts";
 
@@ -12,7 +12,9 @@ export const page = style([
     // the stacked rows on a phone don't stretch over the page's spare height.
     alignItems: "start",
     alignContent: "start",
-    gap: tokens.space.xl,
+    // Stacked on a phone, the rows sit as far apart as the cards in the side column.
+    rowGap: tokens.space.l,
+    columnGap: tokens.space.xl,
     paddingBlock: tokens.space.l,
     "@media": { "(min-width: 48rem)": { gridTemplateColumns: "minmax(0, 2fr) minmax(0, 1fr)" } },
   },
@@ -21,8 +23,11 @@ export const page = style([
 export const start = style({
   display: "flex",
   flexDirection: "column",
-  gap: tokens.space.s,
 });
+
+// The notice line stays in the page for screen readers and brings its own spacing once it has
+// text, so an empty one leaves no space between the field and the first card.
+globalStyle(`${start} > p:not(:empty)`, { paddingBlockStart: tokens.space.s });
 
 export const side = style({
   display: "flex",
@@ -54,16 +59,14 @@ export const introNote = style({
   color: tokens.color.text0,
 });
 
-export const field = style([
-  outlined,
-  {
-    fontSize: "1rem",
-    selectors: {
-      // Hides a pasted room code on screen the way a password field would.
-      '&[data-kind="code"]': { WebkitTextSecurity: "disc" } as Record<string, string>,
-    },
+export const field = style({
+  fontSize: "1rem",
+  inlineSize: "100%",
+  selectors: {
+    // Hides a pasted room code on screen the way a password field would.
+    '&[data-kind="code"]': { WebkitTextSecurity: "disc" } as Record<string, string>,
   },
-]);
+});
 
 const spin = keyframes({ to: { transform: "rotate(360deg)" } });
 
@@ -71,6 +74,7 @@ export const spinner = style({
   inlineSize: "1em",
   blockSize: "1em",
   animation: `${spin} 800ms linear infinite`,
+  "@media": { "(prefers-reduced-motion: reduce)": { animation: "none" } },
 });
 
 // Keeps the status card as tall as its 2 count lines while it waits or gets no answer.

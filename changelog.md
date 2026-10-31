@@ -9,8 +9,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 ### Added
 
 - A server status card on the start page with the open rooms and people online.
+- A phone opens a room on the tab picked last in it, for as long as the browser tab lives.
 - A line in the chat log when a typed name first reaches the 24-character limit.
-- A bar at the bottom of a room on phones to switch between the race and the chat.
+- A bar at the bottom of a room on phones to switch between the room details and the chat.
 
 ### Changed
 
@@ -25,11 +26,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - The room has 2 columns, with the goal, invite link and entrants on the left and the clock and chat on the right.
 - Bot lines in the room chat show without a name.
 - Chat lines in the room chat show as `name: text`.
+- The start field, the goal and the clock show only an underline when hovered or focused, instead of a box.
 - Refused commands show as red lines in the chat log.
 - The name field keeps your name after `.unenter`.
 - Length messages read like "a name needs to be 1-24 characters long."
 - The restart notice on the start page reads "all rooms will be closed for a server restart at 10:00 UTC (in 3 h 20 min)!".
 - The restart notice on the start page sits in the server status card.
+- The privacy note is written in plain words.
+- The start page field's placeholder reads "set goal or paste code".
 - **Breaking:** `RACEME_ADMIN_SOCKET` replaces `RACEME_ADMIN_PORT`.
 - The notice during a rush of new rooms reads "lots of rooms are being opened right now. please wait a few seconds…".
 
@@ -46,6 +50,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - `.startrace` works again after the server replies with an error page instead of a room.
 - Focus stays put when another entrant acts after one of your race buttons was refused.
 - Messages a tab sends past its own limit no longer count against the limit it shares with other tabs on the same address.
+- Screen readers read the closing warning once instead of every second.
+- After a race button, focus stays on the page, off `.end` and out of the goal field.
+- The closing warning no longer dims the room behind it.
+- On phones, screen readers hear new chat and RaceBot lines on the room tab too.
+- "entry is closed" and "race is full" show as a red line above the name field instead of as its placeholder.
+- On phones, the start page field lines up with the cards.
+- On phones, the start page field sits as far above the cards as they are apart.
+- Enter and Escape in the goal field keep the focus there.
+- A room page opens with the focus in the name field or in the message box once entered, except on phones.
+- On phones, the tab bar sits between the shown card and the footer, with no gap.
+- On phones, a control that gets focus under the tab bar scrolls up from under it.
+- On phones, the privacy and build notes open over the tab bar instead of under it.
+- Screen readers hear whether a copy worked.
+- When a room closes, the focus moves to the closed notice.
+- `send` hands the focus back to the message box.
+- With reduced motion on, the spinners stand still.
+- With reduced motion on, `send` keeps its label during the slow mode wait.
+- Just past the phone width, the chat column keeps its clock, `.end`, name field and `.enter` inside the panel.
+- The warning sign in the invite link box sits on the first line, like the other warnings.
+- The entrant table keeps its time and button columns from 960 pixels of screen width, instead of 1024.
 
 ### Security
 

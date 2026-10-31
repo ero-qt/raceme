@@ -10,7 +10,7 @@ import {
 } from "../../shared/results.ts";
 import { homePath } from "../page-path.ts";
 import { Button } from "../primitives/button.tsx";
-import { icon, numberField } from "../styles/controls.css.ts";
+import { icon, numberField, visuallyHidden } from "../styles/controls.css.ts";
 import { resultsImage } from "./results-image.ts";
 import * as styles from "./room.css.ts";
 
@@ -65,7 +65,13 @@ export function ResultsExport(props: { race: RaceState }): JSX.Element {
       </ExportRow>
       <ExportRow
         name="image"
-        copy={() => navigator.clipboard.write([new ClipboardItem({ "image/png": image() })])}
+        copy={() => {
+          // Safari only takes the clipboard during the click, so it gets the image as a promise
+          // instead of after an await. A failed drawing then fails the write, not the page.
+          const png = image();
+          png.catch(() => {});
+          return navigator.clipboard.write([new ClipboardItem({ "image/png": png })]);
+        }}
         download={async () => save(await image(), exportFileName(props.race, "png"))}
         setting={
           <input
@@ -109,10 +115,13 @@ function ExportRow(props: {
   const [open, setOpen] = createSignal(false);
   const [copied, setCopied] = createSignal<"copied" | "failed" | null>(null);
   const copy = async () => {
-    const ok = await (props.copy ?? (() => Promise.reject()))().then(
-      () => true,
-      () => false,
-    );
+    // Drawing the image can throw before the clipboard gets anything, which counts as a failure too.
+    const ok = await Promise.resolve()
+      .then(() => props.copy?.())
+      .then(
+        () => true,
+        () => false,
+      );
     setCopied(ok ? "copied" : "failed");
     setTimeout(() => setCopied(null), copiedForMs);
   };
@@ -132,6 +141,9 @@ function ExportRow(props: {
         <div class={styles.exportSetting}>{props.setting}</div>
       </Show>
       <Show when={props.copy}>
+        <p class={visuallyHidden} role="status">
+          {copied() ? `${props.name} ${copied()}` : ""}
+        </p>
         <Button variant="icon" aria-label={copyLabel()} title={copyLabel()} onClick={copy}>
           <Show when={copied()} fallback={<Copy class={icon} aria-hidden="true" />}>
             {(state) =>

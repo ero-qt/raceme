@@ -57,7 +57,10 @@ export function ClosingWarning(props: {
               <span class={styles.heading}>
                 <TriangleAlert class={styles.icon} aria-hidden="true" /> {reason().title}
               </span>
-              <span class={styles.countdown}>{timeLeft(closesAt(), props.now)}</span>
+              {/* Hidden from the alert, or a screen reader would read the card again every second. */}
+              <span class={styles.countdown} aria-hidden="true">
+                {timeLeft(closesAt(), props.now)}
+              </span>
             </h2>
             <p class={styles.text}>{reason().hint}</p>
           </div>

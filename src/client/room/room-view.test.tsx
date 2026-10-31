@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, waitFor } from "@solidjs/testing-library";
 import { createSignal } from "solid-js";
 import type { ClientAction } from "../../shared/protocol.ts";
 import { type RaceAction, type RaceState, apply, createRace } from "../../shared/race/race.ts";
+import { warningIcon } from "../styles/controls.css.ts";
 import { RoomView } from "./room-view.tsx";
 
 function raceAfter(actions: RaceAction[]): RaceState {
@@ -44,6 +45,8 @@ const catalog = {
 };
 
 afterEach(cleanup);
+// A tab pick is kept per room in the tab's storage, so it would leak into the next test.
+afterEach(() => sessionStorage.clear());
 
 function renderRoom(
   entrantId: string,
@@ -55,6 +58,7 @@ function renderRoom(
   const sent: ClientAction[] = [];
   const view = render(() => (
     <RoomView
+      slug="room1"
       race={state}
       me={{ entrantId, isHost }}
       now={now}
@@ -147,6 +151,23 @@ describe("RoomView goal", () => {
     expect(host.sent).toEqual([]);
   });
 
+  test("Enter and Escape leave focus in the goal field, so Tab goes on from there", () => {
+    const host = renderRoom("a", true);
+    const input = host.getByLabelText("goal") as HTMLInputElement;
+    input.focus();
+    fireEvent.input(input, { target: { value: "100%" } });
+
+    fireEvent.submit(input.closest("form") as HTMLFormElement);
+    expect(document.activeElement).toBe(input);
+    expect(host.queryByRole("button", { name: ".setgoal" })).toBeNull();
+
+    fireEvent.input(input, { target: { value: "oops" } });
+    fireEvent.keyDown(input, { key: "Escape" });
+    fireEvent.keyDown(input, { key: "Escape" });
+    expect(document.activeElement).toBe(input);
+    expect(input.value).toBe("any%");
+  });
+
   test("the host picks a speedrun.com game and category for the goal and keeps it in their goals", async () => {
     localStorage.clear();
     const host = renderRoom("a", true);
@@ -209,6 +230,7 @@ describe("RoomView layout", () => {
     const [state, setState] = createSignal(race);
     const view = render(() => (
       <RoomView
+        slug="room1"
         race={state()}
         me={{ entrantId: "x", isHost: false }}
         now={0}
@@ -247,6 +269,7 @@ describe("RoomView layout", () => {
     const [notice, setNotice] = createSignal<string | null>(null);
     const view = render(() => (
       <RoomView
+        slug="room1"
         race={race}
         me={{ entrantId: "x", isHost: false }}
         now={5_000}
@@ -270,10 +293,11 @@ describe("RoomView layout", () => {
     expect(view.container.querySelector('main > p[role="status"]')).toBeNull();
   });
 
-  test("a closed room goes back to the race card and loses the tab bar", () => {
+  test("a closed room goes back to the room details and loses the tab bar", () => {
     const [closed, setClosed] = createSignal(false);
     const view = render(() => (
       <RoomView
+        slug="room1"
         race={race}
         me={{ entrantId: "x", isHost: false }}
         now={0}
@@ -285,14 +309,17 @@ describe("RoomView layout", () => {
       />
     ));
     expect(view.getByRole("region", { name: "chat" }).dataset.active).toBe("true");
+    view.getByLabelText("your name").focus();
 
     setClosed(true);
 
-    expect(view.getByRole("region", { name: "race" }).dataset.active).toBe("true");
+    expect(view.getByRole("region", { name: "room" }).dataset.active).toBe("true");
     expect(view.queryByRole("navigation", { hidden: true })).toBeNull();
+    // The chat went away under the focus, so the closed notice takes it.
+    expect(document.activeElement?.textContent).toContain("this page is only kept in this tab");
   });
 
-  test("a phone shows the clock on the race card as well, so both tabs have one", () => {
+  test("a phone shows the clock in the room details as well, so both tabs have one", () => {
     const realMatchMedia = globalThis.matchMedia;
     globalThis.matchMedia = (() => ({
       matches: true,
@@ -304,14 +331,14 @@ describe("RoomView layout", () => {
 
       const timers = view.getAllByRole("timer", { hidden: true });
       expect(timers.length).toBe(2);
-      expect(view.getByRole("region", { name: "race" }).contains(timers[0] ?? null)).toBe(true);
+      expect(view.getByRole("region", { name: "room" }).contains(timers[0] ?? null)).toBe(true);
       expect(view.getByRole("navigation", { hidden: true }).textContent).not.toMatch(/\d\d:\d\d/);
     } finally {
       globalThis.matchMedia = realMatchMedia;
     }
   });
 
-  test("a visitor starts on the chat card, where the join form is", () => {
+  test("a visitor starts on the chat, where the join form is", () => {
     const view = renderRoom("x");
 
     expect(view.getByRole("region", { name: "chat" }).dataset.active).toBe("true");
@@ -319,13 +346,24 @@ describe("RoomView layout", () => {
 
   test("the phone tabs mark which card is active, race first for an entrant", () => {
     const view = renderRoom("a");
-    const race = view.getByRole("region", { name: "race" });
+    const race = view.getByRole("region", { name: "room" });
     const chat = view.getByRole("region", { name: "chat" });
     expect([race.dataset.active, chat.dataset.active]).toEqual(["true", "false"]);
 
     // The bar only shows on phones, so the test DOM counts it as hidden.
     fireEvent.click(view.getByRole("button", { name: "chat", pressed: false, hidden: true }));
 
+    expect([race.dataset.active, chat.dataset.active]).toEqual(["false", "true"]);
+  });
+
+  test("a phone's tab pick comes back on the next open of the same room", () => {
+    const first = renderRoom("a");
+    fireEvent.click(first.getByRole("button", { name: "chat", pressed: false, hidden: true }));
+    first.unmount();
+
+    const view = renderRoom("a");
+    const race = view.getByRole("region", { name: "room" });
+    const chat = view.getByRole("region", { name: "chat" });
     expect([race.dataset.active, chat.dataset.active]).toEqual(["false", "true"]);
   });
 
@@ -470,7 +508,8 @@ describe("RoomView layout", () => {
     expect(locked.getByText("entry closed")).toBeTruthy();
     const name = locked.getByLabelText("your name") as HTMLInputElement;
     expect(name.disabled).toBe(true);
-    expect(name.placeholder).toBe("entry is closed");
+    expect(name.placeholder).toBe("your name");
+    expect(locked.getByText("entry is closed.").getAttribute("role")).toBe("status");
     expect((locked.getByRole("button", { name: ".enter" }) as HTMLButtonElement).disabled).toBe(
       true,
     );
@@ -490,10 +529,15 @@ describe("RoomView layout", () => {
 
   test("Enter anywhere on the page jumps into the chat box", () => {
     const view = renderRoom("a");
+    // The page opens with the focus in the chat box, so the test starts from the page itself.
+    (document.activeElement as HTMLElement).blur();
+    expect(document.activeElement).toBe(document.body);
 
     fireEvent.keyDown(document.body, { key: "Enter" });
 
     expect(document.activeElement).toBe(view.getByLabelText("message"));
+    // Only a tap on the phone bar is a pick worth keeping for the room.
+    expect(sessionStorage.getItem("raceme.tab.room1")).toBeNull();
   });
 
   test("shows when the room closes, and a click hides it until the room opens again", () => {
@@ -511,6 +555,7 @@ describe("RoomView layout", () => {
   test("says in the timer when a server restart closes the room", () => {
     const view = render(() => (
       <RoomView
+        slug="room1"
         race={race}
         me={{ entrantId: "a", isHost: false }}
         now={Date.UTC(2026, 9, 25, 7)}
@@ -542,7 +587,7 @@ describe("RoomView layout", () => {
     expect(view.getByTitle("3 watching").textContent).toBe("3 watching");
   });
 
-  test("the chat box comes after the entrants, in the chat card", () => {
+  test("the chat box comes after the entrants", () => {
     const view = renderRoom("a");
     const message = view.getByLabelText("message");
     const table = view.getByRole("table", { name: "entrants" });
@@ -561,6 +606,7 @@ describe("RoomView layout", () => {
     const [state, setState] = createSignal(race);
     const view = render(() => (
       <RoomView
+        slug="room1"
         race={state()}
         me={{ entrantId: "a", isHost: false }}
         now={0}
@@ -583,6 +629,7 @@ describe("RoomView layout", () => {
     const [state, setState] = createSignal(race);
     const view = render(() => (
       <RoomView
+        slug="room1"
         race={state()}
         me={{ entrantId: "a", isHost: false }}
         now={0}
@@ -605,6 +652,7 @@ describe("RoomView layout", () => {
     const [state, setState] = createSignal(race);
     const view = render(() => (
       <RoomView
+        slug="room1"
         race={state()}
         me={{ entrantId: "a", isHost: false }}
         now={0}
@@ -624,10 +672,121 @@ describe("RoomView layout", () => {
     expect(document.activeElement).toBe(document.body);
   });
 
+  test("a host's .remove never lands focus on .end", () => {
+    const [state, setState] = createSignal(race);
+    const view = render(() => (
+      <RoomView
+        slug="room1"
+        race={state()}
+        me={{ entrantId: "a", isHost: true }}
+        now={0}
+        inviteUrl={inviteUrl}
+        notice={null}
+        feed={[]}
+        send={() => {}}
+      />
+    ));
+    const remove = view.getByRole("button", { name: ".remove bob" });
+    remove.focus();
+
+    fireEvent.click(remove);
+    setState(raceAfter([...joinedBoth, { type: "remove", targetId: "b" }]));
+
+    expect(document.activeElement).not.toBe(view.getByRole("button", { name: ".end" }));
+    expect(view.getByRole("region", { name: "room" }).contains(document.activeElement)).toBe(true);
+    // Focus in the goal field would select the goal, so one typed letter replaces it.
+    expect(document.activeElement).not.toBe(view.getByRole("combobox", { name: "goal" }));
+  });
+
+  test("a phone's room tab reads the newest log line aloud, since the log is on the chat tab", () => {
+    const realMatchMedia = globalThis.matchMedia;
+    globalThis.matchMedia = (() => ({
+      matches: true,
+      addEventListener() {},
+      removeEventListener() {},
+    })) as unknown as typeof matchMedia;
+    try {
+      const view = renderRoom("a");
+      const raceCard = view.getByRole("region", { name: "room" });
+
+      const mirror = view.getByRole("status", { name: "latest chat line", hidden: true });
+      expect(raceCard.contains(mirror)).toBe(true);
+      expect(mirror.textContent).toBe("alice: gl hf");
+    } finally {
+      globalThis.matchMedia = realMatchMedia;
+    }
+  });
+
+  test("a wide screen has no second copy of the log line", () => {
+    const view = renderRoom("a");
+
+    expect(view.queryByRole("status", { name: "latest chat line", hidden: true })).toBeNull();
+  });
+
+  test("a phone opens a room page without focusing a field, so no keyboard pops up", () => {
+    const realMatchMedia = globalThis.matchMedia;
+    globalThis.matchMedia = (() => ({
+      matches: true,
+      addEventListener() {},
+      removeEventListener() {},
+    })) as unknown as typeof matchMedia;
+    try {
+      renderRoom("v");
+      expect(document.activeElement).toBe(document.body);
+    } finally {
+      globalThis.matchMedia = realMatchMedia;
+    }
+  });
+
+  test("a room page opens with focus in the name field, or the message box once entered", () => {
+    const guest = renderRoom("v");
+    expect(document.activeElement).toBe(guest.getByLabelText("your name"));
+    cleanup();
+
+    const entrant = renderRoom("a");
+    expect(document.activeElement).toBe(entrant.getByLabelText("message"));
+  });
+
+  test("on a phone, leaving the race keeps focus in the room details, since the chat is hidden", () => {
+    const realMatchMedia = globalThis.matchMedia;
+    globalThis.matchMedia = (() => ({
+      matches: true,
+      addEventListener() {},
+      removeEventListener() {},
+    })) as unknown as typeof matchMedia;
+    try {
+      const [state, setState] = createSignal(race);
+      const view = render(() => (
+        <RoomView
+          slug="room1"
+          race={state()}
+          me={{ entrantId: "a", isHost: false }}
+          now={0}
+          inviteUrl={inviteUrl}
+          notice={null}
+          feed={[]}
+          send={() => {}}
+        />
+      ));
+      const unenter = view.getByRole("button", { name: ".unenter" });
+      unenter.focus();
+
+      fireEvent.click(unenter);
+      setState(raceAfter([...joinedBoth, { type: "leave", entrantId: "a" }]));
+
+      expect(view.getByRole("region", { name: "room" }).contains(document.activeElement)).toBe(
+        true,
+      );
+    } finally {
+      globalThis.matchMedia = realMatchMedia;
+    }
+  });
+
   test("entering moves focus to the message box", () => {
     const [state, setState] = createSignal(race);
     const view = render(() => (
       <RoomView
+        slug="room1"
         race={state()}
         me={{ entrantId: "c", isHost: false }}
         now={0}
@@ -796,7 +955,10 @@ describe("RoomView invite link", () => {
 
     fireEvent.click(field);
     expect(field.textContent).toContain("you are about to reveal the invite link!");
-    expect(field.querySelector(".lucide-triangle-alert")).not.toBeNull();
+    // The warning sign sits on the first line, like in the other warnings.
+    expect(field.querySelector(".lucide-triangle-alert")?.classList.contains(warningIcon)).toBe(
+      true,
+    );
     expect(document.body.innerHTML).not.toContain("abcdefghij");
 
     fireEvent.click(field);
@@ -876,7 +1038,7 @@ describe("RoomView after the room closed", () => {
     expect(view.queryByLabelText("goal")).toBeNull();
     expect(view.getByRole("table", { name: "entrants" })).toBeTruthy();
     expect(view.getByRole("button", { name: "download CSV" })).toBeTruthy();
-    expect(view.getByRole("status").textContent).toContain("gone once you close it");
+    expect(view.getByText(/gone once you close it/)).toBeTruthy();
   });
 });
 

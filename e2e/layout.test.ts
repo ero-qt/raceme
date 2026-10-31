@@ -91,10 +91,10 @@ describe("room layout", () => {
 });
 
 describe("room columns", () => {
-  test("the race card takes the wide left column and the chat the right, tabs on phones", async () => {
+  test("the room details take the wide left column and the chat the right, tabs on phones", async () => {
     const { context, page } = await newPage(harness);
     await openLobbyAndEnter(page, harness.origin, "ero");
-    const race = page.getByRole("region", { name: "race" });
+    const race = page.getByRole("region", { name: "room" });
     const chat = page.getByRole("region", { name: "chat" });
 
     const wideRace = await race.boundingBox();
@@ -103,27 +103,77 @@ describe("room columns", () => {
     expect({
       sideBySide: (wideChat?.x ?? 0) >= (wideRace?.x ?? 0) + (wideRace?.width ?? 0),
       raceWider: (wideRace?.width ?? 0) > (wideChat?.width ?? 0),
-      // The chat card runs down to the page's bottom padding, so the log gets the spare height.
+      // The chat runs down to the page's bottom padding, so the log gets the spare height.
       chatFillsHeight:
         (wideChat?.y ?? 0) + (wideChat?.height ?? 0) >= (main?.y ?? 0) + (main?.height ?? 0) - 17,
       noTabs: await page.getByRole("button", { name: "chat", exact: true }).isHidden(),
     }).toEqual({ sideBySide: true, raceWider: true, chatFillsHeight: true, noTabs: true });
 
-    // The host entered after the room opened, so the chat card with the join form is up first.
+    // Just past the phone breakpoint the chat column is narrow, with its controls still inside.
+    await page.setViewportSize({ width: 1000, height: 800 });
+    const narrowChat = await chat.boundingBox();
+    const end = await page.getByRole("button", { name: ".end" }).boundingBox();
+    const guest = await newPage(harness);
+    await guest.page.setViewportSize({ width: 1000, height: 800 });
+    await guest.page.goto(page.url());
+    const name = await guest.page.getByLabel("your name").boundingBox();
+    const enter = await guest.page.getByRole("button", { name: ".enter" }).boundingBox();
+    await guest.context.close();
+    expect({
+      endInside:
+        (end?.x ?? 0) + (end?.width ?? 0) <= (narrowChat?.x ?? 0) + (narrowChat?.width ?? 0),
+      enterBesideName: Math.round(enter?.y ?? 0) === Math.round(name?.y ?? 1),
+    }).toEqual({ endInside: true, enterBesideName: true });
+
+    // The host entered after the room opened, so the chat with the join form is up first.
     await page.setViewportSize({ width: 390, height: 800 });
-    await page.getByRole("button", { name: "race", exact: true }).waitFor();
+    await page.getByRole("button", { name: "room", exact: true }).waitFor();
     expect([await race.isVisible(), await chat.isVisible()]).toEqual([false, true]);
-    await page.getByRole("button", { name: "race", exact: true }).click();
+    await page.getByRole("button", { name: "room", exact: true }).click();
     expect([await race.isVisible(), await chat.isVisible()]).toEqual([true, false]);
-    // Each card has its own clock on a phone, so the race tab keeps the time in view.
+    // Each card has its own clock on a phone, so the room tab keeps the time in view.
     expect(await race.getByRole("timer").isVisible()).toBe(true);
 
-    // The footer's links sit above the tab bar, not under it.
-    const privacy = page.getByText("privacy", { exact: true });
-    await privacy.scrollIntoViewIfNeeded();
-    const link = await privacy.boundingBox();
-    const bar = await page.getByRole("navigation", { name: "room cards" }).boundingBox();
-    expect((link?.y ?? 0) + (link?.height ?? 0) <= (bar?.y ?? 0)).toBe(true);
+    // The tab bar sticks to the bottom of the screen while the page is longer than it, and the
+    // footer scrolls in right below the bar, never under it and with no gap.
+    const bar = page.getByRole("navigation", { name: "room cards" });
+    const footer = page.locator("footer");
+    await page.setViewportSize({ width: 390, height: 300 });
+    await page.evaluate(() => window.scrollTo(0, 0));
+    const stuck = await bar.boundingBox();
+    expect(Math.round((stuck?.y ?? 0) + (stuck?.height ?? 0))).toBe(300);
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    const [atEnd, footerBox] = await Promise.all([bar.boundingBox(), footer.boundingBox()]);
+    expect(Math.round((atEnd?.y ?? 0) + (atEnd?.height ?? 0))).toBe(Math.round(footerBox?.y ?? 0));
+    // Focus scrolls a control up from under the stuck bar, which covers the screen's bottom.
+    await page.setViewportSize({ width: 390, height: 220 });
+    const lastButton = race.getByRole("button").last();
+    await lastButton.evaluate((button) => {
+      window.scrollTo(0, 0);
+      window.scrollTo(0, button.getBoundingClientRect().top - window.innerHeight + 20);
+    });
+    await lastButton.focus();
+    const focused = await lastButton.boundingBox();
+    const shortBar = await bar.boundingBox();
+    expect((focused?.y ?? 0) + (focused?.height ?? 0) <= (shortBar?.y ?? 0)).toBe(true);
+    // The chat runs down to the bar on a short page too.
+    await page.setViewportSize({ width: 390, height: 800 });
+    await page.getByRole("button", { name: "chat", exact: true }).click();
+    const [chatBox, barBox] = await Promise.all([chat.boundingBox(), bar.boundingBox()]);
+    expect(Math.round((chatBox?.y ?? 0) + (chatBox?.height ?? 0) + 16)).toBe(
+      Math.round(barBox?.y ?? 0),
+    );
+    // A footer note opens over the bar, so its last lines stay readable and tappable.
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    await page.getByText("privacy", { exact: true }).click();
+    const barTop = (await bar.boundingBox())?.y ?? 0;
+    const noteCovered = await page.evaluate((barTop) => {
+      const note = document.querySelector("details[open] > div") as HTMLElement;
+      const rect = note.getBoundingClientRect();
+      const hit = document.elementFromPoint(rect.left + rect.width / 2, barTop + 10);
+      return rect.bottom > barTop && !note.contains(hit);
+    }, barTop);
+    expect(noteCovered).toBe(false);
 
     await context.close();
   });
@@ -178,18 +228,21 @@ describe("entrants header on phones", () => {
   });
 });
 
-describe("entrant table on phones", () => {
-  // A finished entrant's time takes the place of the Done badge, so the name keeps room to read.
-  test("leaves the host at least 100 pixels for names on an 800, 412 and 360 pixel wide screen", async () => {
+describe("entrant table", () => {
+  // Below 960 pixels a finished entrant's time takes the place of the Done badge and the row
+  // buttons go under the name, so the name keeps room to read.
+  test("leaves the host at least 100 pixels for names on a 960, 900, 412 and 360 pixel wide screen", async () => {
     const { context, page } = await newPage(harness);
     await openLobbyAndEnter(page, harness.origin, "ero");
 
-    for (const width of [800, 412, 360]) {
+    for (const width of [960, 900, 412, 360]) {
       await page.setViewportSize({ width, height: 800 });
       if (width < 768) {
-        await page.getByRole("button", { name: "race", exact: true }).click();
+        await page.getByRole("button", { name: "room", exact: true }).click();
       }
-      await page.getByRole("columnheader", { name: "time" }).waitFor({ state: "detached" });
+      await page
+        .getByRole("columnheader", { name: "time" })
+        .waitFor({ state: width >= 960 ? "visible" : "detached" });
       await page.waitForFunction(
         () => getComputedStyle(document.querySelector("#app") as Element).minHeight === "800px",
       );
@@ -271,6 +324,42 @@ describe("control size", () => {
   });
 });
 
+describe("inline fields", () => {
+  test("the start field shows only an underline, on hover and focus", async () => {
+    const { context, page } = await newPage(harness);
+    await page.goto(`${harness.origin}/`);
+    const clear = "rgba(0, 0, 0, 0)";
+    const line = "rgb(138, 147, 163)";
+    const field = page.getByLabel("goal or room code");
+    const borders = () =>
+      field.evaluate((node) => {
+        const style = getComputedStyle(node);
+        return [
+          style.borderBottomColor,
+          style.borderTopColor,
+          style.borderLeftWidth,
+          style.outlineStyle,
+        ];
+      });
+    // The underline's color takes a frame to change, so the check gives it a few.
+    const expectBorders = async (bottom: string) => {
+      for (let tries = 0; (await borders())[0] !== bottom && tries < 20; tries++) {
+        await page.waitForTimeout(50);
+      }
+      expect(await borders()).toEqual([bottom, clear, "0px", "none"]);
+    };
+
+    await expectBorders(clear);
+    await field.hover();
+    await expectBorders(line);
+    await field.click();
+    await page.mouse.move(0, 0);
+    await expectBorders(line);
+
+    await context.close();
+  });
+});
+
 describe("home layout", () => {
   test("the start form takes the wide left column, the intro the right, right below it on phones", async () => {
     const { context, page } = await newPage(harness);
@@ -288,12 +377,19 @@ describe("home layout", () => {
 
     await page.setViewportSize({ width: 390, height: 800 });
     const phoneForm = await form.boundingBox();
-    const phoneIntro = await intro.boundingBox();
-    if (!phoneForm || !phoneIntro) {
-      throw new Error("the start field or the intro is missing");
+    if (!phoneForm) {
+      throw new Error("the start field is missing");
     }
-    const below = phoneIntro.y - phoneForm.y - phoneForm.height;
-    expect(below >= 0 && below <= 48).toBe(true);
+    const cards = await page.getByRole("complementary").locator("> section").all();
+    const [welcome, status] = await Promise.all(cards.map((card) => card.boundingBox()));
+    if (!welcome || !status) {
+      throw new Error("the welcome or the status card is missing");
+    }
+    // The field lines up with the cards, and the gap below it is the gap between the cards.
+    expect(Math.round(phoneForm.x)).toBe(Math.round(welcome.x));
+    expect(Math.round(welcome.y - phoneForm.y - phoneForm.height)).toBe(
+      Math.round(status.y - welcome.y - welcome.height),
+    );
 
     await context.close();
   });
@@ -305,7 +401,7 @@ describe("home layout", () => {
     const before = await form.boundingBox();
 
     await page.getByText("privacy", { exact: true }).click();
-    await page.getByText("the server keeps nothing on disk.").waitFor();
+    await page.getByText("raceme doesn't save anything about you.", { exact: false }).waitFor();
     expect(await form.boundingBox()).toEqual(before);
 
     await page.getByText("build", { exact: true }).click();
@@ -324,7 +420,7 @@ describe("home layout", () => {
     const before = await boxes();
 
     await page.getByText("privacy", { exact: true }).click();
-    const notice = page.getByText("the server keeps nothing on disk.");
+    const notice = page.getByText("raceme doesn't save anything about you.", { exact: false });
     await notice.waitFor();
     expect(await boxes()).toEqual(before);
     expect(((await notice.boundingBox())?.y ?? 0) < (before[0]?.y ?? 0)).toBe(true);
@@ -343,7 +439,7 @@ describe("home layout", () => {
     await page.setViewportSize({ width: 1280, height: 700 });
     await page.goto(`${harness.origin}/`);
     await page.getByText("privacy", { exact: true }).click();
-    await page.getByText("the server keeps nothing on disk.").waitFor();
+    await page.getByText("raceme doesn't save anything about you.", { exact: false }).waitFor();
 
     const hiddenPixels = await page.evaluate(() => {
       const body = document.querySelector("details[open] > div") as HTMLElement;
@@ -357,7 +453,7 @@ describe("home layout", () => {
   test("a click outside the note or Escape closes it", async () => {
     const { context, page } = await newPage(harness);
     await page.goto(`${harness.origin}/`);
-    const notice = page.getByText("the server keeps nothing on disk.");
+    const notice = page.getByText("raceme doesn't save anything about you.", { exact: false });
 
     await page.getByText("privacy", { exact: true }).click();
     await notice.waitFor();

@@ -43,7 +43,7 @@ describe("privacy", () => {
     await context.close();
   }, 30_000);
 
-  test("stores only the 2 HttpOnly cookies the race needs and the viewer's own goal list", async () => {
+  test("stores only the 2 HttpOnly cookies the race needs, the viewer's own goal list and a phone's tab pick", async () => {
     const { context, page } = await newPage(harness);
     await openLobbyAndEnter(page, harness.origin, "ero");
 
@@ -69,6 +69,11 @@ describe("privacy", () => {
       workers: 0,
       caches: 0,
     });
+
+    await page.setViewportSize({ width: 390, height: 800 });
+    await page.getByRole("button", { name: "chat", exact: true }).click();
+    const slug = new URL(page.url()).pathname.split("/").pop();
+    expect(await page.evaluate(() => Object.keys(sessionStorage))).toEqual([`raceme.tab.${slug}`]);
 
     await context.close();
   }, 20_000);

@@ -8,6 +8,7 @@ import {
   createSignal,
   on,
   onCleanup,
+  onMount,
 } from "solid-js";
 import type { FeedEntry } from "../../shared/feed-entry.ts";
 import type { ClientAction, ClosesFor, Me } from "../../shared/protocol.ts";
@@ -20,7 +21,7 @@ import {
 } from "../../shared/race/race.ts";
 import type { GoalCatalog } from "../goal/goal-picker.tsx";
 import { Button } from "../primitives/button.tsx";
-import { icon, warningIcon } from "../styles/controls.css.ts";
+import { icon, visuallyHidden, warningIcon } from "../styles/controls.css.ts";
 import { actionLabel, refusalText } from "./action-labels.ts";
 import { type ActionType, availableActions } from "./available-actions.ts";
 import { chatCommand } from "./chat-command.ts";
@@ -36,6 +37,7 @@ import * as styles from "./room.css.ts";
 import { ChatForm, JoinForm } from "./room-forms.tsx";
 import { RoomStatus } from "./room-status.tsx";
 import { HeaderStatus, RoomTimer } from "./room-timer.tsx";
+import { type RoomTab, loadTab, saveTab } from "./tab-preference.ts";
 
 // Shows the actions that take you out of the race in your own row.
 const rowActionTypes = new Set<ActionType>(["forfeit", "leave"]);
@@ -44,6 +46,7 @@ const neutralActions = new Set<ActionType>(["unready", "undone", "unforfeit", "l
 const accentActions = new Set<ActionType>(["rematch"]);
 
 export interface RoomViewProps {
+  slug: string;
   race: RaceState;
   me: Me;
   /** Current time on the server's clock, in ms. */
@@ -90,8 +93,14 @@ export function RoomView(props: RoomViewProps): JSX.Element {
   // A pressed button often makes way for its opposite, like .ready for .unready. Keeping the
   // button in its slot keeps focus on it, and focus that falls off a removed one comes back below.
   let pressed: Element | null = null;
+  let pressedCard: Element | null | undefined = null;
   const press = (event: MouseEvent, action: ClientAction) => {
     pressed = event.currentTarget as Element;
+    // Leaving the race takes focus to the chat, where the join form is, unless a phone has
+    // the chat hidden. A hidden control can't take focus.
+    const leavesRow = rowActionTypes.has(action.type as ActionType);
+    const ownCard = race?.contains(pressed) ? race : chat;
+    pressedCard = leavesRow && !(phoneScreen() && tab() === "race") ? chat : ownCard;
     props.send(action);
   };
 
@@ -178,13 +187,17 @@ export function RoomView(props: RoomViewProps): JSX.Element {
   );
   const logLines = () =>
     [...props.feed, ...notices()].sort((a, b) => a.at - b.at || Number(a.kind === "notice"));
+  const latestLine = () => {
+    const line = logLines().at(-1);
+    return line?.kind === "chat" ? `${line.name}: ${line.text}` : (line?.text ?? "");
+  };
 
   let messageBox: HTMLInputElement | undefined;
   let race: HTMLElement | undefined;
   let chat: HTMLElement | undefined;
   const phoneScreen = usePhoneScreen();
-  // The clock line sits on the chat card. A phone shows one card at a time, so the race card
-  // gets its own copy. Only one of the 2 is ever on screen.
+  // The clock line sits in the chat. A phone shows the room details or the chat, so the room
+  // details get their own copy. Only one of the 2 is ever on screen.
   const clockLine = () => (
     <div class={styles.clockLine}>
       <div class={styles.clockBlock}>
@@ -200,13 +213,21 @@ export function RoomView(props: RoomViewProps): JSX.Element {
       </Show>
     </div>
   );
-  // Phones show one card at a time, picked in the bar at the bottom. The join form is on the
-  // chat card, so that's where someone who hasn't entered starts.
-  const [tab, setTab] = createSignal<"race" | "chat">(entered() ? "race" : "chat");
-  // A closed room has its results on the race card, so a phone shows that card.
+  // Phones show the room details or the chat, picked in the bar at the bottom. The join form is
+  // in the chat, so that's where someone who hasn't entered starts. A pick is kept for the room,
+  // so a reload or a return opens the same tab.
+  const [tab, setTab] = createSignal<RoomTab>(loadTab(props.slug) ?? (entered() ? "race" : "chat"));
+  const pickTab = (picked: RoomTab) => {
+    saveTab(props.slug, picked);
+    setTab(picked);
+  };
+  // A closed room has its results in the room details, so a phone shows those. The chat's
+  // controls are gone then, so the notice takes the focus that was in them.
+  let closedNotice: HTMLDivElement | undefined;
   createEffect(() => {
     if (props.closed) {
       setTab("race");
+      closedNotice?.focus();
     }
   });
 
@@ -222,6 +243,26 @@ export function RoomView(props: RoomViewProps): JSX.Element {
   };
   document.addEventListener("keydown", jumpToChat);
   onCleanup(() => document.removeEventListener("keydown", jumpToChat));
+  // The stuck phone tab bar covers the screen's bottom. Browsers don't scroll for a focused
+  // control that is on screen but under it, so this scrolls it up into view.
+  let tabBar: HTMLElement | undefined;
+  const keepAboveTabBar = (event: FocusEvent) => {
+    const bar = tabBar?.getBoundingClientRect();
+    const control = (event.target as Element).getBoundingClientRect();
+    const hidden = bar && bar.height > 0 ? control.bottom - bar.top : 0;
+    if (hidden > 0) {
+      window.scrollBy({ top: hidden + 8 });
+    }
+  };
+  document.addEventListener("focusin", keepAboveTabBar);
+  onCleanup(() => document.removeEventListener("focusin", keepAboveTabBar));
+  // The page opens on the field the viewer needs next, the name field or the message box.
+  // A phone is left alone, since focus in a field would pop the keyboard up on every open.
+  onMount(() => {
+    if (!props.closed && !phoneScreen()) {
+      (entered() ? messageBox : chat?.querySelector<HTMLInputElement>("input"))?.focus();
+    }
+  });
   createEffect(
     on(entered, (isIn, wasIn) => {
       if (isIn && wasIn === false) {
@@ -235,11 +276,16 @@ export function RoomView(props: RoomViewProps): JSX.Element {
       () => {
         const lost = document.activeElement === null || document.activeElement === document.body;
         if (pressed && !pressed.isConnected && lost) {
-          // On a phone the chat card may be hidden. A hidden control can't take focus.
-          const card = tab() === "race" && phoneScreen() ? race : chat;
-          card?.querySelector<HTMLElement>("input, button")?.focus();
+          // Focus stays in the card the press came from, on a control that can't end the race
+          // and isn't the goal field, where focus selects the goal for typing over.
+          pressedCard
+            ?.querySelector<HTMLElement>(
+              'input:not([aria-label="goal"]), button:not([data-variant="danger"])',
+            )
+            ?.focus();
         }
         pressed = null;
+        pressedCard = null;
       },
       { defer: true },
     ),
@@ -247,9 +293,16 @@ export function RoomView(props: RoomViewProps): JSX.Element {
 
   return (
     <main class={styles.page} data-closed={props.closed === true}>
-      <section class={styles.raceCard} data-active={tab() === "race"} aria-label="race" ref={race}>
+      <section class={styles.raceCard} data-active={tab() === "race"} aria-label="room" ref={race}>
+        {/* A phone hides the chat and its live log on the room tab, so the newest line is
+            read from here instead. */}
+        <Show when={phoneScreen()}>
+          <p class={visuallyHidden} role="status" aria-label="latest chat line">
+            {latestLine()}
+          </p>
+        </Show>
         <Show when={props.closed}>
-          <div class={styles.closedNotice} role="status">
+          <div class={styles.closedNotice} role="status" tabIndex={-1} ref={closedNotice}>
             <p class={styles.closedReason}>{props.notice}</p>
             <p class={styles.closedBox}>
               <TriangleAlert class={warningIcon} aria-hidden="true" />
@@ -350,20 +403,20 @@ export function RoomView(props: RoomViewProps): JSX.Element {
         </Show>
       </section>
       <Show when={!props.closed}>
-        <nav class={styles.tabBar} aria-label="room cards">
+        <nav class={styles.tabBar} aria-label="room cards" ref={tabBar}>
           <button
             type="button"
             class={styles.tabButton}
             aria-pressed={tab() === "race"}
-            onClick={() => setTab("race")}
+            onClick={() => pickTab("race")}
           >
-            race
+            room
           </button>
           <button
             type="button"
             class={styles.tabButton}
             aria-pressed={tab() === "chat"}
-            onClick={() => setTab("chat")}
+            onClick={() => pickTab("chat")}
           >
             chat
           </button>

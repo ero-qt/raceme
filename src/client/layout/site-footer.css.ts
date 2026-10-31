@@ -39,6 +39,8 @@ export const text = style([
   panel,
   {
     position: "absolute",
+    // Above the phone tab bar, which sits right over the footer at the end of the page.
+    zIndex: 2,
     insetBlockEnd: `calc(100% + ${tokens.space.s})`,
     insetInlineStart: tokens.space.l,
     inlineSize: `min(60ch, calc(100% - 2 * ${tokens.space.l}))`,

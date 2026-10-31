@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { cleanup, fireEvent, render } from "@solidjs/testing-library";
+import { cleanup, fireEvent, render, waitFor } from "@solidjs/testing-library";
 import type { RaceState } from "../../shared/race/race.ts";
 import { resultsCsv } from "../../shared/results.ts";
 import { ResultsExport } from "./results-export.tsx";
@@ -26,6 +26,20 @@ describe("resultsExport", () => {
     for (const name of ["text", "CSV", "JSON", "image"]) {
       expect(view.getByText(name, { selector: "summary" })).toBeTruthy();
     }
+  });
+
+  test("a copy's result is announced, not only shown on the button", async () => {
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { write: async () => {} },
+    });
+    const view = render(() => <ResultsExport race={race} />);
+
+    fireEvent.click(view.getByRole("button", { name: "copy image" }));
+
+    await waitFor(() =>
+      expect(view.getByRole("status").textContent).toMatch(/^image (copied|failed)$/),
+    );
   });
 
   test("opening CSV shows the read-only text, all selected", async () => {

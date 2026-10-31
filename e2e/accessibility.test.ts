@@ -58,7 +58,7 @@ describe("axe-core WCAG 2.2 AA", () => {
     const { context, page } = await newPage(harness, { bypassCSP: true });
     await page.goto(`${harness.origin}/`);
     await page.getByText("privacy", { exact: true }).click();
-    await page.getByText("the server keeps nothing on disk.").waitFor();
+    await page.getByText("raceme doesn't save anything about you.", { exact: false }).waitFor();
 
     expect(await violations(page)).toEqual([]);
 

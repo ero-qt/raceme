@@ -10,6 +10,5 @@ export const tokens = createThemeContract({
   target: { min: null },
   // Fade for inactive things, measured so faded text keeps 4.5:1 on the palette.
   dim: { opacity: null },
-  // Dark overlays for scrims and shadows.
-  overlay: { scrim: null, shadow: null },
+  overlay: { shadow: null },
 });

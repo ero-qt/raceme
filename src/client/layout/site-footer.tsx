@@ -16,31 +16,31 @@ const notes: Note[] = [
     body: () => (
       <>
         <p>
-          the server keeps nothing on disk. rooms live only in its memory and are gone when they
-          close.
+          raceme doesn't save anything about you. a room only exists while it's open. when it
+          closes, all data about it is deleted.
         </p>
         <ul>
           <li>
-            your browser gets a random cookie so the room knows you after a reload. a host also gets
-            a host cookie, whose name contains the room code. both expire after {sessionCookieDays}{" "}
-            days and contain no name or other info about you.
+            you get a cookie so a room still knows who you are after a reload. if you made the room,
+            you get a second cookie that marks you as the host. neither one has your name in it.
+            both are deleted after {sessionCookieDays} days.
           </li>
           <li>
-            the server uses your IP address only in memory, to limit rooms, chat, room checks, game
-            searches and connections per address or network. it isn't logged or saved.
-          </li>
-          <li>
-            game searches go through the server to speedrun.com, so speedrun.com sees the server and
-            never your browser. the server caches the search results in memory for up to{" "}
-            {catalogCacheHours} hours.
-          </li>
-          <li>
-            your time digits and recent goals stay in your browser's local storage. after a room
-            closes, its results stay in that tab until you close it. none of this reaches the
+            the server uses your IP address to stop one person from opening tons of rooms or
+            spamming chat. it is forgotten a few minutes after you leave and never saved on the
             server.
           </li>
+          <li>
+            when you search for a game, the server does the search for you, so the site it searches
+            never sees you. the answers are kept for up to {catalogCacheHours} hours so the next
+            person gets them faster.
+          </li>
+          <li>
+            your clock setting, your recent goals and the results of a room you were in stay in your
+            browser only. none of that is sent anywhere.
+          </li>
         </ul>
-        <p>there are no accounts, usage stats, ads or trackers.</p>
+        <p>no accounts, no ads, no trackers.</p>
       </>
     ),
   },

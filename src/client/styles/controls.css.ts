@@ -18,18 +18,21 @@ export const dimWhenDisabled = style({
 /** Fades content that isn't live yet with the same look as a disabled control. */
 export const dimmed = style({ opacity: tokens.dim.opacity });
 
-/** Makes a text field or select that reads as plain text until hovered or focused. */
+/** Makes a text field or select that reads as plain text until an underline shows on hover or focus. */
 export const inlineEdit = style([
   controlBorder,
   {
+    borderRadius: 0,
+    // The text starts where the underline starts, on the edge the rest of the column sits on.
+    borderInlineStartWidth: 0,
+    paddingInlineStart: 0,
     font: "inherit",
     color: "inherit",
     background: "transparent",
-    transition: "border-color 150ms ease, background-color 150ms ease",
+    transition: "border-color 150ms ease",
     selectors: {
       "&:hover, &:focus-visible, &:has(:focus-visible)": {
-        borderColor: tokens.color.borderStrong,
-        background: tokens.color.bg1,
+        borderBlockEndColor: tokens.color.borderStrong,
         outline: "none",
       },
     },

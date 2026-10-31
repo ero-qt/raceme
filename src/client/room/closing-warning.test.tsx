@@ -10,16 +10,15 @@ describe("ClosingWarning", () => {
     const view = render(() => <ClosingWarning closesAt={14 * 60_000 + 32_000} now={0} />);
 
     expect(view.getByRole("alert").textContent).toContain("room closes soon due to inactivity!");
-    expect(view.getByRole("alert").textContent).toContain("14:32");
-    expect(view.getByRole("alert").textContent).not.toContain("No activity");
     expect(view.getByRole("alert").textContent).toContain("move the mouse, tap or type");
+    expect(view.getByText("14:32").getAttribute("aria-hidden")).toBe("true");
   });
 
   test("warns of a server restart until a click outside the card, not on movement", () => {
     const view = render(() => <ClosingWarning closesAt={45 * 60_000} now={0} reason="restart" />);
     const alert = view.getByRole("alert");
     expect(alert.textContent).toContain("room closes soon for a server restart!");
-    expect(alert.textContent).toContain("45:00");
+    expect(view.getByText("45:00")).toBeTruthy();
 
     fireEvent.pointerMove(window);
     fireEvent.pointerDown(alert);

@@ -3,12 +3,13 @@ import { maxChatLength } from "../../shared/protocol.ts";
 import { maxNameLength } from "../../shared/race/race.ts";
 import { Button } from "../primitives/button.tsx";
 import { TextField } from "../primitives/text-field.tsx";
+import { notice } from "../styles/controls.css.ts";
 import { actionLabel } from "./action-labels.ts";
 import * as styles from "./room.css.ts";
 
 export function JoinForm(props: {
   onSubmit: (name: string) => void;
-  /** Turns the form off and shows why in the name field, like `entry is closed`. */
+  /** Turns the form off and shows why in a line above it, like `entry is closed`. */
   closedBecause?: string | null;
   /** Runs the first time the typed name reaches the longest a name can be. */
   onLimit?: () => void;
@@ -19,16 +20,19 @@ export function JoinForm(props: {
   let limitShown = false;
   return (
     <form
-      class={styles.row}
+      class={styles.joinForm}
       onSubmit={(event) => {
         event.preventDefault();
         props.onSubmit(name());
       }}
     >
+      <p class={`${notice} ${styles.joinNotice}`} role="status">
+        {props.closedBecause ? `${props.closedBecause}.` : ""}
+      </p>
       <TextField
         label="your name"
         hideLabel
-        placeholder={props.closedBecause ?? "your name"}
+        placeholder="your name"
         value={props.initialName ?? ""}
         disabled={Boolean(props.closedBecause)}
         maxLength={maxNameLength}
@@ -63,6 +67,7 @@ export function ChatForm(
 ): JSX.Element {
   const [text, setText] = createSignal("");
   const [waiting, setWaiting] = createSignal(false);
+  let messageBox: HTMLInputElement | undefined;
   let waitTimer: ReturnType<typeof setTimeout> | undefined;
   onCleanup(() => clearTimeout(waitTimer));
 
@@ -93,6 +98,8 @@ export function ChatForm(
       onSubmit={(event) => {
         event.preventDefault();
         sendLine();
+        // `send` turns itself off for the slow mode wait, which would drop the focus to the page.
+        messageBox?.focus();
       }}
     >
       <TextField
@@ -100,7 +107,10 @@ export function ChatForm(
         hideLabel
         placeholder={props.muted ? "you are muted" : "chat"}
         disabled={props.muted}
-        ref={(input: HTMLInputElement) => props.inputRef?.(input)}
+        ref={(input: HTMLInputElement) => {
+          messageBox = input;
+          props.inputRef?.(input);
+        }}
         maxLength={maxChatLength}
         autocomplete="off"
         value={text()}

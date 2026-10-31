@@ -58,6 +58,7 @@ export const reveal = style([
   bare,
   {
     flex: "1 1 auto",
+    alignItems: "flex-start",
     minInlineSize: 0,
     paddingInlineStart: 0,
     textAlign: "start",

@@ -26,7 +26,7 @@ export const start = style({
 });
 
 // The notice line stays in the page for screen readers and brings its own spacing once it has
-// text, so an empty one puts nothing between the field and the first card.
+// text, so an empty one leaves no space between the field and the first card.
 globalStyle(`${start} > p:not(:empty)`, { paddingBlockStart: tokens.space.s });
 
 export const side = style({

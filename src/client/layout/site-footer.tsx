@@ -27,15 +27,16 @@ const notes: Note[] = [
           </li>
           <li>
             the server uses your IP address to stop one person from opening tons of rooms or
-            spamming chat. it is deleted after a few minutes and never written down.
+            spamming chat. it is forgotten a few minutes after you leave and never saved on the
+            server.
           </li>
           <li>
-            when you search for a game, the server does the search for you, so the site it asks
+            when you search for a game, the server does the search for you, so the site it searches
             never sees you. the answers are kept for up to {catalogCacheHours} hours so the next
             person gets them faster.
           </li>
           <li>
-            your room settings, your recent goals and the results of a room you were in stay in your
+            your clock setting, your recent goals and the results of a room you were in stay in your
             browser only. none of that is sent anywhere.
           </li>
         </ul>

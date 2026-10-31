@@ -9,7 +9,7 @@ import * as styles from "./room.css.ts";
 
 export function JoinForm(props: {
   onSubmit: (name: string) => void;
-  /** Turns the form off and shows why in a line below it, like `entry is closed`. */
+  /** Turns the form off and shows why in a line above it, like `entry is closed`. */
   closedBecause?: string | null;
   /** Runs the first time the typed name reaches the longest a name can be. */
   onLimit?: () => void;

@@ -115,7 +115,7 @@ function ExportRow(props: {
   const [open, setOpen] = createSignal(false);
   const [copied, setCopied] = createSignal<"copied" | "failed" | null>(null);
   const copy = async () => {
-    // Drawing the image can throw before the clipboard is even asked, which counts as a failure too.
+    // Drawing the image can throw before the clipboard gets anything, which counts as a failure too.
     const ok = await Promise.resolve()
       .then(() => props.copy?.())
       .then(

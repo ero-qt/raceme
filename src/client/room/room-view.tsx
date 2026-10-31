@@ -222,7 +222,7 @@ export function RoomView(props: RoomViewProps): JSX.Element {
     setTab(picked);
   };
   // A closed room has its results in the room details, so a phone shows those. The chat's
-  // controls are gone then, so the notice takes the focus they held.
+  // controls are gone then, so the notice takes the focus that was in them.
   let closedNotice: HTMLDivElement | undefined;
   createEffect(() => {
     if (props.closed) {

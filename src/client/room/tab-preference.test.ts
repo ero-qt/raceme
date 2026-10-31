@@ -13,7 +13,7 @@ describe("tab preference", () => {
     expect([loadTab("abc"), loadTab("xyz")]).toEqual(["chat", null]);
   });
 
-  test("a stored value that is no tab name reads as null", () => {
+  test("a stored value that isn't a tab name reads as null", () => {
     sessionStorage.setItem("raceme.tab.abc", "settings");
     expect(loadTab("abc")).toBeNull();
   });

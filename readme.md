@@ -21,6 +21,17 @@ a race takes up to 300 entrants. chat lines can be up to 512 characters, each en
 
 new rooms are limited per address and per network. when lots of rooms open at once, the browser solves a short proof of work before it gets a new room.
 
+## privacy
+
+the privacy note in the page's footer is the whole policy. the tests prove some of it, the rest you can check in a short file:
+
+- the page never contacts another host: [privacy.test.ts](e2e/privacy.test.ts) runs a whole race and fails on any request to one, [source.test.ts](e2e/source.test.ts) fails if the built page mentions an outside host or uses a tracking API. the one outside link, to SRL, only opens when you click it,
+- the browser stores only the 2 cookies, your goal list, your clock setting, the phone tab you had open and a closed room's results: [privacy.test.ts](e2e/privacy.test.ts) lists every cookie, storage key, database, worker and cache after entering a room,
+- the cookies live 2 and 30 days: [privacy.test.ts](e2e/privacy.test.ts) checks their expiry. the footer reads both lifetimes from [retention.ts](src/shared/retention.ts),
+- the server doesn't store anything: [no-storage.test.ts](src/server/no-storage.test.ts) fails if the server code gets a way to write a file, start a program or print after startup. once a room is closed, it's deleted from the server: [server.test.ts](src/server/server.test.ts),
+- the server keeps your address only while your tab is open and in rate limit buckets for a few minutes after: [client-limits.ts](src/server/client-limits.ts),
+- the page loads nothing from another host and sends nothing to one: the headers in [http.ts](src/server/http.ts), which also keep every page out of search engines.
+
 ## contributing and hosting
 
 [contributing.md](contributing.md) has the setup, the scripts and the tests. [hosting.md](hosting.md) lists the environment variables the race server reads.

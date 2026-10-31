@@ -142,6 +142,8 @@ describe("connectRoom", () => {
       });
 
       expect(room.watchers()).toBe(4);
+      StuckSocket.opened[0]?.onmessage?.({ data: JSON.stringify({ type: "watchers", count: 5 }) });
+      expect(room.watchers()).toBe(5);
 
       dispose();
     });

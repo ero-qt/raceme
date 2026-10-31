@@ -52,11 +52,9 @@ export function roomSocketHandlers(deps: {
       isHost: socket.data.isHost,
       chatEveryMs,
     });
-    // A fresh state resets every client's clock offset, so the room only hears about a new count.
-    if (room.watcherCount === watchersBefore) {
-      send(socket, hub.state(room));
-    } else {
-      hub.publishState(room);
+    send(socket, hub.state(room));
+    if (room.watcherCount !== watchersBefore) {
+      hub.publishWatchers(room);
     }
     send(socket, { type: "feed", entries: [...room.feed.entries] });
 
@@ -76,7 +74,7 @@ export function roomSocketHandlers(deps: {
         room.detachSession(socket.data.sessionSecret);
         deps.countsChanged?.();
         if (room.watcherCount !== watchersBefore) {
-          hub.publishState(room);
+          hub.publishWatchers(room);
         }
       }
     }

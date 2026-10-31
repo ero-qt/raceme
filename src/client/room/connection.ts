@@ -159,6 +159,9 @@ export function connectRoom(slug: string): RoomConnection {
         setWatchers(message.watchers);
         setClosesFor(message.closesFor);
         break;
+      case "watchers":
+        setWatchers(message.count);
+        break;
       case "feed": {
         // A reconnect resends the whole log, so only lines newer than the last one shown count.
         const lastId = feed().at(-1)?.id ?? 0;

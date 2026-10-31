@@ -477,6 +477,25 @@ describe("server", () => {
     expect(rewelcome.type === "welcome" && rewelcome.isHost).toBe(true);
   });
 
+  test("a watcher coming or going sends the room a count, not a state that resets its clocks", async () => {
+    const base = start();
+    const { slug, host } = await createRoom(base);
+    const entrant = new Client(socketUrl(base, slug), `${host}; ${session("host-secret")}`);
+    await entrant.waitFor((m) => m.type === "welcome");
+    entrant.send({ type: "join", name: "ero" });
+    await entrant.waitFor((m) => m.type === "state" && m.race.entrants.length === 1);
+    const statesBefore = entrant.messages.filter((m) => m.type === "state").length;
+
+    const watcher = new Client(socketUrl(base, slug), session("watcher-secret"));
+    await entrant.waitFor((m) => m.type === "watchers" && m.count === 1);
+    const watcherState = await watcher.waitFor((m) => m.type === "state");
+    watcher.socket.close();
+    await entrant.waitFor((m) => m.type === "watchers" && m.count === 0);
+
+    expect(watcherState.type === "state" && watcherState.watchers).toBe(1);
+    expect(entrant.messages.filter((m) => m.type === "state").length).toBe(statesBefore);
+  });
+
   describe("build info", () => {
     test("answers with the commit and release digest the deploy wrote", async () => {
       const build = {
@@ -806,8 +825,8 @@ describe("server", () => {
     await watcher.opened;
 
     const latestWatchers = () => {
-      const state = first.messages.filter((m) => m.type === "state").at(-1);
-      return state?.type === "state" ? state.watchers : null;
+      const last = first.messages.filter((m) => m.type === "state" || m.type === "watchers").at(-1);
+      return last?.type === "state" ? last.watchers : last?.type === "watchers" ? last.count : null;
     };
     await first.waitFor(() => latestWatchers() === 2);
     first.send({ type: "join", name: "alice" });

@@ -40,6 +40,10 @@ export class RoomHub<Data> {
     this.#send(room, this.state(room));
   }
 
+  publishWatchers(room: Room): void {
+    this.#send(room, { type: "watchers", count: room.watcherCount });
+  }
+
   /** Builds the room's current state message, for everyone or for one new socket. */
   state(room: Room): ServerMessage {
     return {

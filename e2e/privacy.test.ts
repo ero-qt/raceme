@@ -53,6 +53,12 @@ describe("privacy", () => {
       "raceme_session",
     ]);
     expect(cookies.every((c) => c.httpOnly && c.sameSite === "Strict")).toBe(true);
+    // The host cookie lives the room's 2 days, the session cookie 30.
+    const daysLeft = (name: string) => {
+      const cookie = cookies.find((c) => c.name.startsWith(name));
+      return Math.round(((cookie?.expires ?? 0) * 1000 - Date.now()) / 86_400_000);
+    };
+    expect([daysLeft("raceme_host_"), daysLeft("raceme_session")]).toEqual([2, 30]);
 
     const storage = await page.evaluate(async () => ({
       local: Object.keys(localStorage),

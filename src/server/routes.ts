@@ -141,11 +141,11 @@ async function createRoom(deps: RouteDeps, request: Request, ip: string): Promis
   surge.recordRoom();
 
   const response = json({ slug: created.room.slug }, 201);
-  const hostCookie = cookie(
-    hostCookieName(created.room.slug),
-    created.hostToken,
-    cookieOptions(config),
-  );
+  // The host cookie is no use once the room is gone, so it lives as long as a room can.
+  const hostCookie = cookie(hostCookieName(created.room.slug), created.hostToken, {
+    ...cookieOptions(config),
+    maxAgeSeconds: Math.round(config.roomLifetimeMs / 1000),
+  });
   response.headers.append("set-cookie", hostCookie);
   return response;
 }
@@ -308,7 +308,6 @@ function hostCookieName(slug: string): string {
   return `raceme_host_${slug}`;
 }
 
-// The host cookie lives as long as the session cookie, so a host who comes back keeps host rights.
 function cookieOptions(config: ServerConfig) {
   return {
     path: config.basePath || "/",

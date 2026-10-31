@@ -137,8 +137,8 @@ describe("server", () => {
     expect(cookie).toContain("HttpOnly");
     expect(cookie).toContain("SameSite=Strict");
     expect(cookie).toContain("Path=/apps/raceme");
-    // A host who comes back to a long race keeps host rights, so this matches the session cookie.
-    expect(cookie).toContain(`Max-Age=${30 * 24 * 60 * 60}`);
+    // The host cookie is no use once the room is gone, so it lives as long as a room can.
+    expect(cookie).toContain(`Max-Age=${48 * 60 * 60}`);
   });
 
   test("marks cookies Secure unless an http-only preview turns that off", async () => {

@@ -49,6 +49,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 
 ### Fixed
 
+- The host cookie is deleted after 2 days, the longest a room lives, instead of after 30 days.
 - Someone opening or leaving a room page leaves the clocks of everyone in the room alone.
 - A reconnect gets only the chat lines it missed.
 - Reconnects spread out instead of all hitting the server at once.

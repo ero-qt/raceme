@@ -19,20 +19,16 @@ export const plainGoal = style([
   { display: "flex", flex: "none", alignItems: "center", minBlockSize: tokens.target.min },
 ]);
 
-// Pulls the input left by its padding and border so the editable goal lines up with plain text.
-const inset = `calc(${tokens.space.xs} + 2px)`;
-
 export const input = style([
   inlineEdit,
   {
-    inlineSize: `calc(100% + ${inset})`,
-    marginInlineStart: `calc(-1 * ${inset})`,
-    paddingInline: tokens.space.xs,
+    inlineSize: "100%",
+    paddingInlineEnd: tokens.space.xs,
     minBlockSize: tokens.target.min,
     cursor: "text",
     selectors: {
-      // Keeps the border while typing after a mouse click too, which `:focus-visible` skips.
-      "&:focus": { borderColor: tokens.color.borderStrong, background: tokens.color.bg1 },
+      // Keeps the underline while typing after a mouse click too, which `:focus-visible` skips.
+      "&:focus": { borderBlockEndColor: tokens.color.borderStrong },
     },
   },
 ]);

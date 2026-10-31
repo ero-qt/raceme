@@ -2,9 +2,6 @@ import { globalStyle, style } from "@vanilla-extract/css";
 import { dimmed, inlineEdit } from "../styles/controls.css.ts";
 import { tokens } from "../styles/tokens.css.ts";
 
-// Pulls the control left by its padding and border so the digits line up with the page edge.
-const inset = `calc(${tokens.space.xs} + 2px)`;
-
 // Marks keyboard focus on the whole clock instead of a ring around the select alone, through
 // the `:has(:focus-visible)` part of `inlineEdit`.
 export const clock = style([
@@ -12,10 +9,11 @@ export const clock = style([
   {
     display: "inline-flex",
     alignItems: "baseline",
-    marginInlineStart: `calc(-1 * ${inset})`,
-    paddingInline: tokens.space.xs,
+    paddingInlineEnd: tokens.space.xs,
     fontFamily: tokens.font.mono,
     fontSize: "2rem",
+    // Keeps the underline close under the digits, which the body's 1.5 line height pushes away.
+    lineHeight: 1.2,
     fontVariantNumeric: "tabular-nums",
     fontWeight: 700,
     cursor: "pointer",

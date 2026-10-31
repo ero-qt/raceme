@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - The room has 2 columns, with the goal, invite link and entrants on the left and the clock and chat on the right.
 - Bot lines in the room chat show without a name.
 - Chat lines in the room chat show as `name: text`.
+- The start field, the goal and the clock show only an underline when hovered or focused, instead of a box.
 - Refused commands show as red lines in the chat log.
 - The name field keeps your name after `.unenter`.
 - Length messages read like "a name needs to be 1-24 characters long."

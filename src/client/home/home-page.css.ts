@@ -1,5 +1,5 @@
 import { globalStyle, keyframes, style } from "@vanilla-extract/css";
-import { outlined, panel } from "../styles/controls.css.ts";
+import { panel } from "../styles/controls.css.ts";
 import { container } from "../styles/layout.css.ts";
 import { tokens } from "../styles/tokens.css.ts";
 
@@ -59,19 +59,14 @@ export const introNote = style({
   color: tokens.color.text0,
 });
 
-export const field = style([
-  outlined,
-  {
-    fontSize: "1rem",
-    // Sits on the column's edge like the cards, with none of the room goal's pull to the left.
-    marginInlineStart: 0,
-    inlineSize: "100%",
-    selectors: {
-      // Hides a pasted room code on screen the way a password field would.
-      '&[data-kind="code"]': { WebkitTextSecurity: "disc" } as Record<string, string>,
-    },
+export const field = style({
+  fontSize: "1rem",
+  inlineSize: "100%",
+  selectors: {
+    // Hides a pasted room code on screen the way a password field would.
+    '&[data-kind="code"]': { WebkitTextSecurity: "disc" } as Record<string, string>,
   },
-]);
+});
 
 const spin = keyframes({ to: { transform: "rotate(360deg)" } });
 

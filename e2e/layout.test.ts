@@ -321,6 +321,42 @@ describe("control size", () => {
   });
 });
 
+describe("inline fields", () => {
+  test("the start field shows only an underline, on hover and focus", async () => {
+    const { context, page } = await newPage(harness);
+    await page.goto(`${harness.origin}/`);
+    const clear = "rgba(0, 0, 0, 0)";
+    const line = "rgb(138, 147, 163)";
+    const field = page.getByLabel("goal or room code");
+    const borders = () =>
+      field.evaluate((node) => {
+        const style = getComputedStyle(node);
+        return [
+          style.borderBottomColor,
+          style.borderTopColor,
+          style.borderLeftWidth,
+          style.outlineStyle,
+        ];
+      });
+    // The underline's color takes a frame to change, so the check gives it a few.
+    const expectBorders = async (bottom: string) => {
+      for (let tries = 0; (await borders())[0] !== bottom && tries < 20; tries++) {
+        await page.waitForTimeout(50);
+      }
+      expect(await borders()).toEqual([bottom, clear, "0px", "none"]);
+    };
+
+    await expectBorders(clear);
+    await field.hover();
+    await expectBorders(line);
+    await field.click();
+    await page.mouse.move(0, 0);
+    await expectBorders(line);
+
+    await context.close();
+  });
+});
+
 describe("home layout", () => {
   test("the start form takes the wide left column, the intro the right, right below it on phones", async () => {
     const { context, page } = await newPage(harness);

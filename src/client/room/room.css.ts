@@ -113,9 +113,12 @@ export const joinForm = style([row, { rowGap: tokens.space.xs }]);
 // the race fills up or the host mutes you.
 export const formNotice = style({ flexBasis: "100%", minBlockSize: "1lh", fontSize: "0.75rem" });
 
+// The name column takes the room the others leave. Each other column asks for the width of its
+// widest content, so nothing moves as statuses, times and buttons change. A column still grows
+// past that for longer content.
 export const table = style({
   inlineSize: "100%",
-  tableLayout: "fixed",
+  tableLayout: "auto",
   borderCollapse: "collapse",
   background: tokens.color.bg1,
 });
@@ -294,29 +297,38 @@ export const entrantsTitle = style({
   fontSize: "1rem",
 });
 
+// One character of the body's monospace font (0.6em of the 0.9375rem body size). The head cells
+// have a smaller font, so their own `ch` would undersize the columns.
+const bodyCh = "0.5625rem";
+
+// Each column's minimum is its widest content, so nothing moves as cells change. The name column
+// takes the rest. The mute column sizes to its button on its own.
 // Fits 3 digits with the narrow padding of the place cell, so the name column keeps its room on phones.
-export const placeColumn = style({ inlineSize: "4ch" });
-export const muteColumn = style({
-  inlineSize: `calc(${tokens.target.min} + 2 * ${tokens.space.s})`,
-});
-export const statusColumn = style({ inlineSize: "12ch" });
-export const timeColumn = style({ inlineSize: "13ch" });
-// Fits the widest row button, `.unenter`, in the monospace button font: 8 characters plus the
-// button's padding and border and the cell's padding.
+export const placeColumn = style({ boxSizing: "border-box", minInlineSize: `calc(4 * ${bodyCh})` });
+export const nameColumn = style({ inlineSize: "100%" });
+// Fits a finished time with every digit, `00:00:00.000`, plus the cell's padding. On phones the
+// status column shows that time in place of the Done badge, so it needs the same room.
+const timeWidth = `calc(12 * ${bodyCh} + 2 * ${tokens.space.s})`;
+export const statusColumn = style({ boxSizing: "border-box", minInlineSize: timeWidth });
+export const timeColumn = style({ boxSizing: "border-box", minInlineSize: timeWidth });
+// Fits the widest row button, `.unenter`: 8 characters plus the button's padding and border and
+// the cell's padding.
 export const actionColumn = style({
-  inlineSize: `calc(8ch + 2 * ${tokens.space.m} + 4px + 2 * ${tokens.space.s})`,
+  boxSizing: "border-box",
+  minInlineSize: `calc(8 * ${bodyCh} + 2 * ${tokens.space.m} + 4px + 2 * ${tokens.space.s})`,
 });
+// The table shows its time and button columns from this width on: the mute, place, status, time
+// and button minimums above at the body's 15px font (48 + 36 + 124 + 124 + 108) and 100px of name.
+export const wideTableMinPx = 540;
 
 export const placeCell = style([cell, { textAlign: "end", paddingInline: tokens.space.xs }]);
+// A long name with no space in it wraps inside the cell instead of widening the table.
+export const nameCell = style([cell, { overflowWrap: "anywhere" }]);
 export const muteCell = style([cell, { paddingInline: tokens.space.s, textAlign: "center" }]);
 
 export const actionCell = style([cell, { textAlign: "end" }]);
 
 export const stackedActions = style({ marginBlockStart: tokens.space.xs });
-
-// Stretches every row button to the column, so .unenter, .quit and .remove line up.
-globalStyle(`${actionCell} button`, { inlineSize: "100%" });
-globalStyle(`${stackedActions} button`, { inlineSize: "auto" });
 
 export const muteButton = style({
   selectors: { "&[data-muted=true]": { color: tokens.color.statusForfeit } },

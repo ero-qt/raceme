@@ -1,4 +1,4 @@
-import { For, type JSX, Show, createSignal, onCleanup } from "solid-js";
+import { For, type JSX, Show, createSignal, onCleanup, onMount } from "solid-js";
 import { type FractionDigits, formatClock } from "../../shared/format-time.ts";
 import type { Standing } from "../../shared/race/race.ts";
 import { StatusBadge } from "../primitives/status-badge.tsx";
@@ -14,23 +14,12 @@ export function EntrantTable(props: {
   /** Renders a first column for the host's mute buttons, left out when not given. */
   muteButton?: ((row: Standing) => JSX.Element) | undefined;
 }): JSX.Element {
-  const wide = wideScreen();
+  let table: HTMLTableElement | undefined;
+  const wide = wideTable(() => table);
 
   return (
-    <table class={styles.table} aria-label="entrants">
-      {/* Fixed widths keep the columns still when statuses change length. */}
-      <colgroup>
-        <Show when={props.muteButton}>
-          <col class={styles.muteColumn} />
-        </Show>
-        <col class={styles.placeColumn} />
-        <col />
-        <col class={styles.statusColumn} />
-        <Show when={wide()}>
-          <col class={styles.timeColumn} />
-          <col class={styles.actionColumn} />
-        </Show>
-      </colgroup>
+    <table class={styles.table} aria-label="entrants" ref={table}>
+      {/* Each head cell asks for its column's width, so the columns stay still as cells change. */}
       <thead>
         <tr>
           <Show when={props.muteButton}>
@@ -38,20 +27,20 @@ export function EntrantTable(props: {
               <span class={visuallyHidden}>chat</span>
             </th>
           </Show>
-          <th class={styles.headCell} scope="col">
+          <th class={`${styles.headCell} ${styles.placeColumn}`} scope="col">
             #
           </th>
-          <th class={styles.headCell} scope="col">
+          <th class={`${styles.headCell} ${styles.nameColumn}`} scope="col">
             name
           </th>
-          <th class={styles.headCell} scope="col">
+          <th class={`${styles.headCell} ${styles.statusColumn}`} scope="col">
             status
           </th>
           <Show when={wide()}>
-            <th class={styles.headCell} scope="col">
+            <th class={`${styles.headCell} ${styles.timeColumn}`} scope="col">
               time
             </th>
-            <th class={styles.headCell} scope="col">
+            <th class={`${styles.headCell} ${styles.actionColumn}`} scope="col">
               <span class={visuallyHidden}>actions</span>
             </th>
           </Show>
@@ -65,7 +54,7 @@ export function EntrantTable(props: {
                 {(muteButton) => <td class={styles.muteCell}>{muteButton()(row)}</td>}
               </Show>
               <td class={styles.placeCell}>{row.place ?? ""}</td>
-              <td class={styles.cell}>
+              <td class={styles.nameCell}>
                 <bdi>{row.name}</bdi>
                 <Show when={!wide()}>
                   <div class={styles.stackedActions}>{props.rowActions(row)}</div>
@@ -117,15 +106,23 @@ function doneTime(row: Standing, digits: FractionDigits): string {
 }
 
 /**
- * Tracks whether the screen has room for the Time and row button columns. Below 61rem a finished
- * entrant's time shows in the Status column and the row buttons sit under the name, since the
- * left column next to the chat leaves the name less than 100px with the 2 columns in.
+ * Tracks whether the table's own room fits the Time and row button columns, whatever the screen
+ * does around it. In a narrower table a finished entrant's time shows in the Status column and
+ * the row buttons sit under the name, so the name keeps 100px. Without a `ResizeObserver`, as
+ * in the unit tests, the table counts as wide.
  */
-function wideScreen(): () => boolean {
-  const query = globalThis.matchMedia?.("(min-width: 61rem)");
-  const [wide, setWide] = createSignal(query?.matches ?? true);
-  const onChange = (event: MediaQueryListEvent) => setWide(event.matches);
-  query?.addEventListener("change", onChange);
-  onCleanup(() => query?.removeEventListener("change", onChange));
+function wideTable(table: () => HTMLTableElement | undefined): () => boolean {
+  const [wide, setWide] = createSignal(true);
+  onMount(() => {
+    const target = table()?.parentElement;
+    if (!target || typeof ResizeObserver === "undefined") {
+      return;
+    }
+    const measure = () => setWide(target.clientWidth >= styles.wideTableMinPx);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(target);
+    onCleanup(() => observer.disconnect());
+  });
   return wide;
 }

@@ -85,6 +85,30 @@ describe("room layout", () => {
     await host.page.getByText("in progress").waitFor();
     expect(await positions(host.page)).toEqual(before);
 
+    // A row button is as wide as its text, at the end of its column, which stays as wide as
+    // `.unenter`, the widest of them.
+    const quit = await host.page.getByRole("button", { name: ".quit" }).boundingBox();
+    const quitCell = await host.page
+      .getByRole("button", { name: ".quit" })
+      .locator("xpath=..")
+      .boundingBox();
+    expect({
+      narrowerThanCell: (quit?.width ?? 0) < (quitCell?.width ?? 0) - 24,
+      atTheEnd:
+        Math.round((quit?.x ?? 0) + (quit?.width ?? 0)) ===
+        Math.round((quitCell?.x ?? 0) + (quitCell?.width ?? 0) - 8),
+    }).toEqual({ narrowerThanCell: true, atTheEnd: true });
+
+    // A finished time with every digit fits the time column. On phones it fits the status column.
+    await host.page.getByLabel("time precision").selectOption("3");
+    await host.page.getByRole("button", { name: ".done" }).click({ timeout: 10_000 });
+    await host.page.getByRole("columnheader", { name: "#" }).waitFor();
+    await host.page
+      .getByText(/^\d\d:\d\d:\d\d\.\d\d\d$/)
+      .first()
+      .waitFor();
+    expect(await positions(host.page)).toEqual(before);
+
     // `send` is a square, so it takes as little of the line as a button can.
     const sendBox = await guest.page.getByRole("button", { name: "send" }).boundingBox();
     expect([Math.round(sendBox?.width ?? 0), Math.round(sendBox?.height ?? 0)]).toEqual([32, 32]);
@@ -246,20 +270,23 @@ describe("entrants header on phones", () => {
 });
 
 describe("entrant table", () => {
-  // Below 976 pixels a finished entrant's time takes the place of the Done badge and the row
-  // buttons go under the name, so the name keeps room to read.
-  test("leaves the host at least 100 pixels for names on a 976, 900, 412 and 360 pixel wide screen", async () => {
+  // The table keeps its time and button columns while it is wide enough to leave names 100
+  // pixels: beside the chat from 976 pixels of screen, alone on a 700 pixel phone, not on a
+  // 900 pixel screen where the chat takes its share. Otherwise a finished time takes the place
+  // of the Done badge and the row buttons go under the name. The longest name with no space in
+  // it wraps inside its cell instead of widening the table.
+  test("leaves the host at least 100 pixels for names on a 976, 900, 700, 412 and 360 pixel wide screen", async () => {
     const { context, page } = await newPage(harness);
-    await openLobbyAndEnter(page, harness.origin, "ero");
+    await openLobbyAndEnter(page, harness.origin, "xXx_SpeedRunner_2026_xXx");
 
-    for (const width of [976, 900, 412, 360]) {
+    for (const width of [976, 900, 700, 412, 360]) {
       await page.setViewportSize({ width, height: 800 });
       if (width < 768) {
         await page.getByRole("button", { name: "room", exact: true }).click();
       }
       await page
         .getByRole("columnheader", { name: "time" })
-        .waitFor({ state: width >= 976 ? "visible" : "detached" });
+        .waitFor({ state: width >= 976 || width === 700 ? "visible" : "detached" });
       await page.waitForFunction(
         () => getComputedStyle(document.querySelector("#app") as Element).minHeight === "800px",
       );

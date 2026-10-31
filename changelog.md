@@ -63,6 +63,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - "entry is closed" and "race is full" show as a red line above the name field instead of as its placeholder.
 - "you are muted" shows as a red line above the chat box instead of as its placeholder.
 - `send` is a square button with an enter arrow instead of a word.
+- A row button like `.quit` is as wide as its text, at the end of its column.
 - On phones, the start page field lines up with the cards.
 - On phones, the start page field sits as far above the cards as they are apart.
 - Enter and Escape in the goal field keep the focus there.
@@ -77,7 +78,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - With reduced motion on, `send` keeps its label during the slow mode wait.
 - Just past the phone width, the chat column keeps its clock, `.end`, name field and `.enter` inside the panel.
 - The warning sign in the invite link box sits on the first line, like the other warnings.
-- The entrant table keeps its time and button columns from 976 pixels of screen width, instead of 1024.
+- The entrant table keeps its time and button columns whenever it is at least 540 pixels wide, on a phone turned sideways too, instead of only from 1024 pixels of screen width.
 - The watcher count sits right after the eye, level with it.
 
 ### Security

@@ -61,6 +61,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - After a race button, focus stays on the page, off `.end` and out of the goal field.
 - On phones, screen readers hear new chat and RaceBot lines on the room tab too.
 - "entry is closed" and "race is full" show as a red line above the name field instead of as its placeholder.
+- "you are muted" shows as a red line above the chat box instead of as its placeholder.
 - On phones, the start page field lines up with the cards.
 - On phones, the start page field sits as far above the cards as they are apart.
 - Enter and Escape in the goal field keep the focus there.

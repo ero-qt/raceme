@@ -26,7 +26,7 @@ export function JoinForm(props: {
         props.onSubmit(name());
       }}
     >
-      <p class={`${notice} ${styles.joinNotice}`} role="status">
+      <p class={`${notice} ${styles.formNotice}`} role="status">
         {props.closedBecause ? `${props.closedBecause}.` : ""}
       </p>
       <TextField
@@ -102,10 +102,13 @@ export function ChatForm(
         messageBox?.focus();
       }}
     >
+      <p class={`${notice} ${styles.formNotice}`} role="status">
+        {props.muted ? "you are muted." : ""}
+      </p>
       <TextField
         label="message"
         hideLabel
-        placeholder={props.muted ? "you are muted" : "chat"}
+        placeholder="chat"
         disabled={props.muted}
         ref={(input: HTMLInputElement) => {
           messageBox = input;

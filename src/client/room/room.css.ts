@@ -109,9 +109,9 @@ export const row = style({
 
 export const joinForm = style([row, { rowGap: tokens.space.xs }]);
 
-// Always one line tall, in the log's small text, so the form doesn't move when entry closes
-// or the race fills up.
-export const joinNotice = style({ flexBasis: "100%", minBlockSize: "1lh", fontSize: "0.75rem" });
+// Always one line tall, in the log's small text, so the form doesn't move when entry closes,
+// the race fills up or the host mutes you.
+export const formNotice = style({ flexBasis: "100%", minBlockSize: "1lh", fontSize: "0.75rem" });
 
 export const table = style({
   inlineSize: "100%",
@@ -173,8 +173,10 @@ export const rule = style([
 
 export const chatRow = style({
   display: "flex",
+  flexWrap: "wrap",
   alignItems: "flex-end",
   gap: tokens.space.s,
+  rowGap: tokens.space.xs,
 });
 
 export const sendButton = style({ position: "relative" });

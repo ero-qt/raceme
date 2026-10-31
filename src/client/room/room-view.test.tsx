@@ -476,13 +476,16 @@ describe("RoomView layout", () => {
     expect(muted.sent).toEqual([{ type: "unmute", entrantId: "b" }]);
   });
 
-  test("a muted entrant's chat box and send are off", () => {
+  test("a muted entrant's chat box and send are off, with a red line above the box", () => {
     const view = renderRoom("b", false, { ...race, muted: ["b"] });
     const message = view.getByLabelText("message") as HTMLInputElement;
 
     expect(message.disabled).toBe(true);
-    expect(message.placeholder).toBe("you are muted");
+    expect(message.placeholder).toBe("chat");
     expect((view.getByRole("button", { name: "send" }) as HTMLButtonElement).disabled).toBe(true);
+    const line = view.getByText("you are muted.");
+    expect(line.getAttribute("role")).toBe("status");
+    expect(line.compareDocumentPosition(message) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   test("a race ended before it started keeps showing who was ready, not Racing", () => {

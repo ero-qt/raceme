@@ -194,6 +194,8 @@ export function RoomView(props: RoomViewProps): JSX.Element {
     return line?.kind === "chat" ? `${line.name}: ${line.text}` : (line?.text ?? "");
   };
 
+  // The room timer shows whole seconds, so it redraws once a second instead of every frame.
+  const second = createMemo(() => Math.floor(props.now / 1000) * 1000);
   // Rows keep their object across updates while they read the same, so `<For>` rebuilds only
   // the rows that changed and focus in the others stays.
   const rows = createMemo<Standing[]>(
@@ -335,7 +337,7 @@ export function RoomView(props: RoomViewProps): JSX.Element {
             <RoomTimer
               closesAt={props.closesAt ?? 0}
               closesFor={props.closesFor ?? "lifetime"}
-              now={props.now}
+              now={second()}
             />
           </HeaderStatus>
         </Show>

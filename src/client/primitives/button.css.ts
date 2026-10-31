@@ -1,4 +1,4 @@
-import { style, styleVariants } from "@vanilla-extract/css";
+import { keyframes, style, styleVariants } from "@vanilla-extract/css";
 import { controlBorder, dimWhenDisabled, outlined } from "../styles/controls.css.ts";
 import { tokens } from "../styles/tokens.css.ts";
 
@@ -6,6 +6,7 @@ const base = style([
   controlBorder,
   dimWhenDisabled,
   {
+    position: "relative",
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
@@ -96,4 +97,37 @@ export const buttonVariant = styleVariants({
       },
     },
   ],
+});
+
+// The ring stands in for the label while the button is locked. Opacity keeps the label's text
+// as the button's name for screen readers, which `visibility: hidden` would drop. With motion
+// reduced the ring doesn't show, so the label stays.
+export const label = style({
+  display: "flex",
+  alignItems: "center",
+  gap: tokens.space.s,
+  "@media": {
+    "(prefers-reduced-motion: no-preference)": {
+      selectors: { "&[data-locked=true]": { opacity: 0 } },
+    },
+  },
+});
+
+const drain = keyframes({ from: { strokeDashoffset: 0 }, to: { strokeDashoffset: 1 } });
+
+export const lockRing = style({
+  position: "absolute",
+  inset: 0,
+  margin: "auto",
+  inlineSize: "1.25em",
+  blockSize: "1.25em",
+  transform: "rotate(-90deg)",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 2.5,
+  strokeDasharray: 1,
+  animationName: drain,
+  animationTimingFunction: "linear",
+  animationFillMode: "forwards",
+  "@media": { "(prefers-reduced-motion: reduce)": { display: "none" } },
 });

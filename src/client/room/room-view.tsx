@@ -127,7 +127,8 @@ export function RoomView(props: RoomViewProps): JSX.Element {
               ? "accent"
               : "go"
       }
-      disabled={tooEarly(action())}
+      lockedForMs={tooEarly(action()) ? earliestResultMs - Math.max(0, elapsed()) : null}
+      reason={refusalText.tooEarly}
       onClick={(event) => press(event, { type: action() } as ClientAction)}
     >
       {actionLabel[action()]}

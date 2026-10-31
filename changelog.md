@@ -63,6 +63,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - "entry is closed" and "race is full" show as a red line above the name field instead of as its placeholder.
 - "you are muted" shows as a red line above the chat box instead of as its placeholder.
 - `send` is a square button with an enter arrow instead of a word.
+- `.done` and `.quit` show the same draining ring as `send` for the first 5 seconds after GO.
+- A button that is off shows why as a tooltip.
 - Buttons have 8 pixels between their text and their edge instead of 12, like the spacing everywhere else.
 - `.rematch` sits at the top right of the clock line, where `.end` sits for the host, instead of next to the chat box.
 - A row button like `.quit` is as wide as its text, at the end of its column.

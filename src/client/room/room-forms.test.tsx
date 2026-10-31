@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { cleanup, fireEvent, render } from "@solidjs/testing-library";
+import { cleanup, fireEvent, render, waitFor } from "@solidjs/testing-library";
 import { ChatForm } from "./room-forms.tsx";
 
 afterEach(cleanup);
@@ -22,6 +22,20 @@ describe("chatForm", () => {
 
     await new Promise((resolve) => setTimeout(resolve, 80));
     expect(send.disabled).toBe(false);
+  });
+
+  test("send tells why it is off: the slow mode wait, or being muted", async () => {
+    const view = render(() => <ChatForm onSay={() => {}} waitMs={50} />);
+    const send = view.getByRole("button", { name: "send" }) as HTMLButtonElement;
+    fireEvent.input(view.getByLabelText("message"), { target: { value: "hi" } });
+    fireEvent.submit(send.closest("form") as HTMLFormElement);
+    expect(send.title).toBe("slow mode is on, wait a moment before your next message.");
+    await waitFor(() => expect(send.disabled).toBe(false));
+    expect(send.hasAttribute("title")).toBe(false);
+    cleanup();
+
+    const muted = render(() => <ChatForm onSay={() => {}} muted />);
+    expect(muted.getByRole("button", { name: "send" }).title).toBe("you have been muted.");
   });
 
   test("send is a square button with the enter arrow, named for screen readers", () => {

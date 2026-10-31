@@ -1142,11 +1142,17 @@ describe("RoomView right after GO", () => {
     const running = { ...race, phase: "running" as const, startsAt: 0 };
 
     const early = renderRoom("a", false, running, false, 4_999);
-    expect(early.getByRole("button", { name: ".done" }).hasAttribute("disabled")).toBe(true);
+    const done = early.getByRole("button", { name: ".done" });
+    expect(done.hasAttribute("disabled")).toBe(true);
     expect(early.getByRole("button", { name: ".quit" }).hasAttribute("disabled")).toBe(true);
+    // Each shows the lock draining over what is left of the 5 seconds, with the reason as a tooltip.
+    expect(done.querySelector("svg")?.style.animationDuration).toBe("1ms");
+    expect(done.title).toBe("too early. wait 5 seconds after GO.");
+    expect(early.getByRole("button", { name: ".quit" }).querySelector("svg")).not.toBeNull();
     cleanup();
 
     const later = renderRoom("a", false, running, false, 5_000);
     expect(later.getByRole("button", { name: ".done" }).hasAttribute("disabled")).toBe(false);
+    expect(later.getByRole("button", { name: ".done" }).querySelector("svg")).toBeNull();
   });
 });

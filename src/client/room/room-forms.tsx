@@ -1,11 +1,11 @@
 import { CornerDownLeft } from "lucide-solid";
-import { type JSX, type ParentProps, Show, createSignal, onCleanup } from "solid-js";
+import { type JSX, type ParentProps, createSignal, onCleanup } from "solid-js";
 import { maxChatLength } from "../../shared/protocol.ts";
 import { maxNameLength } from "../../shared/race/race.ts";
 import { Button } from "../primitives/button.tsx";
 import { TextField } from "../primitives/text-field.tsx";
 import { icon, notice } from "../styles/controls.css.ts";
-import { actionLabel } from "./action-labels.ts";
+import { actionLabel, refusalText } from "./action-labels.ts";
 import * as styles from "./room.css.ts";
 
 export function JoinForm(props: {
@@ -132,22 +132,12 @@ export function ChatForm(
           type="submit"
           variant="ghost"
           class={styles.sendButton}
-          disabled={waiting() || props.muted}
+          disabled={props.muted}
+          lockedForMs={waiting() ? props.waitMs : null}
+          reason={props.muted ? refusalText.muted : refusalText.slowMode}
           aria-label="send"
         >
-          <span class={styles.sendLabel} data-waiting={waiting()}>
-            <CornerDownLeft class={icon} aria-hidden="true" />
-          </span>
-          <Show when={waiting()}>
-            <svg
-              class={styles.waitRing}
-              style={{ "animation-duration": `${props.waitMs}ms` }}
-              viewBox="0 0 20 20"
-              aria-hidden="true"
-            >
-              <circle cx="10" cy="10" r="8" pathLength="1" />
-            </svg>
-          </Show>
+          <CornerDownLeft class={icon} aria-hidden="true" />
         </Button>
         {props.children}
       </div>

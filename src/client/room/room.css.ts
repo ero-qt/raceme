@@ -1,4 +1,4 @@
-import { globalStyle, keyframes, style } from "@vanilla-extract/css";
+import { globalStyle, style } from "@vanilla-extract/css";
 import {
   controlBorder,
   disclosureSummary,
@@ -193,42 +193,7 @@ export const chatLine = style({
 });
 
 // A square, so the enter arrow sits centered and the button takes as little of the line as it can.
-export const sendButton = style({
-  position: "relative",
-  inlineSize: tokens.target.min,
-  paddingInline: 0,
-});
-
-// The ring stands in for the arrow during the slow mode wait. With motion reduced the ring
-// doesn't show, so the arrow stays.
-export const sendLabel = style({
-  // A flex box centers the arrow, which as inline content would sit on the text baseline.
-  display: "flex",
-  "@media": {
-    "(prefers-reduced-motion: no-preference)": {
-      selectors: { "&[data-waiting=true]": { visibility: "hidden" } },
-    },
-  },
-});
-
-const drain = keyframes({ from: { strokeDashoffset: 0 }, to: { strokeDashoffset: 1 } });
-
-export const waitRing = style({
-  position: "absolute",
-  inset: 0,
-  margin: "auto",
-  inlineSize: "1.25em",
-  blockSize: "1.25em",
-  transform: "rotate(-90deg)",
-  fill: "none",
-  stroke: "currentColor",
-  strokeWidth: 2.5,
-  strokeDasharray: 1,
-  animationName: drain,
-  animationTimingFunction: "linear",
-  animationFillMode: "forwards",
-  "@media": { "(prefers-reduced-motion: reduce)": { display: "none" } },
-});
+export const sendButton = style({ inlineSize: tokens.target.min, paddingInline: 0 });
 
 // Lets the message box take the rest of its line next to `send`.
 globalStyle(`${chatLine} > div`, { flex: "1 1 0", minInlineSize: 0 });

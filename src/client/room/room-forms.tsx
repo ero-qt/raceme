@@ -1,9 +1,10 @@
+import { CornerDownLeft } from "lucide-solid";
 import { type JSX, type ParentProps, Show, createSignal, onCleanup } from "solid-js";
 import { maxChatLength } from "../../shared/protocol.ts";
 import { maxNameLength } from "../../shared/race/race.ts";
 import { Button } from "../primitives/button.tsx";
 import { TextField } from "../primitives/text-field.tsx";
-import { notice } from "../styles/controls.css.ts";
+import { icon, notice } from "../styles/controls.css.ts";
 import { actionLabel } from "./action-labels.ts";
 import * as styles from "./room.css.ts";
 
@@ -135,7 +136,7 @@ export function ChatForm(
           aria-label="send"
         >
           <span class={styles.sendLabel} data-waiting={waiting()}>
-            send
+            <CornerDownLeft class={icon} aria-hidden="true" />
           </span>
           <Show when={waiting()}>
             <svg

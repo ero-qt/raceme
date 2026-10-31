@@ -189,11 +189,18 @@ export const chatLine = style({
   minInlineSize: 0,
 });
 
-export const sendButton = style({ position: "relative" });
+// A square, so the enter arrow sits centered and the button takes as little of the line as it can.
+export const sendButton = style({
+  position: "relative",
+  inlineSize: tokens.target.min,
+  paddingInline: 0,
+});
 
-// The ring stands in for the label during the slow mode wait. With motion reduced the ring
-// doesn't show, so the label stays.
+// The ring stands in for the arrow during the slow mode wait. With motion reduced the ring
+// doesn't show, so the arrow stays.
 export const sendLabel = style({
+  // A flex box centers the arrow, which as inline content would sit on the text baseline.
+  display: "flex",
   "@media": {
     "(prefers-reduced-motion: no-preference)": {
       selectors: { "&[data-waiting=true]": { visibility: "hidden" } },

@@ -85,6 +85,9 @@ describe("room layout", () => {
     await host.page.getByText("in progress").waitFor();
     expect(await positions(host.page)).toEqual(before);
 
+    // `send` is a square, so it takes as little of the line as a button can.
+    const sendBox = await guest.page.getByRole("button", { name: "send" }).boundingBox();
+    expect([Math.round(sendBox?.width ?? 0), Math.round(sendBox?.height ?? 0)]).toEqual([32, 32]);
     // The box, `send` and the race buttons share one line even on a narrow screen.
     await guest.page.setViewportSize({ width: 320, height: 800 });
     await guest.page.getByRole("button", { name: "chat", exact: true }).click();

@@ -24,6 +24,14 @@ describe("chatForm", () => {
     expect(send.disabled).toBe(false);
   });
 
+  test("send is a square button with the enter arrow, named for screen readers", () => {
+    const view = render(() => <ChatForm onSay={() => {}} />);
+    const send = view.getByRole("button", { name: "send" });
+
+    expect(send.querySelector("svg.lucide-corner-down-left")).not.toBeNull();
+    expect(send.textContent?.trim()).toBe("");
+  });
+
   test("send hands focus back to the message box", () => {
     const view = render(() => <ChatForm onSay={() => {}} waitMs={50} />);
     const input = view.getByLabelText("message") as HTMLInputElement;

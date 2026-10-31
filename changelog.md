@@ -63,6 +63,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - "entry is closed" and "race is full" show as a red line above the name field instead of as its placeholder.
 - "you are muted" shows as a red line above the chat box instead of as its placeholder.
 - `send` is a square button with an enter arrow instead of a word.
+- Buttons have 8 pixels between their text and their edge instead of 12, like the spacing everywhere else.
 - A row button like `.quit` is as wide as its text, at the end of its column.
 - On phones, the start page field lines up with the cards.
 - On phones, the start page field sits as far above the cards as they are apart.

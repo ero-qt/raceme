@@ -12,7 +12,7 @@ const base = style([
     gap: tokens.space.s,
     minBlockSize: tokens.target.min,
     minInlineSize: tokens.target.min,
-    paddingInline: tokens.space.m,
+    paddingInline: tokens.space.s,
     font: "inherit",
     fontFamily: tokens.font.mono,
     fontWeight: 700,

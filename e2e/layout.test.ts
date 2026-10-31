@@ -92,6 +92,15 @@ describe("room layout", () => {
       .getByRole("button", { name: ".quit" })
       .locator("xpath=..")
       .boundingBox();
+    // A button's side padding is the page's 8px spacing, inside its 2px border.
+    const quitPadding = await host.page
+      .getByRole("button", { name: ".quit" })
+      .evaluate((button) => {
+        const range = document.createRange();
+        range.selectNodeContents(button);
+        return (button.getBoundingClientRect().width - range.getBoundingClientRect().width - 4) / 2;
+      });
+    expect(Math.round(quitPadding)).toBe(8);
     expect({
       narrowerThanCell: (quit?.width ?? 0) < (quitCell?.width ?? 0) - 24,
       atTheEnd:

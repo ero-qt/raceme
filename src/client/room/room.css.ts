@@ -88,7 +88,7 @@ export const tabButton = style([
   controlBorder,
   {
     minBlockSize: tokens.target.min,
-    paddingInline: tokens.space.m,
+    paddingInline: tokens.space.s,
     font: "inherit",
     fontWeight: 700,
     color: tokens.color.text1,
@@ -315,7 +315,7 @@ export const timeColumn = style({ boxSizing: "border-box", minInlineSize: timeWi
 // the cell's padding.
 export const actionColumn = style({
   boxSizing: "border-box",
-  minInlineSize: `calc(8 * ${bodyCh} + 2 * ${tokens.space.m} + 4px + 2 * ${tokens.space.s})`,
+  minInlineSize: `calc(8 * ${bodyCh} + 4 * ${tokens.space.s} + 4px)`,
 });
 // The table shows its time and button columns from this width on: the mute, place, status, time
 // and button minimums above at the body's 15px font (48 + 36 + 124 + 124 + 108) and 100px of name.

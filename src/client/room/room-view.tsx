@@ -5,6 +5,7 @@ import {
   type JSX,
   Show,
   createEffect,
+  createMemo,
   createSignal,
   on,
   onCleanup,
@@ -37,6 +38,7 @@ import * as styles from "./room.css.ts";
 import { ChatForm, JoinForm } from "./room-forms.tsx";
 import { RoomStatus } from "./room-status.tsx";
 import { HeaderStatus, RoomTimer } from "./room-timer.tsx";
+import { stableRows } from "./stable-rows.ts";
 import { type RoomTab, loadTab, saveTab } from "./tab-preference.ts";
 
 // Shows the actions that take you out of the race in your own row.
@@ -192,6 +194,12 @@ export function RoomView(props: RoomViewProps): JSX.Element {
     return line?.kind === "chat" ? `${line.name}: ${line.text}` : (line?.text ?? "");
   };
 
+  // Rows keep their object across updates while they read the same, so `<For>` rebuilds only
+  // the rows that changed and focus in the others stays.
+  const rows = createMemo<Standing[]>(
+    (previous) => stableRows(previous, standings(props.race)),
+    [],
+  );
   let messageBox: HTMLInputElement | undefined;
   let race: HTMLElement | undefined;
   let chat: HTMLElement | undefined;
@@ -342,7 +350,7 @@ export function RoomView(props: RoomViewProps): JSX.Element {
             send={props.send}
           />
           <EntrantTable
-            rows={standings(props.race)}
+            rows={rows()}
             started={!beforeStart(props.race) && props.race.startsAt !== null}
             digits={precision.digits()}
             rowActions={rowActions}

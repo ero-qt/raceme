@@ -672,6 +672,31 @@ describe("RoomView layout", () => {
     expect(document.activeElement).toBe(document.body);
   });
 
+  test("another entrant's update keeps the other rows' controls, so focus in them stays", () => {
+    const [state, setState] = createSignal(race);
+    const view = render(() => (
+      <RoomView
+        slug="room1"
+        race={state()}
+        me={{ entrantId: "a", isHost: true }}
+        now={0}
+        inviteUrl={inviteUrl}
+        notice={null}
+        feed={[]}
+        send={() => {}}
+      />
+    ));
+    const remove = view.getByRole("button", { name: ".remove bob" });
+    const mute = view.getByRole("button", { name: "mute bob" });
+    remove.focus();
+
+    setState(raceAfter([...joinedBoth, { type: "join", entrantId: "c", name: "carol" }]));
+
+    expect(view.getByRole("button", { name: ".remove bob" })).toBe(remove);
+    expect(view.getByRole("button", { name: "mute bob" })).toBe(mute);
+    expect(document.activeElement).toBe(remove);
+  });
+
   test("a host's .remove never lands focus on .end", () => {
     const [state, setState] = createSignal(race);
     const view = render(() => (

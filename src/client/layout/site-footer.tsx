@@ -1,5 +1,5 @@
 import { For, type JSX, Show, createSignal, onCleanup } from "solid-js";
-import { catalogCacheHours, sessionCookieDays } from "../../shared/retention.ts";
+import { catalogCacheHours, roomLifetimeDays, sessionCookieDays } from "../../shared/retention.ts";
 import { BuildInfoText } from "../home/build-info.tsx";
 import * as styles from "./site-footer.css.ts";
 
@@ -23,11 +23,12 @@ const notes: Note[] = [
           <li>
             you get a cookie so a room still knows who you are after a reload. if you made the room,
             you get a second cookie that marks you as the host. neither contains any identifying
-            information. both are deleted after {sessionCookieDays} days.
+            information. the host one is deleted after {roomLifetimeDays} days and the other after{" "}
+            {sessionCookieDays} days.
           </li>
           <li>
             the server uses your IP address to stop one person from opening tons of rooms or
-            spamming chat. it is forgotten a few minutes after you leave and never saved on the
+            spamming chat. it is deleted a few minutes after you leave and never saved on the
             server.
           </li>
           <li>

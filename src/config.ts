@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { normalizeBasePath } from "./shared/base-path.ts";
-import { feedCapacity } from "./shared/retention.ts";
+import { feedCapacity, roomLifetimeDays } from "./shared/retention.ts";
 
 type Env = Record<string, string | undefined>;
 
@@ -85,7 +85,7 @@ export interface BuildInfo {
   digest: string;
 }
 
-/** Reads the server settings from environment variables, see the table in hosting.md. */
+/** Reads the server settings from environment variables, see the tables in hosting.md. */
 export function loadConfig(env: Env): ServerConfig {
   const count = (name: string, fallback: number) => positiveInteger(env, name, fallback);
 
@@ -102,7 +102,7 @@ export function loadConfig(env: Env): ServerConfig {
     idleMs: count("RACEME_IDLE_MINUTES", 120) * 60_000,
     idleInputMs: count("RACEME_IDLE_INPUT_MINUTES", 120) * 60_000,
     idleWarningMs: count("RACEME_IDLE_WARNING_MINUTES", 10) * 60_000,
-    roomLifetimeMs: count("RACEME_ROOM_HOURS", 48) * 60 * 60_000,
+    roomLifetimeMs: count("RACEME_ROOM_HOURS", roomLifetimeDays * 24) * 60 * 60_000,
     closingWarningMs: 60 * 60_000,
     unusedRoomMs: 10 * 60_000,
     abandonedAfterMs: 10 * 60_000,

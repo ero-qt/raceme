@@ -137,8 +137,8 @@ describe("server", () => {
     expect(cookie).toContain("HttpOnly");
     expect(cookie).toContain("SameSite=Strict");
     expect(cookie).toContain("Path=/apps/raceme");
-    // A host who comes back to a long race keeps host rights, so this matches the session cookie.
-    expect(cookie).toContain(`Max-Age=${30 * 24 * 60 * 60}`);
+    // The host cookie is no use once the room is gone, so it lives as long as a room can.
+    expect(cookie).toContain(`Max-Age=${48 * 60 * 60}`);
   });
 
   test("marks cookies Secure unless an http-only preview turns that off", async () => {
@@ -457,6 +457,20 @@ describe("server", () => {
 
     clockOffsetMs += 60_001;
     expect(await client.closed).toBe(4404);
+  });
+
+  test("a closed room is deleted from the server", async () => {
+    const base = start();
+    const { slug, host } = await createRoom(base);
+    const client = new Client(socketUrl(base, slug), `${host}; ${session("gone-secret")}`);
+    await client.opened;
+    client.send({ type: "end" });
+    await client.waitFor(isPhase("terminated"));
+
+    clockOffsetMs += 10 * 60_000 + 1;
+    expect(await client.closed).toBe(4404);
+    expect(await (await fetch(`${base}/api/rooms/${slug}`)).json()).toEqual({ exists: false });
+    expect(await (await fetch(`${base}/api/status`)).json()).toMatchObject({ rooms: 0, people: 0 });
   });
 
   test("an entrant reconnecting with the same cookies keeps their id and host rights", async () => {

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, mock, test } from "bun:test";
 import { cleanup, fireEvent, render } from "@solidjs/testing-library";
-import { catalogCacheHours, sessionCookieDays } from "../../shared/retention.ts";
+import { catalogCacheHours, roomLifetimeDays, sessionCookieDays } from "../../shared/retention.ts";
 import { SiteFooter } from "./site-footer.tsx";
 
 const realFetch = globalThis.fetch;
@@ -15,7 +15,8 @@ describe("SiteFooter", () => {
 
     const notice = view.getByText("privacy", { selector: "summary" }).parentElement;
     expect(notice?.textContent).toContain("raceme doesn't save anything about you.");
-    expect(notice?.textContent).toContain(`deleted after ${sessionCookieDays} days`);
+    expect(notice?.textContent).toContain(`deleted after ${roomLifetimeDays} days`);
+    expect(notice?.textContent).toContain(`the other after ${sessionCookieDays} days`);
     expect(notice?.textContent).toContain(`kept for up to ${catalogCacheHours} hours`);
     expect(notice?.textContent).toContain("no accounts, no ads, no trackers.");
   });

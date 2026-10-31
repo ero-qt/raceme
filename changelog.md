@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-10-31
+
 ### Added
 
 - A server status card on the start page with the open rooms and people online.
@@ -155,7 +157,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - A link card for Discord and other chats that never shows a room's goal or entrants.
 - A `noindex` header and tag on every page, so search engines leave raceme out.
 
-[Unreleased]: https://github.com/ero-qt/raceme/compare/1.1.2...HEAD
+[Unreleased]: https://github.com/ero-qt/raceme/compare/1.2.0...HEAD
+[1.2.0]: https://github.com/ero-qt/raceme/compare/1.1.2...1.2.0
 [1.1.2]: https://github.com/ero-qt/raceme/compare/1.1.1...1.1.2
 [1.1.1]: https://github.com/ero-qt/raceme/compare/1.1.0...1.1.1
 [1.1.0]: https://github.com/ero-qt/raceme/compare/1.0.1...1.1.0

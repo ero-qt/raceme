@@ -459,6 +459,20 @@ describe("server", () => {
     expect(await client.closed).toBe(4404);
   });
 
+  test("a closed room is deleted from the server", async () => {
+    const base = start();
+    const { slug, host } = await createRoom(base);
+    const client = new Client(socketUrl(base, slug), `${host}; ${session("gone-secret")}`);
+    await client.opened;
+    client.send({ type: "end" });
+    await client.waitFor(isPhase("terminated"));
+
+    clockOffsetMs += 10 * 60_000 + 1;
+    expect(await client.closed).toBe(4404);
+    expect(await (await fetch(`${base}/api/rooms/${slug}`)).json()).toEqual({ exists: false });
+    expect(await (await fetch(`${base}/api/status`)).json()).toMatchObject({ rooms: 0, people: 0 });
+  });
+
   test("an entrant reconnecting with the same cookies keeps their id and host rights", async () => {
     const base = start();
     const { slug, host } = await createRoom(base);

@@ -50,6 +50,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - Reconnects spread out instead of all hitting the server at once.
 - An entrant's update redraws only their row, so focus in another row stays.
 - During a race, the room timer, the closing warnings and the tab title redraw once a second instead of every frame.
+- The chat log keeps the newest 200 refusal lines instead of all of them.
 - Emoji made of several emoji, like a family, stay whole in names, goals and chat.
 - The restart notice on the start page counts down while the page stays open.
 - `.startrace` works again after the server replies with an error page instead of a room.

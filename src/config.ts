@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { normalizeBasePath } from "./shared/base-path.ts";
+import { feedCapacity } from "./shared/retention.ts";
 
 type Env = Record<string, string | undefined>;
 
@@ -112,7 +113,7 @@ export function loadConfig(env: Env): ServerConfig {
     countdownMs: 10_000,
     clearAfterEndMs: 10 * 60_000,
     maxSessionsPerRoom: 200,
-    feedCapacity: 200,
+    feedCapacity,
     speedrunPerMinute: 60,
     chatEveryMs: count("RACEME_CHAT_SECONDS", 3) * 1000,
     maxSocketsPerIp: count("RACEME_MAX_SOCKETS_PER_IP", 10),

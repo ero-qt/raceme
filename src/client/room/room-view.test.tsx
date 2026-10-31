@@ -293,6 +293,30 @@ describe("RoomView layout", () => {
     expect(view.container.querySelector('main > p[role="status"]')).toBeNull();
   });
 
+  test("the log keeps the newest 200 notices, like the server keeps the newest 200 lines", () => {
+    const [notice, setNotice] = createSignal<string | null>(null);
+    const view = render(() => (
+      <RoomView
+        slug="room1"
+        race={race}
+        me={{ entrantId: "x", isHost: false }}
+        now={5_000}
+        inviteUrl={inviteUrl}
+        notice={notice()}
+        feed={[]}
+        send={() => {}}
+      />
+    ));
+    for (let i = 1; i <= 201; i++) {
+      setNotice(`refusal ${i}`);
+    }
+
+    const lines = [...view.getByRole("log", { name: "race chat" }).querySelectorAll("p")];
+    expect(lines.length).toBe(200);
+    expect(lines[0]?.textContent).toContain("refusal 2");
+    expect(lines.at(-1)?.textContent).toContain("refusal 201");
+  });
+
   test("a closed room goes back to the room details and loses the tab bar", () => {
     const [closed, setClosed] = createSignal(false);
     const view = render(() => (

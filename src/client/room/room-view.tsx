@@ -20,6 +20,7 @@ import {
   earliestResultMs,
   standings,
 } from "../../shared/race/race.ts";
+import { feedCapacity } from "../../shared/retention.ts";
 import type { GoalCatalog } from "../goal/goal-picker.tsx";
 import { Button } from "../primitives/button.tsx";
 import { icon, visuallyHidden, warningIcon } from "../styles/controls.css.ts";
@@ -28,7 +29,7 @@ import { type ActionType, availableActions } from "./available-actions.ts";
 import { chatCommand } from "./chat-command.ts";
 import { EntrantTable } from "./entrant-table.tsx";
 import { EntrantsHeader } from "./entrants-header.tsx";
-import { FeedLog, type NoticeLine } from "./feed-log.tsx";
+import { FeedLog, type LogLine, type NoticeLine } from "./feed-log.tsx";
 import { useFractionDigits } from "./fraction-preference.ts";
 import { GoalTitle } from "./goal-title.tsx";
 import { InviteLink } from "./invite-link.tsx";
@@ -175,8 +176,10 @@ export function RoomView(props: RoomViewProps): JSX.Element {
   const [notices, setNotices] = createSignal<NoticeLine[]>([]);
   // A name stays filled in after .unenter, so entering again is one click.
   const [lastName, setLastName] = createSignal("");
-  const addNotice = (text: string) =>
-    setNotices((lines) => [...lines, { at: props.now, kind: "notice", text }]);
+  const addNotice = (text: string) => {
+    const line: NoticeLine = { at: props.now, kind: "notice", text };
+    setNotices((lines) => [...lines, line].slice(-feedCapacity));
+  };
   createEffect(
     on(
       () => props.notice,
@@ -187,8 +190,27 @@ export function RoomView(props: RoomViewProps): JSX.Element {
       },
     ),
   );
-  const logLines = () =>
-    [...props.feed, ...notices()].sort((a, b) => a.at - b.at || Number(a.kind === "notice"));
+  // Both lists are in time order already, so one pass merges them, a notice after a feed line
+  // of the same time.
+  const logLines = createMemo(() => {
+    const merged: LogLine[] = [];
+    const feed = props.feed;
+    const own = notices();
+    let i = 0;
+    let j = 0;
+    while (i < feed.length || j < own.length) {
+      const line = feed[i];
+      const notice = own[j];
+      if (line !== undefined && (notice === undefined || line.at <= notice.at)) {
+        merged.push(line);
+        i++;
+      } else if (notice !== undefined) {
+        merged.push(notice);
+        j++;
+      }
+    }
+    return merged;
+  });
   const latestLine = () => {
     const line = logLines().at(-1);
     return line?.kind === "chat" ? `${line.name}: ${line.text}` : (line?.text ?? "");

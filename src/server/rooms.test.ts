@@ -120,6 +120,27 @@ describe("RoomRegistry.sweep", () => {
   });
 });
 
+describe("RoomRegistry.peopleCount", () => {
+  test("counts each session once across its tabs and drops a room's people with the room", () => {
+    const rooms = registry({ idleMs: 100 * 60 * 60_000, roomLifetimeMs: 72 * 60 * 60_000 });
+    const room = created(rooms.create(settings, 0)).room;
+    const other = created(rooms.create(settings, 0)).room;
+    room.attachSession("a");
+    room.attachSession("a");
+    room.attachSession("b");
+    other.attachSession("c");
+    expect(rooms.peopleCount).toBe(3);
+
+    room.detachSession("a");
+    expect(rooms.peopleCount).toBe(3);
+    room.detachSession("a");
+    expect(rooms.peopleCount).toBe(2);
+
+    rooms.sweep(72 * 60 * 60_000);
+    expect(rooms.peopleCount).toBe(0);
+  });
+});
+
 describe("RoomRegistry lifetime", () => {
   test("drops every room once its lifetime is over, even with people in it", () => {
     const rooms = registry({ idleMs: 100 * 60 * 60_000, roomLifetimeMs: 72 * 60 * 60_000 });

@@ -200,7 +200,7 @@ describe("RoomView layout", () => {
     const host = renderRoom("a", true);
     const end = host.getByRole("button", { name: ".end" });
 
-    expect(end.parentElement?.contains(host.getByRole("timer"))).toBe(true);
+    expect(end.parentElement?.parentElement?.contains(host.getByRole("timer"))).toBe(true);
     expect(renderRoom("a").queryByRole("button", { name: ".end" })).toBeNull();
   });
 
@@ -293,6 +293,30 @@ describe("RoomView layout", () => {
     expect(view.container.querySelector('main > p[role="status"]')).toBeNull();
   });
 
+  test("the log keeps the newest 200 notices, like the server keeps the newest 200 lines", () => {
+    const [notice, setNotice] = createSignal<string | null>(null);
+    const view = render(() => (
+      <RoomView
+        slug="room1"
+        race={race}
+        me={{ entrantId: "x", isHost: false }}
+        now={5_000}
+        inviteUrl={inviteUrl}
+        notice={notice()}
+        feed={[]}
+        send={() => {}}
+      />
+    ));
+    for (let i = 1; i <= 201; i++) {
+      setNotice(`refusal ${i}`);
+    }
+
+    const lines = [...view.getByRole("log", { name: "race chat" }).querySelectorAll("p")];
+    expect(lines.length).toBe(200);
+    expect(lines[0]?.textContent).toContain("refusal 2");
+    expect(lines.at(-1)?.textContent).toContain("refusal 201");
+  });
+
   test("a closed room goes back to the room details and loses the tab bar", () => {
     const [closed, setClosed] = createSignal(false);
     const view = render(() => (
@@ -373,7 +397,7 @@ describe("RoomView layout", () => {
 
     expect(view.getByRole("table", { name: "entrants" })).toBeTruthy();
     expect(view.getByRole("heading", { name: "entrants" }).nextElementSibling?.textContent).toBe(
-      "0/50",
+      "0/300",
     );
   });
 
@@ -452,13 +476,16 @@ describe("RoomView layout", () => {
     expect(muted.sent).toEqual([{ type: "unmute", entrantId: "b" }]);
   });
 
-  test("a muted entrant's chat box and send are off", () => {
+  test("a muted entrant's chat box and send are off, with a red line above the box", () => {
     const view = renderRoom("b", false, { ...race, muted: ["b"] });
     const message = view.getByLabelText("message") as HTMLInputElement;
 
     expect(message.disabled).toBe(true);
-    expect(message.placeholder).toBe("you are muted");
+    expect(message.placeholder).toBe("chat");
     expect((view.getByRole("button", { name: "send" }) as HTMLButtonElement).disabled).toBe(true);
+    const line = view.getByText("you are muted.");
+    expect(line.getAttribute("role")).toBe("status");
+    expect(line.compareDocumentPosition(message) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   test("a race ended before it started keeps showing who was ready, not Racing", () => {
@@ -476,7 +503,7 @@ describe("RoomView layout", () => {
 
     fireEvent.click(host.getByRole("button", { name: "close entry" }));
     fireEvent.change(limit, { target: { value: "1" } });
-    expect(limit.value).toBe("50");
+    expect(limit.value).toBe("300");
     fireEvent.change(limit, { target: { value: "8" } });
 
     expect(host.sent).toEqual([{ type: "lock" }, { type: "setEntrantCap", cap: 8 }]);
@@ -670,6 +697,31 @@ describe("RoomView layout", () => {
     setState(raceAfter([...joinedBoth, { type: "ready", entrantId: "b" }]));
 
     expect(document.activeElement).toBe(document.body);
+  });
+
+  test("another entrant's update keeps the other rows' controls, so focus in them stays", () => {
+    const [state, setState] = createSignal(race);
+    const view = render(() => (
+      <RoomView
+        slug="room1"
+        race={state()}
+        me={{ entrantId: "a", isHost: true }}
+        now={0}
+        inviteUrl={inviteUrl}
+        notice={null}
+        feed={[]}
+        send={() => {}}
+      />
+    ));
+    const remove = view.getByRole("button", { name: ".remove bob" });
+    const mute = view.getByRole("button", { name: "mute bob" });
+    remove.focus();
+
+    setState(raceAfter([...joinedBoth, { type: "join", entrantId: "c", name: "carol" }]));
+
+    expect(view.getByRole("button", { name: ".remove bob" })).toBe(remove);
+    expect(view.getByRole("button", { name: "mute bob" })).toBe(mute);
+    expect(document.activeElement).toBe(remove);
   });
 
   test("a host's .remove never lands focus on .end", () => {
@@ -1063,6 +1115,25 @@ describe("RoomView button colors", () => {
       view.getByRole("button", { name: ".undone" }).classList[0],
     );
   });
+
+  test(".rematch sits on the clock line, where .end sits for the host, not by the chat box", () => {
+    const finished = raceAfter([
+      ...joinedBoth,
+      { type: "ready", entrantId: "a" },
+      { type: "ready", entrantId: "b" },
+    ]);
+    const over = playAt(finished, [
+      [{ type: "tick" }, 10_000],
+      [{ type: "done", entrantId: "a" }, 20_000],
+      [{ type: "done", entrantId: "b" }, 20_000],
+    ]);
+    const view = renderRoom("a", false, over);
+    const rematch = view.getByRole("button", { name: ".rematch" });
+    const clockLine = view.getByRole("timer").closest("div")?.parentElement;
+
+    expect(clockLine?.contains(rematch)).toBe(true);
+    expect(rematch.closest("form")).toBeNull();
+  });
 });
 
 describe("RoomView right after GO", () => {
@@ -1071,11 +1142,17 @@ describe("RoomView right after GO", () => {
     const running = { ...race, phase: "running" as const, startsAt: 0 };
 
     const early = renderRoom("a", false, running, false, 4_999);
-    expect(early.getByRole("button", { name: ".done" }).hasAttribute("disabled")).toBe(true);
+    const done = early.getByRole("button", { name: ".done" });
+    expect(done.hasAttribute("disabled")).toBe(true);
     expect(early.getByRole("button", { name: ".quit" }).hasAttribute("disabled")).toBe(true);
+    // Each shows the lock draining over what is left of the 5 seconds, with the reason as a tooltip.
+    expect(done.querySelector("svg")?.style.animationDuration).toBe("1ms");
+    expect(done.title).toBe("too early. wait 5 seconds after GO.");
+    expect(early.getByRole("button", { name: ".quit" }).querySelector("svg")).not.toBeNull();
     cleanup();
 
     const later = renderRoom("a", false, running, false, 5_000);
     expect(later.getByRole("button", { name: ".done" }).hasAttribute("disabled")).toBe(false);
+    expect(later.getByRole("button", { name: ".done" }).querySelector("svg")).toBeNull();
   });
 });

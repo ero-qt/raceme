@@ -36,6 +36,8 @@ export class Room {
     settings: NewRaceSettings,
     now: number,
     readonly limits: Pick<ServerConfig, "roomLifetimeMs" | "maxSessionsPerRoom" | "feedCapacity">,
+    /** Runs with +1 or -1 as a session gets its first socket or loses its last one. */
+    readonly onPeopleChange: (delta: number) => void = () => {},
   ) {
     this.#hostToken = hostToken;
     this.race = createRace(settings);
@@ -126,7 +128,11 @@ export class Room {
   }
 
   attachSession(sessionSecret: string): void {
-    this.#sessionSockets.set(sessionSecret, (this.#sessionSockets.get(sessionSecret) ?? 0) + 1);
+    const open = this.#sessionSockets.get(sessionSecret) ?? 0;
+    this.#sessionSockets.set(sessionSecret, open + 1);
+    if (open === 0) {
+      this.onPeopleChange(1);
+    }
   }
 
   /**
@@ -134,13 +140,17 @@ export class Room {
    * its id back, so visitors with throwaway cookies can't use up the room's session limit.
    */
   detachSession(sessionSecret: string): void {
-    const left = (this.#sessionSockets.get(sessionSecret) ?? 1) - 1;
-    if (left > 0) {
-      this.#sessionSockets.set(sessionSecret, left);
+    const open = this.#sessionSockets.get(sessionSecret);
+    if (open === undefined) {
+      return;
+    }
+    if (open > 1) {
+      this.#sessionSockets.set(sessionSecret, open - 1);
       return;
     }
 
     this.#sessionSockets.delete(sessionSecret);
+    this.onPeopleChange(-1);
     this.releaseUnusedSession(sessionSecret);
   }
 
@@ -204,6 +214,8 @@ export type CreateRoomResult =
 /** Keeps every live room in memory, keyed by slug. */
 export class RoomRegistry {
   readonly #rooms = new Map<string, Room>();
+  /** The people online, counted by the rooms as sessions come and go. */
+  #people = 0;
   #restartAt: number | null = null;
 
   constructor(readonly options: RoomRegistryOptions) {}
@@ -226,11 +238,7 @@ export class RoomRegistry {
 
   /** Counts the people in open rooms, a person in 2 rooms twice. */
   get peopleCount(): number {
-    let people = 0;
-    for (const room of this.#rooms.values()) {
-      people += room.sessionCount;
-    }
-    return people;
+    return this.#people;
   }
 
   rooms(): IterableIterator<Room> {
@@ -248,7 +256,9 @@ export class RoomRegistry {
     }
 
     const hostToken = randomSecret();
-    const room = new Room(slug, hostToken, settings, now, this.options);
+    const room = new Room(slug, hostToken, settings, now, this.options, (delta) => {
+      this.#people += delta;
+    });
     room.restartAt = this.#restartAt;
     this.#rooms.set(slug, room);
     return { ok: true, room, hostToken };
@@ -293,6 +303,7 @@ export class RoomRegistry {
     const dropped: DroppedRoom[] = [];
     const drop = (room: Room, reason: CloseReason) => {
       this.#rooms.delete(room.slug);
+      this.#people -= room.sessionCount;
       dropped.push({ slug: room.slug, reason });
     };
 

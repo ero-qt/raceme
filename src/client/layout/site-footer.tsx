@@ -22,8 +22,8 @@ const notes: Note[] = [
         <ul>
           <li>
             you get a cookie so a room still knows who you are after a reload. if you made the room,
-            you get a second cookie that marks you as the host. neither one has your name in it.
-            both are deleted after {sessionCookieDays} days.
+            you get a second cookie that marks you as the host. neither contains any identifying
+            information. both are deleted after {sessionCookieDays} days.
           </li>
           <li>
             the server uses your IP address to stop one person from opening tons of rooms or

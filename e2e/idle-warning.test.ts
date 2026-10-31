@@ -24,6 +24,11 @@ describe("idle warning", () => {
       .filter({ hasText: "room closes soon due to inactivity!" });
     await hostCard.waitFor({ timeout: 10_000 });
     await guestCard.waitFor({ timeout: 10_000 });
+    // The room behind the warning dims, since nothing there is meant to be read while it shows.
+    const scrim = await hostCard.evaluate(
+      (card) => getComputedStyle(card.parentElement as Element).backgroundColor,
+    );
+    expect(scrim).toBe("rgba(0, 0, 0, 0.45)");
 
     await guest.page.mouse.move(200, 200);
     await guest.page.mouse.move(240, 240);

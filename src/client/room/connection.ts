@@ -2,6 +2,7 @@ import { type Accessor, createSignal, onCleanup } from "solid-js";
 import type { FeedEntry } from "../../shared/feed-entry.ts";
 import type { ClientAction, ClosesFor, Me, ServerMessage } from "../../shared/protocol.ts";
 import type { RaceState } from "../../shared/race/race.ts";
+import { feedCapacity } from "../../shared/retention.ts";
 import { refusalText } from "./action-labels.ts";
 
 export interface RoomConnection {
@@ -33,7 +34,7 @@ export interface RoomConnection {
 
 const roomGoneCode = 4404;
 const maxRetryMs = 10_000;
-const maxFeedEntries = 200;
+const maxFeedEntries = feedCapacity;
 
 interface ClosedRoom {
   race: RaceState;
@@ -92,6 +93,11 @@ export function connectRoom(slug: string): RoomConnection {
       return;
     }
 
+    // A reconnect asks only for the log lines after the last one shown.
+    const lastId = feed().at(-1)?.id ?? 0;
+    if (lastId > 0) {
+      url.searchParams.set("since", String(lastId));
+    }
     socket = new WebSocket(url);
     socket.onopen = () => {
       retryMs = 1_000;
@@ -109,7 +115,9 @@ export function connectRoom(slug: string): RoomConnection {
       }
 
       setNotice("connection lost. reconnecting…");
-      retryTimer = setTimeout(open, retryMs);
+      // Spread over half to one and a half times the wait, so a restart's reconnects don't all
+      // hit the server in the same second.
+      retryTimer = setTimeout(open, retryMs * (0.5 + Math.random()));
       retryMs = Math.min(retryMs * 2, maxRetryMs);
     };
   }
@@ -159,8 +167,11 @@ export function connectRoom(slug: string): RoomConnection {
         setWatchers(message.watchers);
         setClosesFor(message.closesFor);
         break;
+      case "watchers":
+        setWatchers(message.count);
+        break;
       case "feed": {
-        // A reconnect resends the whole log, so only lines newer than the last one shown count.
+        // The server sends the lines after `since`, so only lines newer than the last one shown count.
         const lastId = feed().at(-1)?.id ?? 0;
         const fresh = message.entries.filter((entry) => entry.id > lastId);
         setFeed([...feed(), ...fresh].slice(-maxFeedEntries));

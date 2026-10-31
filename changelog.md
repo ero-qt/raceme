@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - A phone opens a room on the tab picked last in it, for as long as the browser tab lives.
 - A line in the chat log when a typed name first reaches the 24-character limit.
 - A bar at the bottom of a room on phones to switch between the room details and the chat.
+- A draining ring on `.done` and `.quit` for the first 5 seconds after GO, like the one on `send` during the slow mode wait.
+- A tooltip with the reason on `send`, `.done` and `.quit` while they are off.
 
 ### Changed
 
@@ -27,6 +29,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - Bot lines in the room chat show without a name.
 - Chat lines in the room chat show as `name: text`.
 - The start field, the goal and the clock show only an underline when hovered or focused, instead of a box.
+- A room takes up to 300 entrants instead of 50.
+- `send` is a square button with an enter arrow instead of a word.
 - Refused commands show as red lines in the chat log.
 - The name field keeps your name after `.unenter`.
 - Length messages read like "a name needs to be 1-24 characters long."
@@ -45,6 +49,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 
 ### Fixed
 
+- Someone opening or leaving a room page leaves the clocks of everyone in the room alone.
+- A reconnect gets only the chat lines it missed.
+- Reconnects spread out instead of all hitting the server at once.
+- An entrant's update redraws only their row, so focus in another row stays put.
+- During a race, the room timer, the closing warnings and the tab title redraw once a second instead of every frame.
+- The chat log keeps the newest 200 lines only this browser sees, like refusals, instead of all of them.
 - Emoji made of several emoji, like a family, stay whole in names, goals and chat.
 - The restart notice on the start page counts down while the page stays open.
 - `.startrace` works again after the server replies with an error page instead of a room.
@@ -52,9 +62,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - Messages a tab sends past its own limit no longer count against the limit it shares with other tabs on the same address.
 - Screen readers read the closing warning once instead of every second.
 - After a race button, focus stays on the page, off `.end` and out of the goal field.
-- The closing warning no longer dims the room behind it.
 - On phones, screen readers hear new chat and RaceBot lines on the room tab too.
 - "entry is closed" and "race is full" show as a red line above the name field instead of as its placeholder.
+- "you are muted" shows as a red line above the chat box instead of as its placeholder.
+- Buttons have 8 pixels between their text and their edge instead of 12.
+- `.rematch` sits at the top right of the clock line instead of next to the chat box.
+- A row button like `.quit` is as wide as its text, at the end of its column.
 - On phones, the start page field lines up with the cards.
 - On phones, the start page field sits as far above the cards as they are apart.
 - Enter and Escape in the goal field keep the focus there.
@@ -69,7 +82,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - With reduced motion on, `send` keeps its label during the slow mode wait.
 - Just past the phone width, the chat column keeps its clock, `.end`, name field and `.enter` inside the panel.
 - The warning sign in the invite link box sits on the first line, like the other warnings.
-- The entrant table keeps its time and button columns from 960 pixels of screen width, instead of 1024.
+- The entrant table keeps its time and button columns whenever it is at least 540 pixels wide, on a phone turned sideways too, instead of only from 1024 pixels of screen width.
+- The watcher count sits right after the eye, level with it.
+- The invite link box keeps its height when the warning or the link shows.
+- Setting the goal that is already set changes nothing, so nobody gets unreadied and RaceBot stays quiet.
 
 ### Security
 

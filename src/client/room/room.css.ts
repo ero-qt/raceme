@@ -1,8 +1,9 @@
-import { globalStyle, keyframes, style } from "@vanilla-extract/css";
+import { globalStyle, style } from "@vanilla-extract/css";
 import {
   controlBorder,
   disclosureSummary,
   divider,
+  icon,
   inlineEdit,
   panel,
   warningPanel,
@@ -87,7 +88,7 @@ export const tabButton = style([
   controlBorder,
   {
     minBlockSize: tokens.target.min,
-    paddingInline: tokens.space.m,
+    paddingInline: tokens.space.s,
     font: "inherit",
     fontWeight: 700,
     color: tokens.color.text1,
@@ -108,13 +109,16 @@ export const row = style({
 
 export const joinForm = style([row, { rowGap: tokens.space.xs }]);
 
-// Always one line tall, in the log's small text, so the form doesn't move when entry closes
-// or the race fills up.
-export const joinNotice = style({ flexBasis: "100%", minBlockSize: "1lh", fontSize: "0.75rem" });
+// Always one line tall, in the log's small text, so the form doesn't move when entry closes,
+// the race fills up or the host mutes you.
+export const formNotice = style({ flexBasis: "100%", minBlockSize: "1lh", fontSize: "0.75rem" });
 
+// The name column takes the room the others leave. Each other column asks for the width of its
+// widest content, so nothing moves as statuses, times and buttons change. A column still grows
+// past that for longer content.
 export const table = style({
   inlineSize: "100%",
-  tableLayout: "fixed",
+  tableLayout: "auto",
   borderCollapse: "collapse",
   background: tokens.color.bg1,
 });
@@ -172,50 +176,41 @@ export const rule = style([
 
 export const chatRow = style({
   display: "flex",
+  flexWrap: "wrap",
   alignItems: "flex-end",
   gap: tokens.space.s,
+  rowGap: tokens.space.xs,
 });
 
-export const sendButton = style({ position: "relative" });
-
-// The ring stands in for the label during the slow mode wait. With motion reduced the ring
-// doesn't show, so the label stays.
-export const sendLabel = style({
-  "@media": {
-    "(prefers-reduced-motion: no-preference)": {
-      selectors: { "&[data-waiting=true]": { visibility: "hidden" } },
-    },
-  },
+// The box, `send` and the race buttons share one line under the notice line. The box gives way
+// so the buttons always fit.
+export const chatLine = style({
+  display: "flex",
+  alignItems: "flex-end",
+  gap: tokens.space.s,
+  flex: "1 1 0",
+  minInlineSize: 0,
 });
 
-const drain = keyframes({ from: { strokeDashoffset: 0 }, to: { strokeDashoffset: 1 } });
+// A square, so the enter arrow sits centered and the button takes as little of the line as it can.
+export const sendButton = style({ inlineSize: tokens.target.min, paddingInline: 0 });
 
-export const waitRing = style({
-  position: "absolute",
-  inset: 0,
-  margin: "auto",
-  inlineSize: "1.25em",
-  blockSize: "1.25em",
-  transform: "rotate(-90deg)",
-  fill: "none",
-  stroke: "currentColor",
-  strokeWidth: 2.5,
-  strokeDasharray: 1,
-  animationName: drain,
-  animationTimingFunction: "linear",
-  animationFillMode: "forwards",
-  "@media": { "(prefers-reduced-motion: reduce)": { display: "none" } },
-});
-
-// Lets the message box shrink so `send` and the main buttons stay on its line on a phone.
-globalStyle(`${chatRow} > div`, { flex: "1 1 0", minInlineSize: 0 });
+// Lets the message box take the rest of its line next to `send`.
+globalStyle(`${chatLine} > div`, { flex: "1 1 0", minInlineSize: 0 });
 
 export const clockLine = style({
   display: "flex",
   flexWrap: "wrap",
-  alignItems: "center",
+  alignItems: "flex-start",
   justifyContent: "space-between",
   gap: tokens.space.s,
+});
+
+// `.end` and `.rematch` at the top right of the clock line.
+export const clockActions = style({
+  display: "flex",
+  gap: tokens.space.s,
+  marginInlineStart: "auto",
 });
 
 export const entrants = style({
@@ -241,20 +236,24 @@ export const entrantCount = style({
   fontVariantNumeric: "tabular-nums",
 });
 
-// Fits 2 digits plus the browser's up and down arrows.
-const capWidth = "calc(2ch + 28px)";
+// Fits 3 digits plus the browser's up and down arrows.
+const capWidth = "calc(3ch + 28px)";
 
 export const capField = style([
   inlineEdit,
   { boxSizing: "border-box", inlineSize: capWidth, padding: 0, paddingInline: "2px" },
 ]);
 
-// Reserves 2 digits each, so going from 9 to 10 entrants or a cap of 8 to 50 moves nothing.
+// Reserves 3 digits each, so going from 99 to 100 entrants or a cap of 8 to 300 moves nothing.
 export const countDigits = style({
   display: "inline-block",
-  minInlineSize: "2ch",
+  minInlineSize: "3ch",
   textAlign: "end",
 });
+// Sits right after the eye, with the same 3 digits reserved so a growing count moves nothing.
+export const watcherDigits = style([countDigits, { textAlign: "start" }]);
+// Lifts the eye to the middle of the digits, which sit above the middle of their line box.
+export const watcherIcon = style([icon, { position: "relative", insetBlockStart: "-0.07em" }]);
 // Matches the cap field's box, so the count keeps its place after the start.
 export const capDigits = style([
   controlBorder,
@@ -270,28 +269,38 @@ export const entrantsTitle = style({
   fontSize: "1rem",
 });
 
-export const placeColumn = style({ inlineSize: "3.5ch" });
-export const muteColumn = style({
-  inlineSize: `calc(${tokens.target.min} + 2 * ${tokens.space.s})`,
-});
-export const statusColumn = style({ inlineSize: "12ch" });
-export const timeColumn = style({ inlineSize: "13ch" });
-// Fits the widest row button, `.unenter`, in the monospace button font: 8 characters plus the
-// button's padding and border and the cell's padding.
-export const actionColumn = style({
-  inlineSize: `calc(8ch + 2 * ${tokens.space.m} + 4px + 2 * ${tokens.space.s})`,
-});
+// One character of the body's monospace font (0.6em of the 0.9375rem body size). The head cells
+// have a smaller font, so their own `ch` would undersize the columns.
+const bodyCh = "0.5625rem";
 
-export const placeCell = style([cell, { textAlign: "end" }]);
+// Each column's minimum is its widest content, so nothing moves as cells change. The name column
+// takes the rest. The mute column sizes to its button on its own.
+// Fits 3 digits with the narrow padding of the place cell, so the name column keeps its room on phones.
+export const placeColumn = style({ boxSizing: "border-box", minInlineSize: `calc(4 * ${bodyCh})` });
+export const nameColumn = style({ inlineSize: "100%" });
+// Fits a finished time with every digit, `00:00:00.000`, plus the cell's padding. On phones the
+// status column shows that time in place of the Done badge, so it needs the same room.
+const timeWidth = `calc(12 * ${bodyCh} + 2 * ${tokens.space.s})`;
+export const statusColumn = style({ boxSizing: "border-box", minInlineSize: timeWidth });
+export const timeColumn = style({ boxSizing: "border-box", minInlineSize: timeWidth });
+// Fits the widest row button, `.unenter`: 8 characters plus the button's padding and border and
+// the cell's padding.
+export const actionColumn = style({
+  boxSizing: "border-box",
+  minInlineSize: `calc(8 * ${bodyCh} + 4 * ${tokens.space.s} + 4px)`,
+});
+// The table shows its time and button columns from this width on: the mute, place, status, time
+// and button minimums above at the body's 15px font (48 + 36 + 124 + 124 + 108) and 100px of name.
+export const wideTableMinPx = 540;
+
+export const placeCell = style([cell, { textAlign: "end", paddingInline: tokens.space.xs }]);
+// A long name with no space in it wraps inside the cell instead of widening the table.
+export const nameCell = style([cell, { overflowWrap: "anywhere" }]);
 export const muteCell = style([cell, { paddingInline: tokens.space.s, textAlign: "center" }]);
 
 export const actionCell = style([cell, { textAlign: "end" }]);
 
 export const stackedActions = style({ marginBlockStart: tokens.space.xs });
-
-// Stretches every row button to the column, so .unenter, .quit and .remove line up.
-globalStyle(`${actionCell} button`, { inlineSize: "100%" });
-globalStyle(`${stackedActions} button`, { inlineSize: "auto" });
 
 export const muteButton = style({
   selectors: { "&[data-muted=true]": { color: tokens.color.statusForfeit } },

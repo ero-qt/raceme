@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { cleanup, fireEvent, render } from "@solidjs/testing-library";
+import { cleanup, fireEvent, render, waitFor } from "@solidjs/testing-library";
 import { ChatForm } from "./room-forms.tsx";
 
 afterEach(cleanup);
@@ -22,6 +22,28 @@ describe("chatForm", () => {
 
     await new Promise((resolve) => setTimeout(resolve, 80));
     expect(send.disabled).toBe(false);
+  });
+
+  test("send's tooltip gives the slow mode wait or the mute as the reason it is off", async () => {
+    const view = render(() => <ChatForm onSay={() => {}} waitMs={50} />);
+    const send = view.getByRole("button", { name: "send" }) as HTMLButtonElement;
+    fireEvent.input(view.getByLabelText("message"), { target: { value: "hi" } });
+    fireEvent.submit(send.closest("form") as HTMLFormElement);
+    expect(send.title).toBe("slow mode is on, wait a moment before your next message.");
+    await waitFor(() => expect(send.disabled).toBe(false));
+    expect(send.hasAttribute("title")).toBe(false);
+    cleanup();
+
+    const muted = render(() => <ChatForm onSay={() => {}} muted />);
+    expect(muted.getByRole("button", { name: "send" }).title).toBe("you are muted.");
+  });
+
+  test("send is a square button with the enter arrow and keeps its name for screen readers", () => {
+    const view = render(() => <ChatForm onSay={() => {}} />);
+    const send = view.getByRole("button", { name: "send" });
+
+    expect(send.querySelector("svg.lucide-corner-down-left")).not.toBeNull();
+    expect(send.textContent?.trim()).toBe("");
   });
 
   test("send hands focus back to the message box", () => {

@@ -63,6 +63,8 @@ export type ServerMessage =
       closesFor: ClosesFor;
       watchers: number;
     }
+  /** Gives a new watcher count alone, since a full state would reset every client's clock. */
+  | { type: "watchers"; count: number }
   | { type: "feed"; entries: FeedEntry[] }
   | { type: "refused"; refusal: RoomRefusal }
   | { type: "idleWarning"; closesAt: number; quietFor: string }

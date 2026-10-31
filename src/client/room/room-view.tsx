@@ -5,6 +5,7 @@ import {
   type JSX,
   Show,
   createEffect,
+  createMemo,
   createSignal,
   on,
   onCleanup,
@@ -19,6 +20,7 @@ import {
   earliestResultMs,
   standings,
 } from "../../shared/race/race.ts";
+import { feedCapacity } from "../../shared/retention.ts";
 import type { GoalCatalog } from "../goal/goal-picker.tsx";
 import { Button } from "../primitives/button.tsx";
 import { icon, visuallyHidden, warningIcon } from "../styles/controls.css.ts";
@@ -27,7 +29,7 @@ import { type ActionType, availableActions } from "./available-actions.ts";
 import { chatCommand } from "./chat-command.ts";
 import { EntrantTable } from "./entrant-table.tsx";
 import { EntrantsHeader } from "./entrants-header.tsx";
-import { FeedLog, type NoticeLine } from "./feed-log.tsx";
+import { FeedLog, type LogLine, type NoticeLine } from "./feed-log.tsx";
 import { useFractionDigits } from "./fraction-preference.ts";
 import { GoalTitle } from "./goal-title.tsx";
 import { InviteLink } from "./invite-link.tsx";
@@ -37,6 +39,7 @@ import * as styles from "./room.css.ts";
 import { ChatForm, JoinForm } from "./room-forms.tsx";
 import { RoomStatus } from "./room-status.tsx";
 import { HeaderStatus, RoomTimer } from "./room-timer.tsx";
+import { stableRows } from "./stable-rows.ts";
 import { type RoomTab, loadTab, saveTab } from "./tab-preference.ts";
 
 // Shows the actions that take you out of the race in your own row.
@@ -110,7 +113,9 @@ export function RoomView(props: RoomViewProps): JSX.Element {
   const tooEarly = (action: ActionType) =>
     (action === "done" || action === "forfeit") && elapsed() < earliestResultMs;
   const sideActions = () => actions().filter((a) => rowActionTypes.has(a));
-  const mainActions = () => actions().filter((a) => !rowActionTypes.has(a) && a !== "join");
+  // `.rematch` sits on the clock line next to `.end`, the other main buttons by the chat box.
+  const mainActions = () =>
+    actions().filter((a) => !rowActionTypes.has(a) && a !== "join" && a !== "rematch");
   const actionButton = (action: Accessor<ActionType>) => (
     <Button
       variant={
@@ -122,7 +127,8 @@ export function RoomView(props: RoomViewProps): JSX.Element {
               ? "accent"
               : "go"
       }
-      disabled={tooEarly(action())}
+      lockedForMs={tooEarly(action()) ? earliestResultMs - Math.max(0, elapsed()) : null}
+      reason={refusalText.tooEarly}
       onClick={(event) => press(event, { type: action() } as ClientAction)}
     >
       {actionLabel[action()]}
@@ -173,8 +179,10 @@ export function RoomView(props: RoomViewProps): JSX.Element {
   const [notices, setNotices] = createSignal<NoticeLine[]>([]);
   // A name stays filled in after .unenter, so entering again is one click.
   const [lastName, setLastName] = createSignal("");
-  const addNotice = (text: string) =>
-    setNotices((lines) => [...lines, { at: props.now, kind: "notice", text }]);
+  const addNotice = (text: string) => {
+    const line: NoticeLine = { at: props.now, kind: "notice", text };
+    setNotices((lines) => [...lines, line].slice(-feedCapacity));
+  };
   createEffect(
     on(
       () => props.notice,
@@ -185,13 +193,40 @@ export function RoomView(props: RoomViewProps): JSX.Element {
       },
     ),
   );
-  const logLines = () =>
-    [...props.feed, ...notices()].sort((a, b) => a.at - b.at || Number(a.kind === "notice"));
+  // Both lists are in time order already, so one pass merges them, a notice after a feed line
+  // of the same time.
+  const logLines = createMemo(() => {
+    const merged: LogLine[] = [];
+    const feed = props.feed;
+    const own = notices();
+    let i = 0;
+    let j = 0;
+    while (i < feed.length || j < own.length) {
+      const line = feed[i];
+      const notice = own[j];
+      if (line !== undefined && (notice === undefined || line.at <= notice.at)) {
+        merged.push(line);
+        i++;
+      } else if (notice !== undefined) {
+        merged.push(notice);
+        j++;
+      }
+    }
+    return merged;
+  });
   const latestLine = () => {
     const line = logLines().at(-1);
     return line?.kind === "chat" ? `${line.name}: ${line.text}` : (line?.text ?? "");
   };
 
+  // The room timer shows whole seconds, so it redraws once a second instead of every frame.
+  const second = createMemo(() => Math.floor(props.now / 1000) * 1000);
+  // Rows keep their object across updates while they read the same, so `<For>` rebuilds only
+  // the rows that changed and focus in the others stays.
+  const rows = createMemo<Standing[]>(
+    (previous) => stableRows(previous, standings(props.race)),
+    [],
+  );
   let messageBox: HTMLInputElement | undefined;
   let race: HTMLElement | undefined;
   let chat: HTMLElement | undefined;
@@ -206,11 +241,16 @@ export function RoomView(props: RoomViewProps): JSX.Element {
           <RoomStatus race={props.race} />
         </span>
       </div>
-      <Show when={props.me.isHost && !over() && !props.closed}>
-        <Button variant="danger" onClick={() => props.send({ type: "end" })}>
-          {actionLabel.end}
-        </Button>
-      </Show>
+      <div class={styles.clockActions}>
+        <Show when={props.me.isHost && !over() && !props.closed}>
+          <Button variant="danger" onClick={() => props.send({ type: "end" })}>
+            {actionLabel.end}
+          </Button>
+        </Show>
+        <Show when={actions().includes("rematch") && !props.closed}>
+          {actionButton(() => "rematch")}
+        </Show>
+      </div>
     </div>
   );
   // Phones show the room details or the chat, picked in the bar at the bottom. The join form is
@@ -327,7 +367,7 @@ export function RoomView(props: RoomViewProps): JSX.Element {
             <RoomTimer
               closesAt={props.closesAt ?? 0}
               closesFor={props.closesFor ?? "lifetime"}
-              now={props.now}
+              now={second()}
             />
           </HeaderStatus>
         </Show>
@@ -342,7 +382,7 @@ export function RoomView(props: RoomViewProps): JSX.Element {
             send={props.send}
           />
           <EntrantTable
-            rows={standings(props.race)}
+            rows={rows()}
             started={!beforeStart(props.race) && props.race.startsAt !== null}
             digits={precision.digits()}
             rowActions={rowActions}

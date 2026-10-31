@@ -1,13 +1,16 @@
-import { createEffect, createSignal, onCleanup } from "solid-js";
+import { type Accessor, createEffect, createMemo, createSignal, onCleanup } from "solid-js";
 import type { RoomConnection } from "./connection.ts";
 
 /**
- * Returns the server's time, read fresh on every access. It redraws every frame while the race
- * clock runs, because a timer would leave that clock stale by up to a second. It also redraws every
- * second for the room timer and the idle countdown, which shows in the tab title too, since
- * animation frames stop in background tabs.
+ * Returns the server's time 2 ways. `now` changes every frame while the race clock runs, because
+ * a timer would leave that clock stale by up to a second. Outside a race it changes every second,
+ * since animation frames stop in background tabs. `second` is `now` cut to whole seconds, for the
+ * room timer, the closing warnings and the tab title, which only show whole seconds.
  */
-export function useServerClock(room: Pick<RoomConnection, "race" | "clockOffset">): () => number {
+export function useServerClock(room: Pick<RoomConnection, "race" | "clockOffset">): {
+  now: Accessor<number>;
+  second: Accessor<number>;
+} {
   const [frame, setFrame] = createSignal(0);
   const tick = () => setFrame((count) => count + 1);
 
@@ -31,8 +34,10 @@ export function useServerClock(room: Pick<RoomConnection, "race" | "clockOffset"
     clearInterval(interval);
   });
 
-  return () => {
+  const now = () => {
     frame();
     return Date.now() + room.clockOffset();
   };
+  const second = createMemo(() => Math.floor(now() / 1000) * 1000);
+  return { now, second };
 }

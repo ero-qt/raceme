@@ -1,10 +1,11 @@
-import { type JSX, type ParentProps, Show, createSignal, onCleanup } from "solid-js";
+import { CornerDownLeft } from "lucide-solid";
+import { type JSX, type ParentProps, createSignal, onCleanup } from "solid-js";
 import { maxChatLength } from "../../shared/protocol.ts";
 import { maxNameLength } from "../../shared/race/race.ts";
 import { Button } from "../primitives/button.tsx";
 import { TextField } from "../primitives/text-field.tsx";
-import { notice } from "../styles/controls.css.ts";
-import { actionLabel } from "./action-labels.ts";
+import { icon, notice } from "../styles/controls.css.ts";
+import { actionLabel, refusalText } from "./action-labels.ts";
 import * as styles from "./room.css.ts";
 
 export function JoinForm(props: {
@@ -26,7 +27,7 @@ export function JoinForm(props: {
         props.onSubmit(name());
       }}
     >
-      <p class={`${notice} ${styles.joinNotice}`} role="status">
+      <p class={`${notice} ${styles.formNotice}`} role="status">
         {props.closedBecause ? `${props.closedBecause}.` : ""}
       </p>
       <TextField
@@ -102,49 +103,44 @@ export function ChatForm(
         messageBox?.focus();
       }}
     >
-      <TextField
-        label="message"
-        hideLabel
-        placeholder={props.muted ? "you are muted" : "chat"}
-        disabled={props.muted}
-        ref={(input: HTMLInputElement) => {
-          messageBox = input;
-          props.inputRef?.(input);
-        }}
-        maxLength={maxChatLength}
-        autocomplete="off"
-        value={text()}
-        onInput={(e) => setText(e.currentTarget.value)}
-        // Browsers skip Enter's submit while `send` is off, so a command still goes out in the wait.
-        onKeyDown={(event) => {
-          if (event.key === "Enter") {
-            event.preventDefault();
-            sendLine();
-          }
-        }}
-      />
-      <Button
-        type="submit"
-        variant="ghost"
-        class={styles.sendButton}
-        disabled={waiting() || props.muted}
-        aria-label="send"
-      >
-        <span class={styles.sendLabel} data-waiting={waiting()}>
-          send
-        </span>
-        <Show when={waiting()}>
-          <svg
-            class={styles.waitRing}
-            style={{ "animation-duration": `${props.waitMs}ms` }}
-            viewBox="0 0 20 20"
-            aria-hidden="true"
-          >
-            <circle cx="10" cy="10" r="8" pathLength="1" />
-          </svg>
-        </Show>
-      </Button>
-      {props.children}
+      <p class={`${notice} ${styles.formNotice}`} role="status">
+        {props.muted ? refusalText.muted : ""}
+      </p>
+      <div class={styles.chatLine}>
+        <TextField
+          label="message"
+          hideLabel
+          placeholder="chat"
+          disabled={props.muted}
+          ref={(input: HTMLInputElement) => {
+            messageBox = input;
+            props.inputRef?.(input);
+          }}
+          maxLength={maxChatLength}
+          autocomplete="off"
+          value={text()}
+          onInput={(e) => setText(e.currentTarget.value)}
+          // Browsers skip Enter's submit while `send` is off, so a command still goes out in the wait.
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              sendLine();
+            }
+          }}
+        />
+        <Button
+          type="submit"
+          variant="ghost"
+          class={styles.sendButton}
+          disabled={props.muted}
+          lockedForMs={waiting() ? props.waitMs : null}
+          reason={props.muted ? refusalText.muted : refusalText.slowMode}
+          aria-label="send"
+        >
+          <CornerDownLeft class={icon} aria-hidden="true" />
+        </Button>
+        {props.children}
+      </div>
     </form>
   );
 }

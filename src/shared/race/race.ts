@@ -15,7 +15,7 @@ export type * from "./types.ts";
 
 export const maxNameLength = 24;
 export const maxGoalLength = 200;
-export const maxEntrants = 50;
+export const maxEntrants = 300;
 export const minEntrantCap = 2;
 // Entrants named like the bot could post chat that passes for its announcements.
 const reservedNames = new Set(["racebot"]);
@@ -95,6 +95,9 @@ function setGoal(state: RaceState, rawGoal: string): RaceResult {
   const goal = cleanText(rawGoal);
   if (goal.length === 0 || goal.length > maxGoalLength) {
     return refuse("badGoal");
+  }
+  if (goal === state.goal) {
+    return ok(state);
   }
 
   return ok(stopCountdown({ ...state, goal, entrants: state.entrants.map(unreadied) }));

@@ -61,6 +61,9 @@ export const reveal = style([
     alignItems: "flex-start",
     minInlineSize: 0,
     paddingInlineStart: 0,
+    // A line of text is 1.5em tall and the copy button's icon 1.25em, so the text gets an
+    // eighth of an em less padding on each side and the box keeps its height when it shows.
+    paddingBlock: `calc(${tokens.space.s} - 0.125em)`,
     textAlign: "start",
   },
 ]);

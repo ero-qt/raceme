@@ -71,7 +71,7 @@ describe("room layout", () => {
       );
     };
     await setCap("8");
-    await setCap("50");
+    await setCap("300");
     expect(await positions(host.page)).toEqual(before);
 
     await setCap("8");
@@ -85,6 +85,56 @@ describe("room layout", () => {
     await host.page.getByText("in progress").waitFor();
     expect(await positions(host.page)).toEqual(before);
 
+    // A row button is as wide as its text, at the end of its column, which stays as wide as
+    // `.unenter`, the widest of them.
+    const quit = await host.page.getByRole("button", { name: ".quit" }).boundingBox();
+    const quitCell = await host.page
+      .getByRole("button", { name: ".quit" })
+      .locator("xpath=..")
+      .boundingBox();
+    // A button's side padding is the page's 8px spacing, inside its 2px border.
+    const quitPadding = await host.page
+      .getByRole("button", { name: ".quit" })
+      .evaluate((button) => {
+        const range = document.createRange();
+        range.selectNodeContents(button);
+        return (button.getBoundingClientRect().width - range.getBoundingClientRect().width - 4) / 2;
+      });
+    expect(Math.round(quitPadding)).toBe(8);
+    expect({
+      narrowerThanCell: (quit?.width ?? 0) < (quitCell?.width ?? 0) - 24,
+      atTheEnd:
+        Math.round((quit?.x ?? 0) + (quit?.width ?? 0)) ===
+        Math.round((quitCell?.x ?? 0) + (quitCell?.width ?? 0) - 8),
+    }).toEqual({ narrowerThanCell: true, atTheEnd: true });
+
+    // A finished time with every digit fits the time column. On phones it fits the status column.
+    await host.page.getByLabel("time precision").selectOption("3");
+    await host.page.getByRole("button", { name: ".done" }).click({ timeout: 10_000 });
+    await host.page.getByRole("columnheader", { name: "#" }).waitFor();
+    await host.page
+      .getByText(/^\d\d:\d\d:\d\d\.\d\d\d$/)
+      .first()
+      .waitFor();
+    expect(await positions(host.page)).toEqual(before);
+
+    // `send` is a square, so it takes as little of the line as a button can.
+    const sendBox = await guest.page.getByRole("button", { name: "send" }).boundingBox();
+    expect([Math.round(sendBox?.width ?? 0), Math.round(sendBox?.height ?? 0)]).toEqual([32, 32]);
+    // The box, `send` and the race buttons share one line even on a narrow screen.
+    await guest.page.setViewportSize({ width: 320, height: 800 });
+    await guest.page.getByRole("button", { name: "chat", exact: true }).click();
+    const [box, send, done] = await Promise.all(
+      [guest.page.getByLabel("message"), guest.page.getByRole("button", { name: "send" })]
+        .map((control) => control.boundingBox())
+        .concat([guest.page.getByRole("button", { name: ".done" }).boundingBox()]),
+    );
+    expect({
+      boxWide: (box?.width ?? 0) >= 100,
+      sendBeside: Math.round(send?.y ?? 0) === Math.round(box?.y ?? 1),
+      doneBeside: Math.round(done?.y ?? 0) === Math.round(box?.y ?? 1),
+    }).toEqual({ boxWide: true, sendBeside: true, doneBeside: true });
+
     await host.context.close();
     await guest.context.close();
   }, 30_000);
@@ -96,6 +146,15 @@ describe("room columns", () => {
     await openLobbyAndEnter(page, harness.origin, "ero");
     const race = page.getByRole("region", { name: "room" });
     const chat = page.getByRole("region", { name: "chat" });
+
+    // Revealing the invite link puts a line of text where there was none, at the same height.
+    const invite = page.getByRole("button", { name: "copy invite link" }).locator("xpath=..");
+    const hiddenHeight = (await invite.boundingBox())?.height;
+    await page.getByRole("button", { name: "show invite link" }).click();
+    expect((await invite.boundingBox())?.height).toBe(hiddenHeight);
+    await page.getByRole("button", { name: "you are about to reveal the invite link!" }).click();
+    expect((await invite.boundingBox())?.height).toBe(hiddenHeight);
+    await page.mouse.move(0, 0);
 
     const wideRace = await race.boundingBox();
     const wideChat = await chat.boundingBox();
@@ -229,20 +288,23 @@ describe("entrants header on phones", () => {
 });
 
 describe("entrant table", () => {
-  // Below 960 pixels a finished entrant's time takes the place of the Done badge and the row
-  // buttons go under the name, so the name keeps room to read.
-  test("leaves the host at least 100 pixels for names on a 960, 900, 412 and 360 pixel wide screen", async () => {
+  // The table keeps its time and button columns while it is wide enough to leave names 100
+  // pixels: beside the chat from 976 pixels of screen, alone on a 700 pixel phone, not on a
+  // 900 pixel screen where the chat takes its share. Otherwise a finished time takes the place
+  // of the Done badge and the row buttons go under the name. The longest name with no space in
+  // it wraps inside its cell instead of widening the table.
+  test("leaves the host at least 100 pixels for names on a 976, 900, 700, 412 and 360 pixel wide screen", async () => {
     const { context, page } = await newPage(harness);
-    await openLobbyAndEnter(page, harness.origin, "ero");
+    await openLobbyAndEnter(page, harness.origin, "xXx_SpeedRunner_2026_xXx");
 
-    for (const width of [960, 900, 412, 360]) {
+    for (const width of [976, 900, 700, 412, 360]) {
       await page.setViewportSize({ width, height: 800 });
       if (width < 768) {
         await page.getByRole("button", { name: "room", exact: true }).click();
       }
       await page
         .getByRole("columnheader", { name: "time" })
-        .waitFor({ state: width >= 960 ? "visible" : "detached" });
+        .waitFor({ state: width >= 976 || width === 700 ? "visible" : "detached" });
       await page.waitForFunction(
         () => getComputedStyle(document.querySelector("#app") as Element).minHeight === "800px",
       );

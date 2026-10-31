@@ -9,12 +9,14 @@ const realSetTimeout = globalThis.setTimeout;
 class StuckSocket {
   static opened: StuckSocket[] = [];
   readyState = 0;
+  url: string;
   sent: string[] = [];
   onopen: (() => void) | null = null;
   onmessage: ((event: { data: string }) => void) | null = null;
   onclose: ((event: { code: number }) => void) | null = null;
 
-  constructor() {
+  constructor(url: URL | string) {
+    this.url = String(url);
     StuckSocket.opened.push(this);
   }
 
@@ -37,10 +39,11 @@ function useStuckSocket() {
 }
 
 // Collects retries instead of waiting for them, so a test can fire them by hand.
-function captureTimers(): (() => void)[] {
+function captureTimers(delays: number[] = []): (() => void)[] {
   const pending: (() => void)[] = [];
-  globalThis.setTimeout = ((run: () => void) => {
+  globalThis.setTimeout = ((run: () => void, delay: number) => {
     pending.push(run);
+    delays.push(delay);
     return pending.length;
   }) as never;
   return pending;
@@ -76,6 +79,29 @@ describe("connectRoom", () => {
 
       timers.shift()?.();
       expect(StuckSocket.opened).toHaveLength(2);
+
+      dispose();
+    });
+  });
+
+  test("a retry waits half to one and a half times the wait and asks only for the lines after the last one shown", () => {
+    useStuckSocket();
+    const delays: number[] = [];
+    const timers = captureTimers(delays);
+
+    createRoot((dispose) => {
+      connectRoom("abcdefghij");
+      const socket = StuckSocket.opened[0];
+      socket?.onmessage?.({
+        data: JSON.stringify({ type: "feed", entries: [{ id: 7, kind: "bot", text: "a", at: 0 }] }),
+      });
+      socket?.onclose?.({ code: 1006 });
+      timers.shift()?.();
+
+      expect(delays[0]).toBeGreaterThanOrEqual(500);
+      expect(delays[0]).toBeLessThanOrEqual(1_500);
+      expect(new URL(StuckSocket.opened[1]?.url ?? "").searchParams.get("since")).toBe("7");
+      expect(new URL(StuckSocket.opened[0]?.url ?? "").searchParams.get("since")).toBeNull();
 
       dispose();
     });
@@ -142,6 +168,8 @@ describe("connectRoom", () => {
       });
 
       expect(room.watchers()).toBe(4);
+      StuckSocket.opened[0]?.onmessage?.({ data: JSON.stringify({ type: "watchers", count: 5 }) });
+      expect(room.watchers()).toBe(5);
 
       dispose();
     });

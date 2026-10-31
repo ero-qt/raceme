@@ -10,6 +10,8 @@ export const placement = style({
   justifyItems: "center",
   alignItems: "start",
   paddingBlockStart: tokens.space.l,
+  // Dims the room, since nothing behind the warning is meant to be read while it shows.
+  background: tokens.overlay.scrim,
   pointerEvents: "none",
 });
 

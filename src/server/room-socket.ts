@@ -10,6 +10,8 @@ export interface SocketData extends Session {
   slug: string;
   ip: string;
   sessionSecret: string;
+  /** The id of the last log line the client has, so a reconnect only gets the lines after it. */
+  since: number;
   bucket: TokenBucket;
 }
 
@@ -52,13 +54,11 @@ export function roomSocketHandlers(deps: {
       isHost: socket.data.isHost,
       chatEveryMs,
     });
-    // A fresh state resets every client's clock offset, so the room only hears about a new count.
-    if (room.watcherCount === watchersBefore) {
-      send(socket, hub.state(room));
-    } else {
-      hub.publishState(room);
+    send(socket, hub.state(room));
+    if (room.watcherCount !== watchersBefore) {
+      hub.publishWatchers(room);
     }
-    send(socket, { type: "feed", entries: [...room.feed.entries] });
+    send(socket, { type: "feed", entries: room.feed.after(socket.data.since) });
 
     // Someone opening the room is someone at the screen, so it counts as input too.
     if (room.noteInput(clock())) {
@@ -76,7 +76,7 @@ export function roomSocketHandlers(deps: {
         room.detachSession(socket.data.sessionSecret);
         deps.countsChanged?.();
         if (room.watcherCount !== watchersBefore) {
-          hub.publishState(room);
+          hub.publishWatchers(room);
         }
       }
     }
@@ -128,6 +128,10 @@ export function roomSocketHandlers(deps: {
 
   /** Stores an accepted action's race state and tells everyone in the room about it. */
   function applyResult(room: Room, result: RoomActionResult & { ok: true }, now: number): void {
+    // An action that changed nothing, like setting the goal that is set, has nothing to tell.
+    if (result.state === room.race && result.lines.length === 0) {
+      return;
+    }
     const wasTerminated = room.race.phase === "terminated";
     room.race = result.state;
     if (room.race.phase !== "terminated") {

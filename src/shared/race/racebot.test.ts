@@ -47,6 +47,11 @@ describe("announce", () => {
     expect(steps(twoEntered.slice(0, 1)).lines).toEqual(["Goal Set: any%"]);
   });
 
+  test("the same goal again is no line", () => {
+    const again = [...twoEntered.slice(0, 1), { type: "setGoal", goal: "any%" } as const];
+    expect(steps(again).lines).toEqual([]);
+  });
+
   test("ready counts who is left", () => {
     expect(steps([...twoEntered, { type: "ready", entrantId: "a" }]).lines).toEqual([
       "Namaztak is ready! 1 remaining.",

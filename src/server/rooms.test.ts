@@ -149,6 +149,13 @@ describe("RoomRegistry.peopleCount", () => {
     rooms.sweep(72 * 60 * 60_000);
     expect(rooms.peopleCount).toBe(0);
   });
+
+  test("detaching a session that never attached changes nothing", () => {
+    const rooms = registry();
+    const room = created(rooms.create(settings, 0)).room;
+    room.detachSession("never-attached");
+    expect(rooms.peopleCount).toBe(0);
+  });
 });
 
 describe("RoomRegistry lifetime", () => {

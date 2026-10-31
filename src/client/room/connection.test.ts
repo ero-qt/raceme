@@ -84,7 +84,7 @@ describe("connectRoom", () => {
     });
   });
 
-  test("retries spread out over half to one and a half times the wait, and ask for the lines after the last one shown", () => {
+  test("a retry waits half to one and a half times the wait and asks only for the lines after the last one shown", () => {
     useStuckSocket();
     const delays: number[] = [];
     const timers = captureTimers(delays);

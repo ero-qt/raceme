@@ -18,7 +18,7 @@ describe("stableRows", () => {
     expect(stableRows(previous, [{ ...alice }, { ...bob }])).toBe(previous);
   });
 
-  test("tells a new time apart from the old one", () => {
+  test("a new time counts as a change", () => {
     const done: Standing = { ...alice, result: { kind: "done", timeMs: 5 }, place: 1 };
     const faster = { ...done, result: { kind: "done" as const, timeMs: 4 } };
     expect(stableRows([done], [faster])[0]).toBe(faster);

@@ -2,6 +2,7 @@ import { type Accessor, createSignal, onCleanup } from "solid-js";
 import type { FeedEntry } from "../../shared/feed-entry.ts";
 import type { ClientAction, ClosesFor, Me, ServerMessage } from "../../shared/protocol.ts";
 import type { RaceState } from "../../shared/race/race.ts";
+import { feedCapacity } from "../../shared/retention.ts";
 import { refusalText } from "./action-labels.ts";
 
 export interface RoomConnection {
@@ -33,7 +34,7 @@ export interface RoomConnection {
 
 const roomGoneCode = 4404;
 const maxRetryMs = 10_000;
-const maxFeedEntries = 200;
+const maxFeedEntries = feedCapacity;
 
 interface ClosedRoom {
   race: RaceState;
@@ -170,7 +171,7 @@ export function connectRoom(slug: string): RoomConnection {
         setWatchers(message.count);
         break;
       case "feed": {
-        // A reconnect resends the whole log, so only lines newer than the last one shown count.
+        // The server sends the lines after `since`, so only lines newer than the last one shown count.
         const lastId = feed().at(-1)?.id ?? 0;
         const fresh = message.entries.filter((entry) => entry.id > lastId);
         setFeed([...feed(), ...fresh].slice(-maxFeedEntries));

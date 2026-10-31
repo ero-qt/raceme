@@ -19,7 +19,7 @@ export function EntrantTable(props: {
 
   return (
     <table class={styles.table} aria-label="entrants" ref={table}>
-      {/* Each head cell asks for its column's width, so the columns stay still as cells change. */}
+      {/* Each head cell sets its column's minimum width, so the columns stay still as cells change. */}
       <thead>
         <tr>
           <Show when={props.muteButton}>

@@ -104,7 +104,7 @@ export function ChatForm(
       }}
     >
       <p class={`${notice} ${styles.formNotice}`} role="status">
-        {props.muted ? "you are muted." : ""}
+        {props.muted ? refusalText.muted : ""}
       </p>
       <div class={styles.chatLine}>
         <TextField

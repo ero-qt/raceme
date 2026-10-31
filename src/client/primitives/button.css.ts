@@ -99,8 +99,8 @@ export const buttonVariant = styleVariants({
   ],
 });
 
-// The ring stands in for the label while the button is locked. Opacity keeps the label's text
-// as the button's name for screen readers, which `visibility: hidden` would drop. With motion
+// The ring stands in for the label while the button is locked. The label fades to nothing
+// instead of going hidden, so its text stays the button's name for screen readers. With motion
 // reduced the ring doesn't show, so the label stays.
 export const label = style({
   display: "flex",

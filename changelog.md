@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - A phone opens a room on the tab picked last in it, for as long as the browser tab lives.
 - A line in the chat log when a typed name first reaches the 24-character limit.
 - A bar at the bottom of a room on phones to switch between the room details and the chat.
+- A draining ring on `.done` and `.quit` for the first 5 seconds after GO, like the one on `send` during the slow mode wait.
+- A tooltip with the reason on `send`, `.done` and `.quit` while they are off.
 
 ### Changed
 
@@ -27,7 +29,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - Bot lines in the room chat show without a name.
 - Chat lines in the room chat show as `name: text`.
 - The start field, the goal and the clock show only an underline when hovered or focused, instead of a box.
-- A room takes up to 300 entrants instead of 50, plus as many watchers.
+- A room takes up to 300 entrants instead of 50.
+- `send` is a square button with an enter arrow instead of a word.
 - Refused commands show as red lines in the chat log.
 - The name field keeps your name after `.unenter`.
 - Length messages read like "a name needs to be 1-24 characters long."
@@ -49,9 +52,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - Someone opening or leaving a room page leaves the clocks of everyone in the room alone.
 - A reconnect gets only the chat lines it missed.
 - Reconnects spread out instead of all hitting the server at once.
-- An entrant's update redraws only their row, so focus in another row stays.
+- An entrant's update redraws only their row, so focus in another row stays put.
 - During a race, the room timer, the closing warnings and the tab title redraw once a second instead of every frame.
-- The chat log keeps the newest 200 refusal lines instead of all of them.
+- The chat log keeps the newest 200 lines only this browser sees, like refusals, instead of all of them.
 - Emoji made of several emoji, like a family, stay whole in names, goals and chat.
 - The restart notice on the start page counts down while the page stays open.
 - `.startrace` works again after the server replies with an error page instead of a room.
@@ -62,11 +65,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - On phones, screen readers hear new chat and RaceBot lines on the room tab too.
 - "entry is closed" and "race is full" show as a red line above the name field instead of as its placeholder.
 - "you are muted" shows as a red line above the chat box instead of as its placeholder.
-- `send` is a square button with an enter arrow instead of a word.
-- `.done` and `.quit` show the same draining ring as `send` for the first 5 seconds after GO.
-- A button that is off shows why as a tooltip.
-- Buttons have 8 pixels between their text and their edge instead of 12, like the spacing everywhere else.
-- `.rematch` sits at the top right of the clock line, where `.end` sits for the host, instead of next to the chat box.
+- Buttons have 8 pixels between their text and their edge instead of 12.
+- `.rematch` sits at the top right of the clock line instead of next to the chat box.
 - A row button like `.quit` is as wide as its text, at the end of its column.
 - On phones, the start page field lines up with the cards.
 - On phones, the start page field sits as far above the cards as they are apart.

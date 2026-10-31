@@ -140,9 +140,12 @@ export class Room {
    * its id back, so visitors with throwaway cookies can't use up the room's session limit.
    */
   detachSession(sessionSecret: string): void {
-    const left = (this.#sessionSockets.get(sessionSecret) ?? 1) - 1;
-    if (left > 0) {
-      this.#sessionSockets.set(sessionSecret, left);
+    const open = this.#sessionSockets.get(sessionSecret);
+    if (open === undefined) {
+      return;
+    }
+    if (open > 1) {
+      this.#sessionSockets.set(sessionSecret, open - 1);
       return;
     }
 

@@ -24,7 +24,7 @@ describe("chatForm", () => {
     expect(send.disabled).toBe(false);
   });
 
-  test("send tells why it is off: the slow mode wait, or being muted", async () => {
+  test("send's tooltip gives the slow mode wait or the mute as the reason it is off", async () => {
     const view = render(() => <ChatForm onSay={() => {}} waitMs={50} />);
     const send = view.getByRole("button", { name: "send" }) as HTMLButtonElement;
     fireEvent.input(view.getByLabelText("message"), { target: { value: "hi" } });
@@ -35,10 +35,10 @@ describe("chatForm", () => {
     cleanup();
 
     const muted = render(() => <ChatForm onSay={() => {}} muted />);
-    expect(muted.getByRole("button", { name: "send" }).title).toBe("you have been muted.");
+    expect(muted.getByRole("button", { name: "send" }).title).toBe("you are muted.");
   });
 
-  test("send is a square button with the enter arrow, named for screen readers", () => {
+  test("send is a square button with the enter arrow and keeps its name for screen readers", () => {
     const view = render(() => <ChatForm onSay={() => {}} />);
     const send = view.getByRole("button", { name: "send" });
 

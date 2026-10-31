@@ -17,7 +17,7 @@ a room closes:
 
 the page shows how long the room has left next to the site name. on a phone the room shows the race and the chat one at a time, with a bar at the bottom to switch. after a room closes, the tab you had it open in keeps the results so you can still save them.
 
-a race takes up to 50 entrants. chat lines can be up to 512 characters, each entrant can send 1 line every 3 seconds, and nobody can delete a line once it's sent. the host can mute an entrant's chat, remove an entrant before the start, close entry and set a lower entrant limit.
+a race takes up to 300 entrants. chat lines can be up to 512 characters, each entrant can send 1 line every 3 seconds, and nobody can delete a line once it's sent. the host can mute an entrant's chat, remove an entrant before the start, close entry and set a lower entrant limit.
 
 new rooms are limited per address and per network. when lots of rooms open at once, the browser solves a short proof of work before it gets a new room.
 

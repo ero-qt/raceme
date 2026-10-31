@@ -13,7 +13,7 @@ export interface ButtonProps extends Omit<ComponentProps<"button">, "type"> {
    * its label, like a cooldown. `null` or `undefined` leaves it unlocked.
    */
   lockedForMs?: number | null | undefined;
-  /** Tells why the button is off, as a tooltip while it is disabled or locked. */
+  /** The reason the button is off, shown as a tooltip while it is disabled or locked. */
   reason?: string | undefined;
 }
 

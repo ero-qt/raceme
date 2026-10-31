@@ -117,11 +117,12 @@ function doneTime(row: Standing, digits: FractionDigits): string {
 }
 
 /**
- * Tracks whether the screen has room for the Time and row button columns. On a phone a finished
- * entrant's time shows in the Status column and the row buttons sit under the name.
+ * Tracks whether the screen has room for the Time and row button columns. Below 60rem a finished
+ * entrant's time shows in the Status column and the row buttons sit under the name, since the
+ * left column next to the chat leaves the name less than 100px with the 2 columns in.
  */
 function wideScreen(): () => boolean {
-  const query = globalThis.matchMedia?.("(min-width: 64rem)");
+  const query = globalThis.matchMedia?.("(min-width: 60rem)");
   const [wide, setWide] = createSignal(query?.matches ?? true);
   const onChange = (event: MediaQueryListEvent) => setWide(event.matches);
   query?.addEventListener("change", onChange);

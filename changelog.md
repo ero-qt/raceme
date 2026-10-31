@@ -66,6 +66,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - With reduced motion on, the spinners stand still and `send` keeps its label during the wait.
 - Just past the phone width, the chat column keeps its clock, `.end`, name field and `.enter` inside the panel.
 - The warning sign in the invite link box sits on the first line, like the other warnings.
+- The entrant table keeps its time and button columns from 960 pixels of screen width, instead of 1024.
 
 ### Security
 

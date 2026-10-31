@@ -71,7 +71,7 @@ describe("room layout", () => {
       );
     };
     await setCap("8");
-    await setCap("50");
+    await setCap("300");
     expect(await positions(host.page)).toEqual(before);
 
     await setCap("8");
@@ -229,20 +229,20 @@ describe("entrants header on phones", () => {
 });
 
 describe("entrant table", () => {
-  // Below 960 pixels a finished entrant's time takes the place of the Done badge and the row
+  // Below 976 pixels a finished entrant's time takes the place of the Done badge and the row
   // buttons go under the name, so the name keeps room to read.
-  test("leaves the host at least 100 pixels for names on a 960, 900, 412 and 360 pixel wide screen", async () => {
+  test("leaves the host at least 100 pixels for names on a 976, 900, 412 and 360 pixel wide screen", async () => {
     const { context, page } = await newPage(harness);
     await openLobbyAndEnter(page, harness.origin, "ero");
 
-    for (const width of [960, 900, 412, 360]) {
+    for (const width of [976, 900, 412, 360]) {
       await page.setViewportSize({ width, height: 800 });
       if (width < 768) {
         await page.getByRole("button", { name: "room", exact: true }).click();
       }
       await page
         .getByRole("columnheader", { name: "time" })
-        .waitFor({ state: width >= 960 ? "visible" : "detached" });
+        .waitFor({ state: width >= 976 ? "visible" : "detached" });
       await page.waitForFunction(
         () => getComputedStyle(document.querySelector("#app") as Element).minHeight === "800px",
       );

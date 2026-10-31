@@ -120,6 +120,16 @@ describe("RoomRegistry.sweep", () => {
   });
 });
 
+describe("Room session limit", () => {
+  test("hands out 600 entrant ids per room, so 300 entrants and as many watchers fit", () => {
+    const room = created(registry().create(settings, 0)).room;
+    for (let i = 0; i < 600; i++) {
+      expect(room.entrantIdFor(`secret-${i}`)).not.toBeNull();
+    }
+    expect(room.entrantIdFor("secret-600")).toBeNull();
+  });
+});
+
 describe("RoomRegistry.peopleCount", () => {
   test("counts each session once across its tabs and drops a room's people with the room", () => {
     const rooms = registry({ idleMs: 100 * 60 * 60_000, roomLifetimeMs: 72 * 60 * 60_000 });

@@ -37,7 +37,7 @@ export const refusalText: Record<RoomRefusal, string> = {
   notHost: "only the host can do that.",
   raceFull: "this race is full.",
   entryClosed: "entry is closed.",
-  badCap: "the entrant limit needs a number from 2 to 50.",
+  badCap: "the entrant limit needs a number from 2 to 300.",
   rateLimited: "slow down a little.",
   muted: "you have been muted.",
   slowMode: "slow mode is on, wait a moment before your next message.",

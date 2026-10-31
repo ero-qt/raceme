@@ -112,7 +112,7 @@ export function loadConfig(env: Env): ServerConfig {
     surgeBits: 16,
     countdownMs: 10_000,
     clearAfterEndMs: 10 * 60_000,
-    maxSessionsPerRoom: 200,
+    maxSessionsPerRoom: 600,
     feedCapacity,
     speedrunPerMinute: 60,
     chatEveryMs: count("RACEME_CHAT_SECONDS", 3) * 1000,

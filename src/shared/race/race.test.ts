@@ -342,15 +342,16 @@ describe("entrant cap", () => {
     expect(run(ended, { type: "rematch" }).settings.entrantCap).toBe(2);
   });
 
-  test("takes a cap from 2 to 50, or none", () => {
+  test("takes a cap from 2 to 300, or none", () => {
     expect(refusal(twoJoined(), { type: "setEntrantCap", cap: 1 })).toBe("badCap");
-    expect(refusal(twoJoined(), { type: "setEntrantCap", cap: 51 })).toBe("badCap");
+    expect(refusal(twoJoined(), { type: "setEntrantCap", cap: 301 })).toBe("badCap");
+    expect(run(twoJoined(), { type: "setEntrantCap", cap: 300 }).settings.entrantCap).toBe(300);
     expect(run(twoJoined(), { type: "setEntrantCap", cap: null }).settings.entrantCap).toBeNull();
   });
 
   test("refuses joining a full race", () => {
     let state = createRace({ countdownMs });
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < 300; i++) {
       state = run(state, { type: "join", entrantId: `e${i}`, name: `racer${i}` });
     }
 

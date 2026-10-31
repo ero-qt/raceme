@@ -241,18 +241,18 @@ export const entrantCount = style({
   fontVariantNumeric: "tabular-nums",
 });
 
-// Fits 2 digits plus the browser's up and down arrows.
-const capWidth = "calc(2ch + 28px)";
+// Fits 3 digits plus the browser's up and down arrows.
+const capWidth = "calc(3ch + 28px)";
 
 export const capField = style([
   inlineEdit,
   { boxSizing: "border-box", inlineSize: capWidth, padding: 0, paddingInline: "2px" },
 ]);
 
-// Reserves 2 digits each, so going from 9 to 10 entrants or a cap of 8 to 50 moves nothing.
+// Reserves 3 digits each, so going from 99 to 100 entrants or a cap of 8 to 300 moves nothing.
 export const countDigits = style({
   display: "inline-block",
-  minInlineSize: "2ch",
+  minInlineSize: "3ch",
   textAlign: "end",
 });
 // Matches the cap field's box, so the count keeps its place after the start.
@@ -270,7 +270,8 @@ export const entrantsTitle = style({
   fontSize: "1rem",
 });
 
-export const placeColumn = style({ inlineSize: "3.5ch" });
+// Fits 3 digits with the narrow padding of the place cell, so the name column keeps its room on phones.
+export const placeColumn = style({ inlineSize: "4ch" });
 export const muteColumn = style({
   inlineSize: `calc(${tokens.target.min} + 2 * ${tokens.space.s})`,
 });
@@ -282,7 +283,7 @@ export const actionColumn = style({
   inlineSize: `calc(8ch + 2 * ${tokens.space.m} + 4px + 2 * ${tokens.space.s})`,
 });
 
-export const placeCell = style([cell, { textAlign: "end" }]);
+export const placeCell = style([cell, { textAlign: "end", paddingInline: tokens.space.xs }]);
 export const muteCell = style([cell, { paddingInline: tokens.space.s, textAlign: "center" }]);
 
 export const actionCell = style([cell, { textAlign: "end" }]);

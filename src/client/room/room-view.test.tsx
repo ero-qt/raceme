@@ -397,7 +397,7 @@ describe("RoomView layout", () => {
 
     expect(view.getByRole("table", { name: "entrants" })).toBeTruthy();
     expect(view.getByRole("heading", { name: "entrants" }).nextElementSibling?.textContent).toBe(
-      "0/50",
+      "0/300",
     );
   });
 
@@ -500,7 +500,7 @@ describe("RoomView layout", () => {
 
     fireEvent.click(host.getByRole("button", { name: "close entry" }));
     fireEvent.change(limit, { target: { value: "1" } });
-    expect(limit.value).toBe("50");
+    expect(limit.value).toBe("300");
     fireEvent.change(limit, { target: { value: "8" } });
 
     expect(host.sent).toEqual([{ type: "lock" }, { type: "setEntrantCap", cap: 8 }]);

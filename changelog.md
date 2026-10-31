@@ -27,6 +27,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - Bot lines in the room chat show without a name.
 - Chat lines in the room chat show as `name: text`.
 - The start field, the goal and the clock show only an underline when hovered or focused, instead of a box.
+- A room takes up to 300 entrants instead of 50, plus as many watchers.
 - Refused commands show as red lines in the chat log.
 - The name field keeps your name after `.unenter`.
 - Length messages read like "a name needs to be 1-24 characters long."
@@ -74,7 +75,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - With reduced motion on, `send` keeps its label during the slow mode wait.
 - Just past the phone width, the chat column keeps its clock, `.end`, name field and `.enter` inside the panel.
 - The warning sign in the invite link box sits on the first line, like the other warnings.
-- The entrant table keeps its time and button columns from 960 pixels of screen width, instead of 1024.
+- The entrant table keeps its time and button columns from 976 pixels of screen width, instead of 1024.
 
 ### Security
 

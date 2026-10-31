@@ -10,6 +10,8 @@ export interface SocketData extends Session {
   slug: string;
   ip: string;
   sessionSecret: string;
+  /** The id of the last log line the client has, so a reconnect only gets the lines after it. */
+  since: number;
   bucket: TokenBucket;
 }
 
@@ -56,7 +58,7 @@ export function roomSocketHandlers(deps: {
     if (room.watcherCount !== watchersBefore) {
       hub.publishWatchers(room);
     }
-    send(socket, { type: "feed", entries: [...room.feed.entries] });
+    send(socket, { type: "feed", entries: room.feed.after(socket.data.since) });
 
     // Someone opening the room is someone at the screen, so it counts as input too.
     if (room.noteInput(clock())) {

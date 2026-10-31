@@ -84,7 +84,8 @@ export function createRouter(deps: RouteDeps): Router {
     }
     const socketSlug = roomSocketPath.exec(path)?.[1];
     if (socketSlug) {
-      return upgradeRoomSocket(deps, { request, server, slug: socketSlug, ip });
+      const since = Math.max(0, Math.trunc(Number(url.searchParams.get("since")) || 0));
+      return upgradeRoomSocket(deps, { request, server, slug: socketSlug, ip, since });
     }
 
     const readsPage = request.method === "GET" || request.method === "HEAD";
@@ -237,6 +238,8 @@ interface UpgradeRequest {
   server: Server<SocketData>;
   slug: string;
   ip: string;
+  /** The id of the last log line the client has, read from `?since=`. 0 without one. */
+  since: number;
 }
 
 function upgradeRoomSocket(deps: RouteDeps, upgrade: UpgradeRequest): Response | undefined {
@@ -258,6 +261,7 @@ function upgradeRoomSocket(deps: RouteDeps, upgrade: UpgradeRequest): Response |
       sessionSecret: "",
       entrantId: "",
       isHost: false,
+      since: 0,
       bucket: new TokenBucket(0, 0, clock()),
     };
     return server.upgrade(request, { data: gone }) ? undefined : status(400);
@@ -268,7 +272,7 @@ function upgradeRoomSocket(deps: RouteDeps, upgrade: UpgradeRequest): Response |
 
 function upgradeIntoRoom(
   { config, clock }: RouteDeps,
-  { request, server, slug, ip }: UpgradeRequest,
+  { request, server, slug, ip, since }: UpgradeRequest,
   room: Room,
 ): Response | undefined {
   const existing = readCookie(request, sessionCookie);
@@ -285,6 +289,7 @@ function upgradeIntoRoom(
     sessionSecret: secret,
     entrantId,
     isHost: hostToken !== null && room.isHost(hostToken),
+    since,
     bucket: new TokenBucket(20, 5, clock()),
   };
   const headers: Record<string, string> =

@@ -92,6 +92,11 @@ export function connectRoom(slug: string): RoomConnection {
       return;
     }
 
+    // A reconnect asks only for the log lines after the last one shown.
+    const lastId = feed().at(-1)?.id ?? 0;
+    if (lastId > 0) {
+      url.searchParams.set("since", String(lastId));
+    }
     socket = new WebSocket(url);
     socket.onopen = () => {
       retryMs = 1_000;
@@ -109,7 +114,9 @@ export function connectRoom(slug: string): RoomConnection {
       }
 
       setNotice("connection lost. reconnecting…");
-      retryTimer = setTimeout(open, retryMs);
+      // Spread over half to one and a half times the wait, so a restart's reconnects don't all
+      // hit the server in the same second.
+      retryTimer = setTimeout(open, retryMs * (0.5 + Math.random()));
       retryMs = Math.min(retryMs * 2, maxRetryMs);
     };
   }

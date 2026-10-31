@@ -477,6 +477,27 @@ describe("server", () => {
     expect(rewelcome.type === "welcome" && rewelcome.isHost).toBe(true);
   });
 
+  test("a reconnect with ?since= gets only the log lines after that id", async () => {
+    const base = start();
+    const { slug } = await createRoom(base);
+    const first = new Client(socketUrl(base, slug), session("log-secret"));
+    await first.waitFor((m) => m.type === "welcome");
+    first.send({ type: "join", name: "ero" });
+    await first.waitFor((m) => m.type === "state" && m.race.entrants.length === 1);
+    first.send({ type: "say", text: "hello" });
+    const feed = await first.waitFor(
+      (m) => m.type === "feed" && m.entries.some((e) => e.kind === "chat"),
+    );
+    const lastId = feed.type === "feed" ? (feed.entries.at(-1)?.id ?? 0) : 0;
+    first.socket.close();
+    await first.closed;
+
+    const again = new Client(`${socketUrl(base, slug)}?since=${lastId - 1}`, session("log-secret"));
+    const resent = await again.waitFor((m) => m.type === "feed");
+
+    expect(resent.type === "feed" && resent.entries.map((e) => e.id)).toEqual([lastId]);
+  });
+
   test("a watcher coming or going sends the room a count, not a state that resets its clocks", async () => {
     const base = start();
     const { slug, host } = await createRoom(base);

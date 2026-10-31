@@ -85,7 +85,7 @@ export interface BuildInfo {
   digest: string;
 }
 
-/** Reads the server settings from environment variables, see the table in hosting.md. */
+/** Reads the server settings from environment variables, see the tables in hosting.md. */
 export function loadConfig(env: Env): ServerConfig {
   const count = (name: string, fallback: number) => positiveInteger(env, name, fallback);
 

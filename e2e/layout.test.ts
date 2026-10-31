@@ -85,6 +85,20 @@ describe("room layout", () => {
     await host.page.getByText("in progress").waitFor();
     expect(await positions(host.page)).toEqual(before);
 
+    // The box, `send` and the race buttons share one line even on a narrow screen.
+    await guest.page.setViewportSize({ width: 320, height: 800 });
+    await guest.page.getByRole("button", { name: "chat", exact: true }).click();
+    const [box, send, done] = await Promise.all(
+      [guest.page.getByLabel("message"), guest.page.getByRole("button", { name: "send" })]
+        .map((control) => control.boundingBox())
+        .concat([guest.page.getByRole("button", { name: ".done" }).boundingBox()]),
+    );
+    expect({
+      boxWide: (box?.width ?? 0) >= 100,
+      sendBeside: Math.round(send?.y ?? 0) === Math.round(box?.y ?? 1),
+      doneBeside: Math.round(done?.y ?? 0) === Math.round(box?.y ?? 1),
+    }).toEqual({ boxWide: true, sendBeside: true, doneBeside: true });
+
     await host.context.close();
     await guest.context.close();
   }, 30_000);

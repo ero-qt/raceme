@@ -105,49 +105,51 @@ export function ChatForm(
       <p class={`${notice} ${styles.formNotice}`} role="status">
         {props.muted ? "you are muted." : ""}
       </p>
-      <TextField
-        label="message"
-        hideLabel
-        placeholder="chat"
-        disabled={props.muted}
-        ref={(input: HTMLInputElement) => {
-          messageBox = input;
-          props.inputRef?.(input);
-        }}
-        maxLength={maxChatLength}
-        autocomplete="off"
-        value={text()}
-        onInput={(e) => setText(e.currentTarget.value)}
-        // Browsers skip Enter's submit while `send` is off, so a command still goes out in the wait.
-        onKeyDown={(event) => {
-          if (event.key === "Enter") {
-            event.preventDefault();
-            sendLine();
-          }
-        }}
-      />
-      <Button
-        type="submit"
-        variant="ghost"
-        class={styles.sendButton}
-        disabled={waiting() || props.muted}
-        aria-label="send"
-      >
-        <span class={styles.sendLabel} data-waiting={waiting()}>
-          send
-        </span>
-        <Show when={waiting()}>
-          <svg
-            class={styles.waitRing}
-            style={{ "animation-duration": `${props.waitMs}ms` }}
-            viewBox="0 0 20 20"
-            aria-hidden="true"
-          >
-            <circle cx="10" cy="10" r="8" pathLength="1" />
-          </svg>
-        </Show>
-      </Button>
-      {props.children}
+      <div class={styles.chatLine}>
+        <TextField
+          label="message"
+          hideLabel
+          placeholder="chat"
+          disabled={props.muted}
+          ref={(input: HTMLInputElement) => {
+            messageBox = input;
+            props.inputRef?.(input);
+          }}
+          maxLength={maxChatLength}
+          autocomplete="off"
+          value={text()}
+          onInput={(e) => setText(e.currentTarget.value)}
+          // Browsers skip Enter's submit while `send` is off, so a command still goes out in the wait.
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              sendLine();
+            }
+          }}
+        />
+        <Button
+          type="submit"
+          variant="ghost"
+          class={styles.sendButton}
+          disabled={waiting() || props.muted}
+          aria-label="send"
+        >
+          <span class={styles.sendLabel} data-waiting={waiting()}>
+            send
+          </span>
+          <Show when={waiting()}>
+            <svg
+              class={styles.waitRing}
+              style={{ "animation-duration": `${props.waitMs}ms` }}
+              viewBox="0 0 20 20"
+              aria-hidden="true"
+            >
+              <circle cx="10" cy="10" r="8" pathLength="1" />
+            </svg>
+          </Show>
+        </Button>
+        {props.children}
+      </div>
     </form>
   );
 }

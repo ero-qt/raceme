@@ -179,6 +179,16 @@ export const chatRow = style({
   rowGap: tokens.space.xs,
 });
 
+// The box, `send` and the race buttons share one line under the notice line. The box gives way
+// so the buttons always fit.
+export const chatLine = style({
+  display: "flex",
+  alignItems: "flex-end",
+  gap: tokens.space.s,
+  flex: "1 1 0",
+  minInlineSize: 0,
+});
+
 export const sendButton = style({ position: "relative" });
 
 // The ring stands in for the label during the slow mode wait. With motion reduced the ring
@@ -210,8 +220,8 @@ export const waitRing = style({
   "@media": { "(prefers-reduced-motion: reduce)": { display: "none" } },
 });
 
-// Lets the message box shrink so `send` and the main buttons stay on its line on a phone.
-globalStyle(`${chatRow} > div`, { flex: "1 1 0", minInlineSize: 0 });
+// Lets the message box take the rest of its line next to `send`.
+globalStyle(`${chatLine} > div`, { flex: "1 1 0", minInlineSize: 0 });
 
 export const clockLine = style({
   display: "flex",

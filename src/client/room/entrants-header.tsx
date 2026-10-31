@@ -60,8 +60,8 @@ export function EntrantsHeader(props: {
       </span>
       <Show when={props.watchers !== null}>
         <span class={styles.watcherCount} title={`${props.watchers} watching`}>
-          <Eye class={icon} aria-hidden="true" />
-          <span class={styles.countDigits}>{props.watchers}</span>
+          <Eye class={styles.watcherIcon} aria-hidden="true" />
+          <span class={styles.watcherDigits}>{props.watchers}</span>
           <span class={visuallyHidden}> watching</span>
         </span>
       </Show>

@@ -3,6 +3,7 @@ import {
   controlBorder,
   disclosureSummary,
   divider,
+  icon,
   inlineEdit,
   panel,
   warningPanel,
@@ -255,6 +256,10 @@ export const countDigits = style({
   minInlineSize: "3ch",
   textAlign: "end",
 });
+// Sits right after the eye, with the same 3 digits reserved so a growing count moves nothing.
+export const watcherDigits = style([countDigits, { textAlign: "start" }]);
+// Lifts the eye to the middle of the digits, which sit above the middle of their line box.
+export const watcherIcon = style([icon, { position: "relative", insetBlockStart: "-0.07em" }]);
 // Matches the cap field's box, so the count keeps its place after the start.
 export const capDigits = style([
   controlBorder,

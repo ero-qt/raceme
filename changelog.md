@@ -76,6 +76,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - Just past the phone width, the chat column keeps its clock, `.end`, name field and `.enter` inside the panel.
 - The warning sign in the invite link box sits on the first line, like the other warnings.
 - The entrant table keeps its time and button columns from 976 pixels of screen width, instead of 1024.
+- The watcher count sits right after the eye, level with it.
 
 ### Security
 

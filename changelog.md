@@ -57,7 +57,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - Messages a tab sends past its own limit no longer count against the limit it shares with other tabs on the same address.
 - Screen readers read the closing warning once instead of every second.
 - After a race button, focus stays on the page, off `.end` and out of the goal field.
-- The closing warning no longer dims the room behind it.
 - On phones, screen readers hear new chat and RaceBot lines on the room tab too.
 - "entry is closed" and "race is full" show as a red line above the name field instead of as its placeholder.
 - On phones, the start page field lines up with the cards.

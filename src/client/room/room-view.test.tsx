@@ -45,6 +45,8 @@ const catalog = {
 };
 
 afterEach(cleanup);
+// A tab pick is kept per room in the tab's storage, so it would leak into the next test.
+afterEach(() => sessionStorage.clear());
 
 function renderRoom(
   entrantId: string,
@@ -56,6 +58,7 @@ function renderRoom(
   const sent: ClientAction[] = [];
   const view = render(() => (
     <RoomView
+      slug="room1"
       race={state}
       me={{ entrantId, isHost }}
       now={now}
@@ -227,6 +230,7 @@ describe("RoomView layout", () => {
     const [state, setState] = createSignal(race);
     const view = render(() => (
       <RoomView
+        slug="room1"
         race={state()}
         me={{ entrantId: "x", isHost: false }}
         now={0}
@@ -265,6 +269,7 @@ describe("RoomView layout", () => {
     const [notice, setNotice] = createSignal<string | null>(null);
     const view = render(() => (
       <RoomView
+        slug="room1"
         race={race}
         me={{ entrantId: "x", isHost: false }}
         now={5_000}
@@ -292,6 +297,7 @@ describe("RoomView layout", () => {
     const [closed, setClosed] = createSignal(false);
     const view = render(() => (
       <RoomView
+        slug="room1"
         race={race}
         me={{ entrantId: "x", isHost: false }}
         now={0}
@@ -347,6 +353,17 @@ describe("RoomView layout", () => {
     // The bar only shows on phones, so the test DOM counts it as hidden.
     fireEvent.click(view.getByRole("button", { name: "chat", pressed: false, hidden: true }));
 
+    expect([race.dataset.active, chat.dataset.active]).toEqual(["false", "true"]);
+  });
+
+  test("a phone's tab pick comes back on the next open of the same room", () => {
+    const first = renderRoom("a");
+    fireEvent.click(first.getByRole("button", { name: "chat", pressed: false, hidden: true }));
+    first.unmount();
+
+    const view = renderRoom("a");
+    const race = view.getByRole("region", { name: "room" });
+    const chat = view.getByRole("region", { name: "chat" });
     expect([race.dataset.active, chat.dataset.active]).toEqual(["false", "true"]);
   });
 
@@ -512,10 +529,15 @@ describe("RoomView layout", () => {
 
   test("Enter anywhere on the page jumps into the chat box", () => {
     const view = renderRoom("a");
+    // The page opens with the focus in the chat box, so the test starts from the page itself.
+    (document.activeElement as HTMLElement).blur();
+    expect(document.activeElement).toBe(document.body);
 
     fireEvent.keyDown(document.body, { key: "Enter" });
 
     expect(document.activeElement).toBe(view.getByLabelText("message"));
+    // Only a tap on the phone bar is a pick worth keeping for the room.
+    expect(sessionStorage.getItem("raceme.tab.room1")).toBeNull();
   });
 
   test("shows when the room closes, and a click hides it until the room opens again", () => {
@@ -533,6 +555,7 @@ describe("RoomView layout", () => {
   test("says in the timer when a server restart closes the room", () => {
     const view = render(() => (
       <RoomView
+        slug="room1"
         race={race}
         me={{ entrantId: "a", isHost: false }}
         now={Date.UTC(2026, 9, 25, 7)}
@@ -583,6 +606,7 @@ describe("RoomView layout", () => {
     const [state, setState] = createSignal(race);
     const view = render(() => (
       <RoomView
+        slug="room1"
         race={state()}
         me={{ entrantId: "a", isHost: false }}
         now={0}
@@ -605,6 +629,7 @@ describe("RoomView layout", () => {
     const [state, setState] = createSignal(race);
     const view = render(() => (
       <RoomView
+        slug="room1"
         race={state()}
         me={{ entrantId: "a", isHost: false }}
         now={0}
@@ -627,6 +652,7 @@ describe("RoomView layout", () => {
     const [state, setState] = createSignal(race);
     const view = render(() => (
       <RoomView
+        slug="room1"
         race={state()}
         me={{ entrantId: "a", isHost: false }}
         now={0}
@@ -650,6 +676,7 @@ describe("RoomView layout", () => {
     const [state, setState] = createSignal(race);
     const view = render(() => (
       <RoomView
+        slug="room1"
         race={state()}
         me={{ entrantId: "a", isHost: true }}
         now={0}
@@ -731,6 +758,7 @@ describe("RoomView layout", () => {
       const [state, setState] = createSignal(race);
       const view = render(() => (
         <RoomView
+          slug="room1"
           race={state()}
           me={{ entrantId: "a", isHost: false }}
           now={0}
@@ -758,6 +786,7 @@ describe("RoomView layout", () => {
     const [state, setState] = createSignal(race);
     const view = render(() => (
       <RoomView
+        slug="room1"
         race={state()}
         me={{ entrantId: "c", isHost: false }}
         now={0}

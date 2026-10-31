@@ -63,6 +63,7 @@ export function RoomPage(props: { slug: string; openRoom?: (slug: string) => voi
             {(race) => (
               <>
                 <RoomView
+                  slug={props.slug}
                   race={race()}
                   me={me()}
                   now={shownNow()}

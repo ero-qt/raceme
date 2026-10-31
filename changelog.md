@@ -26,6 +26,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - Bot lines in the room chat show without a name.
 - Chat lines in the room chat show as `name: text`.
 - The start field, the goal and the clock show only an underline when hovered or focused, instead of a box.
+- A phone opens a room on the tab picked last in it, for as long as the browser tab lives.
 - Refused commands show as red lines in the chat log.
 - The name field keeps your name after `.unenter`.
 - Length messages read like "a name needs to be 1-24 characters long."

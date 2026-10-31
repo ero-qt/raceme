@@ -37,6 +37,7 @@ import * as styles from "./room.css.ts";
 import { ChatForm, JoinForm } from "./room-forms.tsx";
 import { RoomStatus } from "./room-status.tsx";
 import { HeaderStatus, RoomTimer } from "./room-timer.tsx";
+import { type RoomTab, loadTab, saveTab } from "./tab-preference.ts";
 
 // Shows the actions that take you out of the race in your own row.
 const rowActionTypes = new Set<ActionType>(["forfeit", "leave"]);
@@ -45,6 +46,7 @@ const neutralActions = new Set<ActionType>(["unready", "undone", "unforfeit", "l
 const accentActions = new Set<ActionType>(["rematch"]);
 
 export interface RoomViewProps {
+  slug: string;
   race: RaceState;
   me: Me;
   /** Current time on the server's clock, in ms. */
@@ -212,8 +214,13 @@ export function RoomView(props: RoomViewProps): JSX.Element {
     </div>
   );
   // Phones show the room details or the chat, picked in the bar at the bottom. The join form is
-  // in the chat, so that's where someone who hasn't entered starts.
-  const [tab, setTab] = createSignal<"race" | "chat">(entered() ? "race" : "chat");
+  // in the chat, so that's where someone who hasn't entered starts. A pick is kept for the room,
+  // so a reload or a return opens the same tab.
+  const [tab, setTab] = createSignal<RoomTab>(loadTab(props.slug) ?? (entered() ? "race" : "chat"));
+  const pickTab = (picked: RoomTab) => {
+    saveTab(props.slug, picked);
+    setTab(picked);
+  };
   // A closed room has its results in the room details, so a phone shows those. The chat's
   // controls are gone then, so the notice takes the focus they held.
   let closedNotice: HTMLDivElement | undefined;
@@ -401,7 +408,7 @@ export function RoomView(props: RoomViewProps): JSX.Element {
             type="button"
             class={styles.tabButton}
             aria-pressed={tab() === "race"}
-            onClick={() => setTab("race")}
+            onClick={() => pickTab("race")}
           >
             room
           </button>
@@ -409,7 +416,7 @@ export function RoomView(props: RoomViewProps): JSX.Element {
             type="button"
             class={styles.tabButton}
             aria-pressed={tab() === "chat"}
-            onClick={() => setTab("chat")}
+            onClick={() => pickTab("chat")}
           >
             chat
           </button>

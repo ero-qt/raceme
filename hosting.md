@@ -50,3 +50,7 @@ the server sends its own security headers, among them a content security policy,
 - turn its access log off for the raceme site or strip the client address from it. the privacy note promises that no visitor data is saved,
 - compress responses, like `encode zstd gzip` in caddy, which cuts the page's script to about a third,
 - send `Strict-Transport-Security` once the site is only ever served over https, since the server doesn't know whether it is.
+
+## nixos
+
+[flake.nix](flake.nix) exports the server as a package and [module.nix](module.nix) as `nixosModules.default`. the module runs the server as the system user `raceme` behind caddy at `ero-qt.eu/apps/raceme` and reads the discord webhook from `/run/secrets/raceme-discord-webhook`, so the service starts from `secrets.target`, a target the host starts once its secrets are in place. set `services.raceme.alertWebhookFile = null` to run without the webhook and start at boot. `nixos-rebuild switch` leaves a running server alone because a restart closes every open room. the `raceme-restart` timer queues the restart for a new package and restarts the server once no rooms are open or the restart hour has come. the server doesn't write anything to disk, so the host has nothing to persist. [tests/nixos.nix](tests/nixos.nix) boots the module in a vm and `nix flake check` runs it.

@@ -4,3 +4,4 @@ dist/
 .env
 release/
 raceme.tar.gz
+result
